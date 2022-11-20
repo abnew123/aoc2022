@@ -5,6 +5,16 @@ import java.util.*;
 
 public abstract class DayTemplate {
 	
+	/**
+	 * Times execution of the solve method
+	 * @param part1
+	 * Param for which day solve() will solve
+	 * @param in
+	 * Param for data solve() will read
+	 * @return
+	 * Time in seconds (not nanoseconds) for execution of the method
+	 * @throws FileNotFoundException
+	 */
 	public double timer(boolean part1, Scanner in) throws FileNotFoundException{
 		Long startTime = System.nanoTime();
 		solve(part1, in);

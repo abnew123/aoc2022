@@ -7,8 +7,16 @@ import java.util.Scanner;
 public class MasterSolver {
 	
 	public static void main(String[] args) throws Exception {
+		
+		//inputs. 
+		boolean runTimer = true;
+		boolean totalTimer = false;
+		boolean exclusionTimer = true;
 		int[] days = new int[] {};
 		boolean[] parts = new boolean[] {};
+		
+		//Do not change anything in the method below this comment
+		
 		for(int day: days) {
 			for(boolean part1: parts) {
 				File file = new File("./data/day" + day + ".txt");
@@ -20,13 +28,13 @@ public class MasterSolver {
 				in.close();
 			}
 		}
-		
-		timer(false, true);
-		//timer();
+		if(runTimer) {
+			timer(totalTimer, exclusionTimer);
+		}
 	}
 	
 //	/**
-//	 * Old timer method. Significantly more verbose (and arguably readable than the stream based one that's now being used
+//	 * Old timer method. Significantly more verbose (and arguably readable than the stream based one that's now being used)
 //	 * Single setting: will print each day's part 1 and part 2 execution times, then the day's total execution time. 
 //	 */
 //	
@@ -53,7 +61,7 @@ public class MasterSolver {
 	 * New timer method. Supports modality
 	 * @param total
 	 * timer will give the sum total execution time if param set to true
-	 * timer will give individual days times if param is set to false
+	 * timer will give individual days times by part if param is set to false
 	 * Note that even if param is set to false, total time will be given
 	 * @param exclusion
 	 * timer will exclude days that return exceptions if param is set to true
