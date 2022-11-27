@@ -60,12 +60,12 @@ public class MasterSolver {
 	/**
 	 * New timer method. Supports modality
 	 * @param total
-	 * timer will give the sum total execution time if param set to true
-	 * timer will give individual days times by part if param is set to false
-	 * Note that even if param is set to false, total time will be given
+	 * Timer will give the sum total execution time if param set to true.
+	 * Timer will give individual days times by part if param is set to false.
+	 * Note that even if param is set to false, total time will be given.
 	 * @param exclusion
-	 * timer will exclude days that return exceptions if param is set to true
-	 * timer will execute all days if param is set to false
+	 * Timer will exclude days that return exceptions if param is set to true.
+	 * Timer will execute all days if param is set to false.
 	 * @throws Exception
 	 */
 	

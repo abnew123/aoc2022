@@ -8,11 +8,11 @@ public abstract class DayTemplate {
 	/**
 	 * Times execution of the solve method
 	 * @param part1
-	 * Param for which day solve() will solve
+	 * Param for which day solve() will solve.
 	 * @param in
-	 * Param for data solve() will read
+	 * Param for data solve() will read.
 	 * @return
-	 * Time in seconds (not nanoseconds) for execution of the method
+	 * Time in seconds (not nanoseconds) for execution of the method.
 	 * @throws FileNotFoundException
 	 */
 	public double timer(boolean part1, Scanner in) throws FileNotFoundException{
@@ -25,22 +25,22 @@ public abstract class DayTemplate {
 	/**
 	 * Main solving method. 
 	 * @param part1
-	 * The solver will solve part 1 if param is set to true
-	 * The solver will solve part 2 if param is set to false
+	 * The solver will solve part 1 if param is set to true.
+	 * The solver will solve part 2 if param is set to false.
 	 * @param in
-	 * The solver will read data from this Scanner
+	 * The solver will read data from this Scanner.
 	 * @return
-	 * Returns answer in string format
+	 * Returns answer in string format.
 	 * @throws FileNotFoundException
 	 */
 	public abstract String solve(boolean part1, Scanner in) throws FileNotFoundException;
 	
 	/**
-	 * Some classes require additional, non code steps (e.g. judge an image output)
-	 * In those cases, we do not want to run the solver
+	 * Some classes require additional, non code steps (e.g. judge an image output).
+	 * In those cases, we do not want to run the solver.
 	 * @return
-	 * By default, returns false
-	 * Subclasses can override in exceptional cases
+	 * By default, returns false.
+	 * Subclasses can override in exceptional cases.
 	 */
 	public boolean exclude() {
 		return false;
