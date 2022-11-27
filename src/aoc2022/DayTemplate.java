@@ -1,7 +1,7 @@
 package aoc2022;
 
-import java.io.*;
-import java.util.*;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 
 public abstract class DayTemplate {
 	
