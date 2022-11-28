@@ -2,8 +2,13 @@
 
 Repo for advent of code 2022 problems. 
 
-To run, go into class MasterSolver.java and set the intended day and part. It will then return the answer for that day and part.
+To run, go into class MasterSolver.java
 
-If you wish to see total run time of all classes, uncomment streamTime();
+Inputs:
+* runTimer - if true, will run the timer method to gather information on execution times
+* totalTimer - if true, timer will return just the total execution time. Otherwise, will return every day's execution time
+* exclusionTimer - if true, will skip days where answer cannot be displayed simply. if false, will run all days regardless (not recommended)
+* int[] days  - determines which days to solve
+* boolean[] parts - determines which parts to solve
 
-If you wish for a granular look at all solutions and times for classes, uncomment timer();
+To see a given day's solution, go to DayX.java, where X is the day in question. 
