@@ -8,8 +8,8 @@ import java.util.Scanner;
 public class Day7 extends DayTemplate{
 	
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		long answer = 0;
-		Node root = new Node("/");
+		int answer = 0;
+		Node root = new Node("/", null);
 		Node current = root;
 		while(in.hasNext()) {
 			String line = in.nextLine();
@@ -25,6 +25,7 @@ public class Day7 extends DayTemplate{
 								break;
 							}
 							current = current.parent;
+							break;
 						default:
 							for(Node child: current.children) {
 								if(child.name.equals(parts[2])) {
@@ -33,19 +34,12 @@ public class Day7 extends DayTemplate{
 							}
 					}	
 				}
-				else {
-					if(parts[1].equals("ls")) {
-						//ls is a no-op
-					}
-				}
 			}
 			else {
-				Node temp = new Node(parts[1]);
-				temp.parent = current;
+				Node temp = new Node(parts[1], current);
 				if(parts[0].chars().allMatch( Character::isDigit )) {		
-					temp.size = Long.parseLong(parts[0]);
+					temp.size = Integer.parseInt(parts[0]);
 					temp.computed = true;
-					temp.directory = false;
 				}
 				else {
 					temp.directory = true;
@@ -58,22 +52,19 @@ public class Day7 extends DayTemplate{
 		return "" + answer;
 	}
 	public void getSizes(Node root) {
-		long size = 0;
+		int size = 0;
 		for(Node child: root.children) {
-			if(child.computed) {
-				size+=child.size;
-			}
-			else {
+			if(!child.computed) {
 				getSizes(child);
-				size+=child.size;
 			}
+			size+=child.size;
 		}
 		root.size = size;
 		root.computed = true;
 	}
 	
-	public long traverse(Node node, long maxsize) {
-		long answer = 0;
+	public int traverse(Node node, int maxsize) {
+		int answer = 0;
 		if(node.size <= maxsize) {
 			answer+=node.size;
 		}
@@ -85,9 +76,9 @@ public class Day7 extends DayTemplate{
 		return answer;
 	}
 	
-	public long traverse2(Node node, long missing, long cur) {
-		if(node.size >= missing && node.size < cur) {
-			cur = node.size;
+	public int traverse2(Node node, int missing, int cur) {
+		if(node.size >= missing) {
+			cur = Math.min(cur, node.size);
 		}
 		for(Node child: node.children) {
 			if(child.directory) {
@@ -102,15 +93,13 @@ class Node{
 	
 	boolean computed;
 	Node parent; 
-	List<Node> children;
-	long size;
+	List<Node> children = new ArrayList<>();
+	int size;
 	String name;
 	boolean directory;
 	
-	public Node(String name) {
+	public Node(String name, Node parent) {
 		this.name = name;
-		size = 0;
-		computed = false;
-		children = new ArrayList<>();
+		this.parent = parent;
 	}
 }
