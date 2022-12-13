@@ -32,12 +32,13 @@ public class Day10 extends DayTemplate {
 				screen[cycle / 40][cycle % 40] = (Math.abs(curVal - (cycle % 40)) < 2) ? '█' : ' ';
 				cycle++;
 			}
-			for (int i = 0; i < screen.length; i++) {
-				for (int j = 0; j < screen[0].length; j++) {
-					System.out.print(screen[i][j]);
-				}
-				System.out.println();
-			}
+			//uncomment below code to see the screen (which gives the answer returned). 
+//			for (int i = 0; i < screen.length; i++) {
+//				for (int j = 0; j < screen[0].length; j++) {
+//					System.out.print(screen[i][j]);
+//				}
+//				System.out.println();
+//			}
 			return "ECZUZALR";
 		}
 	}
