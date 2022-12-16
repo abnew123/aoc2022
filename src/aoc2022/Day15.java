@@ -6,7 +6,7 @@ import java.util.*;
 public class Day15 extends DayTemplate {
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		int answer = 0;
+		long answer = 0;
 		List<Coord> sensors = new ArrayList<>();
 		List<Coord> beacons = new ArrayList<>();
 		List<Integer> distances = new ArrayList<>();
@@ -24,66 +24,28 @@ public class Day15 extends DayTemplate {
 			beacons.add(new Coord(x2, y2));
 			distances.add(Math.abs(x1 - x2) + Math.abs(y1 - y2));
 		}
-		if(part1) {
+		if (part1) {
 			for (int x = -5000000; x < 5000000; x++) {
 				if (alreadyBeacons.contains(x)) {
 					continue;
 				}
-				boolean possible = checkPossible(x,2000000,sensors,distances, 0);
+				boolean possible = checkPossible(x, 2000000, sensors, distances, 0);
 				if (!possible) {
 					answer++;
 				}
 			}
 		}
-		
+
 		if (!part1) {
-			int block1 = 200*200;
-			List<Coord> possibilities = new ArrayList<>();
-			for (int x = 0; x < 4000000; x += block1) {
-				for (int y = 0; y < 4000000; y += block1 ) {
-					if (beacons.contains(new Coord(x, y))) {
-						continue;
-					}
-					boolean possible = checkPossible(x,y,sensors,distances,block1 * 2);
-					if (possible) {
-						possibilities.add(new Coord(x, y));
-					}
-				}
-			}
-			List<Coord> possibilities2 = new ArrayList<>();
-			int block2 = 200;
-			for (Coord c : possibilities) {
-				for (int x = c.x; x <= c.x + block1; x+= block2) {
-					for (int y = c.y; y <= c.y + block1; y+=block2) {
-						if (beacons.contains(new Coord(x, y))) {
-							continue;
-						}
-						boolean possible = checkPossible(x,y,sensors,distances,block2 * 2);
-						if (possible) {
-							possibilities2.add(new Coord(x,y));
-						}
-					}
-				}
-			}
-			for (Coord c : possibilities2) {
-				for (int x = c.x; x <= c.x + block2; x++) {
-					for (int y = c.y; y <= c.y + block2; y++) {
-						if (beacons.contains(new Coord(x, y))) {
-							continue;
-						}
-						boolean possible = checkPossible(x,y,sensors,distances, 0);
-						if (possible) {
-							long xval = x;
-							long yval = y;
-							return "" + ((xval * 4000000) + yval);
-						}
-					}
-				}
-			}
+			List<Coord> possibilities = iterate(Collections.singletonList(new Coord(0, 0)), 4000000, 200 * 200, sensors,
+					distances);
+			List<Coord> possibilities2 = iterate(possibilities, 200 * 200, 200, sensors, distances);
+			Coord ans = iterate(possibilities2, 200, 1, sensors, distances).get(0);
+			answer = ((long) ans.x * 4000000) + ans.y;
 		}
 		return "" + answer;
 	}
-	
+
 	public boolean checkPossible(int x, int y, List<Coord> sensors, List<Integer> distances, int wiggle) {
 		for (int i = 0; i < sensors.size(); i++) {
 			if (Math.abs(x - sensors.get(i).x) + Math.abs(y - sensors.get(i).y) + wiggle <= distances.get(i)) {
@@ -91,6 +53,22 @@ public class Day15 extends DayTemplate {
 			}
 		}
 		return true;
+	}
+
+	public List<Coord> iterate(List<Coord> possibilities, int block1, int block2, List<Coord> sensors,
+			List<Integer> distances) {
+		List<Coord> possibilities2 = new ArrayList<>();
+		for (Coord c : possibilities) {
+			for (int x = c.x; x < c.x + block1; x += block2) {
+				for (int y = c.y; y < c.y + block1; y += block2) {
+					boolean possible = checkPossible(x, y, sensors, distances, (block2 > 1) ? block2 * 2 : 0);
+					if (possible) {
+						possibilities2.add(new Coord(x, y));
+					}
+				}
+			}
+		}
+		return possibilities2;
 	}
 }
 
