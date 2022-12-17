@@ -9,10 +9,10 @@ public class MasterSolver {
 	public static void main(String[] args) throws Exception {
 		
 		//inputs. 
-		boolean runTimer = false;
+		boolean runTimer = true;
 		boolean totalTimer = false;
 		boolean exclusionTimer = true;
-		int[] days = new int[] {1};
+		int[] days = new int[] {};
 		boolean[] parts = new boolean[] {true, false};
 		
 		//Do not change anything in the method below this comment
