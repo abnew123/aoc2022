@@ -17,10 +17,8 @@ public class Day18 extends DayTemplate {
 		}
 		space[0][0][0] = 2;
 		while (iterate(space, 2, 0, true, false)[0] > 0) {
-			System.out.println("hi");
 		}
 		int[] checkSides = iterate(space, 1, 1, false, true);
-		System.out.println(checkSides[0] + " " + checkSides[1]);
 		answer += checkSides[0] + checkSides[1];
 		if (!part1) {
 			answer += iterate(space, 0, 1, false, true)[0];
