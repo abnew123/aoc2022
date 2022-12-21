@@ -18,7 +18,7 @@ public class Day20 extends DayTemplate {
 				Mover mover = null;
 				int loc = 0;
 				for (int j = 0; j < movers.size(); j++) {
-					if (movers.get(j).uuid == i + 10000 * k) {
+					if (movers.get(j).uuid == i ) {
 						mover = movers.get(j);
 						loc = j;
 					}
@@ -27,13 +27,12 @@ public class Day20 extends DayTemplate {
 				int rotate = (int) (mover.val % (movers.size()));
 				movers.add(((loc + rotate) % (movers.size()) + (movers.size())) % (movers.size()), mover);
 			}
-			for (int i = 0; i < movers.size(); i++)
-				movers.get(i).uuid = movers.get(i).uuid + 10000;
 		}
 		int offset = 0;
 		for (int j = 0; j < movers.size(); j++) {
-			if (movers.get(j).val == 0)
+			if (movers.get(j).val == 0) {
 				offset = j;
+			}	
 		}
 		return "" + (movers.get((offset + 1000) % movers.size()).val + movers.get((offset + 2000) % movers.size()).val + movers.get((offset + 3000) % movers.size()).val);
 	}
