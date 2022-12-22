@@ -32,7 +32,7 @@ public class Day17 extends DayTemplate {
 		int jetIndex = 0;
 		int lowest = 0;
 		int lowestOffset = 0;
-		int[][] chamber = new int[7][2100];
+		int[][] chamber = new int[7][210];
 		for (int i = 0; i < num; i++) {
 			switch (i % 5) {
 			case 0:
@@ -83,9 +83,9 @@ public class Day17 extends DayTemplate {
 			settle(chamber);
 
 			lowest = findLowest(chamber);
-			if (lowest > 2000) {
-				lowestOffset += 1000;
-				lowest -= 1000;
+			if (lowest > 200) {
+				lowestOffset += 100;
+				lowest -= 100;
 				compact(chamber);
 			}
 		}
@@ -100,9 +100,9 @@ public class Day17 extends DayTemplate {
 
 	public void compact(int[][] chamber) {
 		int[][] tmp = new int[chamber.length][chamber[0].length];
-		for (int i = 1000; i < chamber[0].length; i++) {
+		for (int i = 100; i < chamber[0].length; i++) {
 			for (int j = 0; j < chamber.length; j++) {
-				tmp[j][i - 1000] = chamber[j][i];
+				tmp[j][i - 100] = chamber[j][i];
 			}
 		}
 		for (int i = 0; i < chamber[0].length; i++) {
