@@ -27,7 +27,6 @@ public class Day19 extends DayTemplate {
 				answer *= blueprints.get(i).result(32, new int[] { 1, 0, 0, 0 }, new int[4],
 						new HashMap<String, Integer>());
 			}
-
 		}
 		return "" + answer;
 	}
@@ -39,6 +38,7 @@ class BluePrint {
 	int[] clayR = new int[4];
 	int[] obsidianR = new int[4];
 	int[] geodeR = new int[4];
+	int maxOre;
 
 	public BluePrint(int o1, int o2, int o3, int o4, int c3, int ob4) {
 		oreR[0] = o1;
@@ -47,6 +47,7 @@ class BluePrint {
 		geodeR[0] = o4;
 		obsidianR[1] = c3;
 		geodeR[2] = ob4;
+		maxOre = Math.max(Math.max(oreR[0], clayR[0]), Math.max(obsidianR[0], geodeR[0]));
 	}
 
 	public int result(int min, int[] currR, int[] currRes, Map<String, Integer> seen) {
@@ -57,49 +58,34 @@ class BluePrint {
 		}
 		int answer = 0;
 		if (min == 0) {
-			if(currRes[3] > m) {
+			if (currRes[3] > m) {
 				m = currRes[3];
 			}
 			return currRes[3];
 		}
-		if(m > currRes[3] + (min * (currR[3] + min))){
+		int highestPossible = currRes[3] + (currR[3] * min) + (min * (min + 1)) / 2;
+		if (m >= highestPossible) {
 			return -1;
 		}
 		List<int[]> possibleR = new ArrayList<>();
 		List<int[]> possibleRes = new ArrayList<>();
-		boolean geodeRpossible = possible(currRes, geodeR);
-		boolean obsidianRpossible = possible(currRes, obsidianR);
-		boolean clayRpossible = possible(currRes, clayR);
-		boolean oreRpossible = possible(currRes, oreR);
 
-		if (geodeRpossible) {
-			int[] newRes4 = subtract(currRes, geodeR);
-			possibleRes.add(newRes4);
+		if (possible(currRes, geodeR)) {
+			possibleRes.add(subtract(currRes, geodeR));
 			possibleR.add(new int[] { currR[0], currR[1], currR[2], currR[3] + 1 });
 		} else {
-			if (obsidianRpossible) {
-				if (!(currRes[2] > min * (geodeR[2] - currR[2]))) {
-					int[] newRes4 = subtract(currRes, obsidianR);
-					possibleRes.add(newRes4);
-					possibleR.add(new int[] { currR[0], currR[1], currR[2] + 1, currR[3] });
-				}
+			if (!(currRes[2] > min * (geodeR[2] - currR[2])) && possible(currRes, obsidianR)) {
+				possibleRes.add(subtract(currRes, obsidianR));
+				possibleR.add(new int[] { currR[0], currR[1], currR[2] + 1, currR[3] });
+			}
+			if (!(currRes[1] > min * (obsidianR[1] - currR[1])) && possible(currRes, clayR)) {
+				possibleRes.add(subtract(currRes, clayR));
+				possibleR.add(new int[] { currR[0], currR[1] + 1, currR[2], currR[3] });
 
 			}
-			if (clayRpossible) {
-				if (!(currRes[1] > min * (obsidianR[1] - currR[1]))) {
-					int[] newRes4 = subtract(currRes, clayR);
-					possibleRes.add(newRes4);
-					possibleR.add(new int[] { currR[0], currR[1] + 1, currR[2], currR[3] });
-				}
-
-			}
-			if (oreRpossible) {
-				int max = Math.max(Math.max(oreR[0], clayR[0]), Math.max(obsidianR[0], geodeR[0]));
-				if (!(currRes[0] > min * (max - currR[0]))) {
-					int[] newRes4 = subtract(currRes, oreR);
-					possibleRes.add(newRes4);
-					possibleR.add(new int[] { currR[0] + 1, currR[1], currR[2], currR[3] });
-				}
+			if (!(currRes[0] > min * (maxOre - currR[0])) && possible(currRes, oreR)) {
+				possibleRes.add(subtract(currRes, oreR));
+				possibleR.add(new int[] { currR[0] + 1, currR[1], currR[2], currR[3] });
 			}
 			possibleRes.add(currRes);
 			possibleR.add(currR);
