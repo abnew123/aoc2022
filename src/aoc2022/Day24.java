@@ -6,7 +6,6 @@ import java.util.*;
 public class Day24 extends DayTemplate {
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		int answer = 0;
 		List<String> lines = new ArrayList<>();
 		Map<Integer, List<CoordTime>> blizzards = new HashMap<>();
 		while (in.hasNext()) {
@@ -46,48 +45,13 @@ public class Day24 extends DayTemplate {
 		for (int i = 1; i < 1000; i++) {
 			blizzards.put(i, advance(blizzards.get(i - 1), lines));
 		}
-		Queue<CoordTime> bfs = new LinkedList<>();
-		bfs.add(start);
-		boolean change = false;
-		while (!bfs.isEmpty()) {
-			CoordTime next = bfs.poll();
-			if (next.x == end.x && next.y == end.y && next.leg % 2 == 0) {
-				if (part1 || next.leg == 2) {
-					answer = next.time;
-					break;
-				}
-				change = true;
-			}
-			if (next.x == start.x && next.y == start.y && next.leg == 1) {
-				change = true;
-			}
-			List<CoordTime> nextBlizzards = blizzards.get(next.time + 1);
-			int[] deltax = new int[] { -1, 0, 1, 0, 0 };
-			int[] deltay = new int[] { 0, -1, 0, 1, 0 };
-			for (int i = 0; i < deltax.length; i++) {
-				CoordTime candidate = new CoordTime(next.x + deltax[i], next.y + deltay[i], next.time + 1,
-						next.direction);
-				if (change) {
-					candidate.leg = next.leg + 1;
-				} else {
-					candidate.leg = next.leg;
-				}
-				if (!nextBlizzards.contains(candidate) && inBounds(candidate, lines)) {
-					boolean flag = true;
-					for (CoordTime c : bfs) {
-						if (c.equals(candidate) && c.leg == candidate.leg) {
-							flag = false;
-						}
-					}
-					if (flag) {
-						bfs.add(candidate);
-					}
-
-				}
-			}
-			change = false;
+		int trip1 = helper(start, end, lines, blizzards, 0);
+		if (part1) {
+			return "" + trip1;
 		}
-		return "" + answer;
+		int trip2 = helper(end, start, lines, blizzards, trip1);
+		int trip3 = helper(start, end, lines, blizzards, trip2);
+		return "" + trip3;
 	}
 
 	public boolean inBounds(CoordTime candidate, List<String> lines) {
@@ -123,9 +87,31 @@ public class Day24 extends DayTemplate {
 					next.add(new CoordTime(candidate.x, 1, candidate.time, candidate.direction));
 				}
 			}
-
 		}
 		return next;
+	}
+
+	public int helper(CoordTime start, CoordTime end, List<String> lines, Map<Integer, List<CoordTime>> blizzards,
+			int startTime) {
+		Queue<CoordTime> bfs = new LinkedList<>();
+		bfs.add(new CoordTime(start.x, start.y, startTime, -1));
+		while (!bfs.isEmpty()) {
+			CoordTime next = bfs.poll();
+			if (next.x == end.x && next.y == end.y) {
+				return next.time;
+			}
+			List<CoordTime> nextBlizzards = blizzards.get(next.time + 1);
+			int[] deltax = new int[] { -1, 0, 1, 0, 0 };
+			int[] deltay = new int[] { 0, -1, 0, 1, 0 };
+			for (int i = 0; i < deltax.length; i++) {
+				CoordTime candidate = new CoordTime(next.x + deltax[i], next.y + deltay[i], next.time + 1,
+						next.direction);
+				if (!nextBlizzards.contains(candidate) && inBounds(candidate, lines) && !bfs.contains(candidate)) {
+					bfs.add(candidate);
+				}
+			}
+		}
+		return -1;
 	}
 }
 
@@ -134,14 +120,12 @@ class CoordTime {
 	int y;
 	int time;
 	int direction;
-	int leg;
 
 	public CoordTime(int x, int y, int time, int direction) {
 		this.x = x;
 		this.y = y;
 		this.time = time;
 		this.direction = direction; // 1 = N, 2 = E, 3 = S, 4 = W, -1 = not a blizzard
-		leg = 0;
 	}
 
 	@Override
