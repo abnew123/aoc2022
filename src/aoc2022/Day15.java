@@ -2,6 +2,7 @@ package aoc2022;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Day15 extends DayTemplate {
 
@@ -35,13 +36,29 @@ public class Day15 extends DayTemplate {
 				}
 			}
 		}
-
-		if (!part1) {
-			List<Coord> possibilities = iterate(Collections.singletonList(new Coord(0, 0)), 4000000, 200 * 200, sensors,
-					distances);
-			List<Coord> possibilities2 = iterate(possibilities, 200 * 200, 200, sensors, distances);
-			Coord ans = iterate(possibilities2, 200, 1, sensors, distances).get(0);
-			answer = ((long) ans.x * 4000000) + ans.y;
+		if(!part1) {
+			List<Integer> positiveLines = new ArrayList<>();
+			List<Integer> negativeLines = new ArrayList<>();
+			for (int i = 0; i < sensors.size(); i++) {
+				positiveLines.add(sensors.get(i).y - sensors.get(i).x + distances.get(i) + 1);
+				positiveLines.add(sensors.get(i).y - sensors.get(i).x - distances.get(i) - 1);
+				negativeLines.add(sensors.get(i).x + sensors.get(i).y + distances.get(i) + 1);
+				negativeLines.add(sensors.get(i).x + sensors.get(i).y - distances.get(i) - 1);
+			}
+			for (int a : positiveLines) {
+				for (int b : negativeLines) {
+					if ((a + b) % 2 != 0) {
+						continue;
+					}
+					int x = (b - a) / 2;
+					int y = (b + a) / 2;
+					if (x >= 0 && y >= 0 && x <= 4000000 && y <= 4000000) {
+						if (checkPossible(x, y, sensors, distances, 0)) {
+							return "" + (((long) x * 4000000) + y);
+						}
+					}
+				}
+			}
 		}
 		return "" + answer;
 	}
@@ -53,22 +70,6 @@ public class Day15 extends DayTemplate {
 			}
 		}
 		return true;
-	}
-
-	public List<Coord> iterate(List<Coord> possibilities, int block1, int block2, List<Coord> sensors,
-			List<Integer> distances) {
-		List<Coord> possibilities2 = new ArrayList<>();
-		for (Coord c : possibilities) {
-			for (int x = c.x; x < c.x + block1; x += block2) {
-				for (int y = c.y; y < c.y + block1; y += block2) {
-					boolean possible = checkPossible(x, y, sensors, distances, (block2 > 1) ? block2 * 2 : 0);
-					if (possible) {
-						possibilities2.add(new Coord(x, y));
-					}
-				}
-			}
-		}
-		return possibilities2;
 	}
 }
 
