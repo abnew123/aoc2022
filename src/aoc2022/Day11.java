@@ -1,7 +1,10 @@
 package aoc2022;
 
-import java.io.*;
-import java.util.*;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Scanner;
 
 public class Day11 extends DayTemplate {
 
@@ -35,7 +38,7 @@ public class Day11 extends DayTemplate {
 			if (line.startsWith("    If false")) {
 				consts[4] = Integer.parseInt(itms[3]);
 				monkeys.add(new Monkey(items, consts));
-				modulo*=consts[2];
+				modulo *= consts[2];
 				items.clear();
 				consts = new int[5];
 			}
@@ -83,7 +86,7 @@ class Monkey {
 				item /= 3;
 			}
 			item %= modulo;
-			monkeys.get((item % consts[2] == 0)?consts[3]:consts[4]).items.add(item);
+			monkeys.get((item % consts[2] == 0) ? consts[3] : consts[4]).items.add(item);
 			counter++;
 		}
 		items.clear();

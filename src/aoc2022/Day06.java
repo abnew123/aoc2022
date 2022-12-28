@@ -1,9 +1,11 @@
 package aoc2022;
 
-import java.io.*;
-import java.util.*;
+import java.io.FileNotFoundException;
+import java.util.HashSet;
+import java.util.Scanner;
+import java.util.Set;
 
-public class Day6 extends DayTemplate {
+public class Day06 extends DayTemplate {
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		int answer = 0;

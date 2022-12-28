@@ -1,7 +1,9 @@
 package aoc2022;
 
-import java.io.*;
-import java.util.*;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class Day20 extends DayTemplate {
 
@@ -18,7 +20,7 @@ public class Day20 extends DayTemplate {
 				Mover mover = null;
 				int loc = 0;
 				for (int j = 0; j < movers.size(); j++) {
-					if (movers.get(j).uuid == i ) {
+					if (movers.get(j).uuid == i) {
 						mover = movers.get(j);
 						loc = j;
 					}
@@ -32,9 +34,10 @@ public class Day20 extends DayTemplate {
 		for (int j = 0; j < movers.size(); j++) {
 			if (movers.get(j).val == 0) {
 				offset = j;
-			}	
+			}
 		}
-		return "" + (movers.get((offset + 1000) % movers.size()).val + movers.get((offset + 2000) % movers.size()).val + movers.get((offset + 3000) % movers.size()).val);
+		return "" + (movers.get((offset + 1000) % movers.size()).val + movers.get((offset + 2000) % movers.size()).val
+				+ movers.get((offset + 3000) % movers.size()).val);
 	}
 }
 

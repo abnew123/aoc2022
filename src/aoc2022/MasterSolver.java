@@ -12,19 +12,21 @@ public class MasterSolver {
 		boolean runTimer = true;
 		boolean totalTimer = false;
 		boolean exclusionTimer = true;
-		int[] days = new int[] {};
+		int[] days = new int[] { };
 		boolean[] parts = new boolean[] { true, false };
 
 		// Do not change anything in the method below this comment
 
 		for (int day : days) {
+			String zeroFilledDay = (day < 10 ? "0" : "") + day;
 			for (boolean part1 : parts) {
-				File file = new File("./data/day" + day + ".txt");
+				File file = new File("./data/day" + zeroFilledDay + ".txt");
 				Scanner in = new Scanner(file);
-				Class<?> cls = Class.forName("aoc2022.Day" + day);
+				Class<?> cls = Class.forName("aoc2022.Day" + zeroFilledDay);
 				Method m = cls.getDeclaredMethod("solve", boolean.class, Scanner.class);
 				String answer = (String) m.invoke(cls.getDeclaredConstructor().newInstance(), part1, in);
-				System.out.println("Day " + day + " part " + (part1 ? 1 : 2) + " solution: " + answer);
+				System.out.println(
+						"Day " + zeroFilledDay+ " part " + (part1 ? 1 : 2) + " solution: " + answer);
 				in.close();
 			}
 		}
@@ -48,19 +50,20 @@ public class MasterSolver {
 
 	public static void timer(boolean total, boolean exclusion) throws Exception {
 		Double totalTime = 0.0;
-		for (int day = 1; day < 25; day++) {
+		for (int day = 1; day <= 25; day++) {
+			String zeroFilledDay = (day < 10 ? "0" : "") + day;
 			for (int part = 1; part <= 2; part++) {
-				boolean exclude = (boolean) Class.forName("aoc2022.Day" + day).getMethod("exclude")
-						.invoke(Class.forName("aoc2022.Day" + day).getDeclaredConstructor().newInstance());
+				boolean exclude = (boolean) Class.forName("aoc2022.Day" + zeroFilledDay).getMethod("exclude")
+						.invoke(Class.forName("aoc2022.Day" + zeroFilledDay).getDeclaredConstructor().newInstance());
 				if (exclusion && exclude) {
 					continue;
 				}
-				Double time = (Double) Class.forName("aoc2022.Day" + day)
+				Double time = (Double) Class.forName("aoc2022.Day" + zeroFilledDay)
 						.getMethod("timer", boolean.class, Scanner.class)
-						.invoke(Class.forName("aoc2022.Day" + day).getDeclaredConstructor().newInstance(), part == 1,
-								new Scanner(new File("./data/day" + day + ".txt")));
+						.invoke(Class.forName("aoc2022.Day" + zeroFilledDay).getDeclaredConstructor().newInstance(),
+								part == 1, new Scanner(new File("./data/day" + zeroFilledDay + ".txt")));
 				if (!total) {
-					System.out.println("Day " + day + " part " + part + " execution time: " + time);
+					System.out.println("Day " + zeroFilledDay + " part " + part + " execution time: " + time);
 				}
 				totalTime += time;
 			}

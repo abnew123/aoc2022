@@ -1,7 +1,7 @@
 package aoc2022;
 
-import java.io.*;
-import java.util.*;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 
 public class Day14 extends DayTemplate {
 
@@ -13,7 +13,7 @@ public class Day14 extends DayTemplate {
 			String line = in.nextLine();
 			maxy = Math.max(addPath(line, grid), maxy);
 		}
-		if(!part1) {
+		if (!part1) {
 			addPath("0," + (maxy + 2) + " -> 999," + (maxy + 2), grid);
 		}
 		while (sand(grid, maxy)) {
@@ -41,7 +41,7 @@ public class Day14 extends DayTemplate {
 	}
 
 	public boolean sand(boolean[][] grid, int maxy) {
-		if(grid[500][0]) {
+		if (grid[500][0]) {
 			return false;
 		}
 		int x = 500;

@@ -1,7 +1,9 @@
 package aoc2022;
 
-import java.io.*;
-import java.util.*;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class Day17 extends DayTemplate {
 
@@ -157,49 +159,20 @@ public class Day17 extends DayTemplate {
 					}
 				}
 			}
-
 		}
-	}
-
-	public void prettyprint(int[][] chamber) {
-		for (int k = 50; k >= 0; k--) {
-			for (int j = 0; j < chamber.length; j++) {
-				System.out.print(chamber[j][k]);
-			}
-			System.out.println();
-		}
-		System.out.println();
-		System.out.println();
 	}
 
 	public void jet(int[][] chamber, boolean left) {
-		if (left) {
-			for (int i = 0; i < chamber[0].length; i++) {
-				if (chamber[0][i] == 2) {
-					return;
-				}
+		for (int i = 0; i < chamber[0].length; i++) {
+			if (chamber[left ? 0 : (chamber.length - 1)][i] == 2) {
+				return;
 			}
-			for (int i = 0; i < chamber[0].length; i++) {
-				for (int j = 1; j < chamber.length; j++) {
-					if (chamber[j][i] == 2) {
-						if (chamber[j - 1][i] == 1) {
-							return;
-						}
-					}
-				}
-			}
-		} else {
-			for (int i = 0; i < chamber[0].length; i++) {
-				if (chamber[chamber.length - 1][i] == 2) {
-					return;
-				}
-			}
-			for (int i = 0; i < chamber[0].length; i++) {
-				for (int j = 0; j < chamber.length - 1; j++) {
-					if (chamber[j][i] == 2) {
-						if (chamber[j + 1][i] == 1) {
-							return;
-						}
+		}
+		for (int i = 0; i < chamber[0].length; i++) {
+			for (int j = left ? 1 : 0; j < chamber.length - (left ? 0 : 1); j++) {
+				if (chamber[j][i] == 2) {
+					if (chamber[j + (left ? -1 : 1)][i] == 1) {
+						return;
 					}
 				}
 			}

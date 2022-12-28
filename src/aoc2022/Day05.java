@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Stack;
 
-public class Day5 extends DayTemplate {
+public class Day05 extends DayTemplate {
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		String answer = "";

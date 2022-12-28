@@ -1,8 +1,9 @@
 package aoc2022;
 
-import java.io.*;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class Day15 extends DayTemplate {
 
@@ -36,7 +37,7 @@ public class Day15 extends DayTemplate {
 				}
 			}
 		}
-		if(!part1) {
+		if (!part1) {
 			List<Integer> positiveLines = new ArrayList<>();
 			List<Integer> negativeLines = new ArrayList<>();
 			for (int i = 0; i < sensors.size(); i++) {
@@ -47,14 +48,13 @@ public class Day15 extends DayTemplate {
 			}
 			for (int a : positiveLines) {
 				for (int b : negativeLines) {
-					if ((a + b) % 2 != 0) {
-						continue;
-					}
-					int x = (b - a) / 2;
-					int y = (b + a) / 2;
-					if (x >= 0 && y >= 0 && x <= 4000000 && y <= 4000000) {
-						if (checkPossible(x, y, sensors, distances, 0)) {
-							return "" + (((long) x * 4000000) + y);
+					if ((a + b) % 2 == 0) {
+						int x = (b - a) / 2;
+						int y = (b + a) / 2;
+						if (x >= 0 && y >= 0 && x <= 4000000 && y <= 4000000) {
+							if (checkPossible(x, y, sensors, distances, 0)) {
+								return "" + (((long) x * 4000000) + y);
+							}
 						}
 					}
 				}
