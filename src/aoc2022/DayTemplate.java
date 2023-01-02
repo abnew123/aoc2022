@@ -12,7 +12,7 @@ public abstract class DayTemplate {
 	 * @param in
 	 * Param for data solve() will read.
 	 * @return
-	 * Time in seconds (not nanoseconds) for execution of the method.
+	 * Time in milliseconds (not nanoseconds) for execution of the method.
 	 * @throws FileNotFoundException
 	 */
 	public double timer(boolean part1, Scanner in) throws FileNotFoundException{
