@@ -26,14 +26,15 @@ public class Day19 extends DayTemplate {
 			BluePrint.m = 0;
 			if (part1) {
 				answer += (i + 1) * blueprints.get(i).result(24, new int[] { 1, 0, 0, 0 }, new int[4],
-						new HashMap<String, Integer>());
+						new HashMap<String, Result>());
 			} else {
 				answer *= blueprints.get(i).result(32, new int[] { 1, 0, 0, 0 }, new int[4],
-						new HashMap<String, Integer>());
+						new HashMap<String, Result>());
 			}
 		}
 		return "" + answer;
 	}
+	
 }
 
 class BluePrint {
@@ -54,11 +55,16 @@ class BluePrint {
 		maxOre = Math.max(Math.max(oreR[0], clayR[0]), Math.max(obsidianR[0], geodeR[0]));
 	}
 
-	public int result(int min, int[] currR, int[] currRes, Map<String, Integer> seen) {
-		String hash = min + " " + currR[0] + " " + currR[1] + " " + currR[2] + " " + currR[3] + " " + currRes[0] + " "
-				+ currRes[1] + " " + currRes[2] + " " + currRes[3] + " ";
+	public int result(int min, int[] currR, int[] currRes, Map<String, Result> seen) {
+		String hash = currR[0] + " " + currR[1] + " " + currR[2] + " " + currR[3] + " " + currRes[0] + " " + currRes[1]
+				+ " " + currRes[2] + " " + currRes[3] + " ";
 		if (seen.keySet().contains(hash)) {
-			return seen.get(hash);
+			if (seen.get(hash).time < min) {
+				return -1;
+			}
+			if (seen.get(hash).time == min) {
+				return seen.get(hash).val;
+			}
 		}
 		int answer = 0;
 		if (min == 0) {
@@ -102,7 +108,7 @@ class BluePrint {
 			}
 			answer = Math.max(answer, result(min - 1, possibleR.get(i), newRes, seen));
 		}
-		seen.put(hash, answer);
+		seen.put(hash, new Result(min, answer));
 		return answer;
 	}
 
@@ -123,4 +129,14 @@ class BluePrint {
 		return true;
 	}
 
+}
+
+class Result {
+	int time;
+	int val;
+
+	public Result(int time, int val) {
+		this.time = time;
+		this.val = val;
+	}
 }
