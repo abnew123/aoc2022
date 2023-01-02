@@ -2,9 +2,7 @@ package aoc2022;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 
 public class Day19 extends DayTemplate {
@@ -25,16 +23,13 @@ public class Day19 extends DayTemplate {
 		for (int i = 0; i < (part1 ? blueprints.size() : 3); i++) {
 			BluePrint.m = 0;
 			if (part1) {
-				answer += (i + 1) * blueprints.get(i).result(24, new int[] { 1, 0, 0, 0 }, new int[4],
-						new HashMap<String, Result>());
+				answer += (i + 1) * blueprints.get(i).result(24, new int[] { 1, 0, 0, 0 }, new int[4]);
 			} else {
-				answer *= blueprints.get(i).result(32, new int[] { 1, 0, 0, 0 }, new int[4],
-						new HashMap<String, Result>());
+				answer *= blueprints.get(i).result(32, new int[] { 1, 0, 0, 0 }, new int[4]);
 			}
 		}
 		return "" + answer;
 	}
-	
 }
 
 class BluePrint {
@@ -55,18 +50,7 @@ class BluePrint {
 		maxOre = Math.max(Math.max(oreR[0], clayR[0]), Math.max(obsidianR[0], geodeR[0]));
 	}
 
-	public int result(int min, int[] currR, int[] currRes, Map<String, Result> seen) {
-		String hash = currR[0] + " " + currR[1] + " " + currR[2] + " " + currR[3] + " " + currRes[0] + " " + currRes[1]
-				+ " " + currRes[2] + " " + currRes[3] + " ";
-		if (seen.keySet().contains(hash)) {
-			if (seen.get(hash).time < min) {
-				return -1;
-			}
-			if (seen.get(hash).time == min) {
-				return seen.get(hash).val;
-			}
-		}
-		int answer = 0;
+	public int result(int min, int[] currR, int[] currRes) {
 		if (min == 0) {
 			if (currRes[3] > m) {
 				m = currRes[3];
@@ -77,58 +61,63 @@ class BluePrint {
 		if (m >= highestPossible) {
 			return -1;
 		}
-		List<int[]> possibleR = new ArrayList<>();
-		List<int[]> possibleRes = new ArrayList<>();
-
-		if (possible(currRes, geodeR)) {
-			possibleRes.add(subtract(currRes, geodeR));
-			possibleR.add(new int[] { currR[0], currR[1], currR[2], currR[3] + 1 });
-		} else {
-			if (!(currRes[2] > min * (geodeR[2] - currR[2])) && possible(currRes, obsidianR)) {
-				possibleRes.add(subtract(currRes, obsidianR));
-				possibleR.add(new int[] { currR[0], currR[1], currR[2] + 1, currR[3] });
-			}
-			if (!(currRes[1] > min * (obsidianR[1] - currR[1])) && possible(currRes, clayR)) {
-				possibleRes.add(subtract(currRes, clayR));
-				possibleR.add(new int[] { currR[0], currR[1] + 1, currR[2], currR[3] });
-
-			}
-			if (!(currRes[0] > min * (maxOre - currR[0])) && possible(currRes, oreR)) {
-				possibleRes.add(subtract(currRes, oreR));
-				possibleR.add(new int[] { currR[0] + 1, currR[1], currR[2], currR[3] });
-			}
-			possibleRes.add(currRes);
-			possibleR.add(currR);
+		int answer = 0;
+		int neededTurns = needed(currRes, currR, geodeR);
+		if (neededTurns < min) {
+			answer = Math.max(answer,
+					result(min - neededTurns - 1, new int[] { currR[0], currR[1], currR[2], currR[3] + 1 },
+							step(neededTurns + 1, subtract(currRes, geodeR), currR)));
 		}
 
-		for (int i = 0; i < possibleR.size(); i++) {
-			int[] newRes = new int[currR.length];
-			for (int j = 0; j < currRes.length; j++) {
-				newRes[j] += currR[j] + possibleRes.get(i)[j];
+		if (!(currRes[2] > min * (geodeR[2] - currR[2]))) {
+			neededTurns = needed(currRes, currR, obsidianR);
+			if (neededTurns < min) {
+				answer = Math.max(answer,
+						result(min - neededTurns - 1, new int[] { currR[0], currR[1], currR[2] + 1, currR[3] },
+								step(neededTurns + 1, subtract(currRes, obsidianR), currR)));
 			}
-			answer = Math.max(answer, result(min - 1, possibleR.get(i), newRes, seen));
 		}
-		seen.put(hash, new Result(min, answer));
+		if (!(currRes[1] > min * (obsidianR[1] - currR[1]))) {
+			neededTurns = needed(currRes, currR, clayR);
+			if (neededTurns < min) {
+				answer = Math.max(answer,
+						result(min - neededTurns - 1, new int[] { currR[0], currR[1] + 1, currR[2], currR[3] },
+								step(neededTurns + 1, subtract(currRes, clayR), currR)));
+			}
+		}
+		if (!(currRes[0] > min * (maxOre - currR[0]))) {
+			neededTurns = needed(currRes, currR, oreR);
+			if (neededTurns < min) {
+				answer = Math.max(answer,
+						result(min - neededTurns - 1, new int[] { currR[0] + 1, currR[1], currR[2], currR[3] },
+								step(neededTurns + 1, subtract(currRes, oreR), currR)));
+			}
+		}
+		answer = Math.max(answer, currRes[3] + min * currR[3]);
 		return answer;
 	}
 
 	public int[] subtract(int[] currRes, int[] R) {
+		return step(-1, currRes, R);
+	}
+
+	public int[] step(int numSteps, int[] currRes, int[] R) {
 		int[] newRes = new int[currRes.length];
 		for (int i = 0; i < currRes.length; i++) {
-			newRes[i] = currRes[i] - R[i];
+			newRes[i] = currRes[i] + (numSteps * R[i]);
 		}
 		return newRes;
 	}
 
-	public boolean possible(int[] currRes, int[] R) {
+	public int needed(int[] currRes, int[] R, int[] bot) {
+		int max = 0;
 		for (int i = 0; i < currRes.length; i++) {
-			if (currRes[i] < R[i]) {
-				return false;
+			if (currRes[i] < bot[i]) {
+				max = (int) Math.max(Math.ceil((bot[i] - currRes[i]) / (double) R[i]), max);
 			}
 		}
-		return true;
+		return max;
 	}
-
 }
 
 class Result {
