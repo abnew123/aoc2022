@@ -3,146 +3,165 @@ package aoc2022;
 import java.io.*;
 import java.util.*;
 
-public class Day16 extends DayTemplate{
-	
-	int val = 0;
-	int count = 0;
-	
-	
+public class Day16 extends DayTemplate {
+
+	static int[][] usefulMatrix;
+	static List<Valve> usefulValves = new ArrayList<>();
+	static List<String> usefulNames = new ArrayList<>();
+	static int best;
+	static int maxFlow;
+	static Map<String, Integer> cache1;
+	static Map<String, Integer> cache2;
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
+		usefulValves = new ArrayList<>();
+		usefulNames = new ArrayList<>();
+		best = 0;
+		maxFlow = 0;
+		cache1 = new HashMap<String, Integer>();
+		cache2 = new HashMap<String, Integer>();
 		int answer = 0;
-		Valve startingValve = null;
-		Valve startingValve2 = null;
-		int numPossible = 0;
-		int num = 0;
-		List<String> open = new ArrayList<>();
 		List<Valve> valves = new ArrayList<>();
-		while(in.hasNext()) {
+		int numNonZero = 0;
+		while (in.hasNext()) {
 			String[] line = in.nextLine().split(" ");
 			List<String> tunnels = new ArrayList<>();
-			for(int i = 9 ; i <line.length; i++) {
-				tunnels.add(line[i].substring(0,2));
+			for (int i = 9; i < line.length; i++) {
+				tunnels.add(line[i].substring(0, 2));
 			}
 			Valve valve = new Valve(line[1], Integer.parseInt(line[4].substring(5, line[4].length() - 1)), tunnels);
-			if(valve.name.equals("AA")) {
-				startingValve = valve;
-				startingValve2 = valve;
-			}
-			if(valve.flow > 0) {
-				numPossible++;
-				valve.designation = numPossible;
-			}
-			num++;
-			valve.num = num;
 			valves.add(valve);
 		}
-		int[] memo = new int[(int) Math.pow(2, numPossible + 1) * (valves.size() + 1)*(valves.size() + 1)];
-		System.out.println(memo.length);
-		answer = optimize(open,valves,startingValve,startingValve2, 15,numPossible,memo);
+		Collections.sort(valves, (a,b) ->  a.flow - b.flow);
+		for(int i = 0; i < valves.size(); i++) {
+			Valve valve = valves.get(i);
+			if (valve.flow > 0 || valve.name.equals("AA")) {
+				numNonZero++;
+				usefulNames.add(valve.name);
+				usefulValves.add(valve);
+				maxFlow += valve.flow;
+			}
+		}
+		int[][] matrix = new int[valves.size()][valves.size()];
+		for (int i = 0; i < valves.size(); i++) {
+			for (int j = 0; j < valves.size(); j++) {
+				matrix[i][j] = 99999; // INF
+				if (valves.get(i).tunnels.contains(valves.get(j).name)) {
+					matrix[i][j] = 1;
+				}
+				if (i == j) {
+					matrix[i][j] = 0;
+				}
+			}
+		}
+		for (int k = 0; k < valves.size(); k++) {
+			for (int i = 0; i < valves.size(); i++) {
+				for (int j = 0; j < valves.size(); j++) {
+					if (matrix[i][k] + matrix[k][j] < matrix[i][j]) {
+						matrix[i][j] = matrix[i][k] + matrix[k][j];
+					}
+				}
+			}
+		}
+		usefulMatrix = new int[numNonZero][numNonZero];
+		int index1 = -1;
+		int index2 = -1;
+		for (int i = 0; i < valves.size(); i++) {
+			if (valves.get(i).name.equals("AA") || valves.get(i).flow > 0) {
+				index1++;
+			}
+			index2 = -1;
+			for (int j = 0; j < valves.size(); j++) {
+				if (valves.get(j).name.equals("AA") || valves.get(j).flow > 0) {
+					index2++;
+				}
+				if ((valves.get(i).name.equals("AA") || valves.get(i).flow > 0)
+						&& (valves.get(j).name.equals("AA") || valves.get(j).flow > 0)) {
+					usefulMatrix[index1][index2] = matrix[i][j];
+				}
+			}
+		}
+		if (part1) {
+			answer = helper(30, 0, usefulNames.indexOf("AA"), 0, new ArrayList<Integer>(), 0);
+		} else {
+			answer = helper2(26, 0, usefulNames.indexOf("AA"), 0, new ArrayList<Integer>());
+		}
 		return "" + answer;
 	}
-	
-	public int optimize(List<String> open, List<Valve> valves, Valve startingValve, Valve startingValve2, int minLeft, int numPossible, int[] memo) {
-		int loc = 1;
-		for(String s: open) {
-			for(Valve v: valves) {
-				if(v.name.equals(s)) {
-					loc += (int) Math.pow(2, v.designation);
+
+	public int helper(int minLeft, int current, int index, int currentFlow, List<Integer> open, int old) {
+		String hash = "";
+		for(int i = 0; i < usefulValves.size();i++) {
+			hash+= open.contains(i)?"0":"1";
+		}
+		hash+="|" + index + "|" + minLeft;
+		if(cache2.containsKey(hash)) {
+			return cache2.get(hash) + current;
+		}
+		if (minLeft == 0) {
+			return current;
+		}
+		if ((best - current - old) > maxFlow * minLeft) {
+			return -1;
+		}
+		int ans = current + currentFlow * minLeft;
+		for (int j = 0; j < usefulMatrix[0].length; j++) {
+			if (!open.contains(j)) {
+				List<Integer> newOpen = new ArrayList<>();
+				newOpen.addAll(open);
+				newOpen.add(j);
+				if (minLeft > usefulMatrix[index][j]) {
+					int newVal = helper(minLeft - usefulMatrix[index][j] - 1,
+							current + (usefulMatrix[index][j] + 1) * currentFlow, j,
+							currentFlow + usefulValves.get(j).flow, newOpen, old);
+					ans = Math.max(ans, newVal);
 				}
 			}
 		}
-		int num2 = startingValve.num * (valves.size() + 1) + startingValve2.num;
-		loc+= (num2 * Math.pow(2, numPossible + 1));
-		if(memo[loc] > minLeft) {
-			return 0;
-		}
-		if(minLeft > memo[loc]) {
-			memo[loc] = minLeft;
-		}
-		count++;
-		if(count%100000 == 0) {
-			System.out.println(count);
-		}
-		if(minLeft == 0) {
-			return 0;
-		}
-		int max = 0;
-		int currSum = 0;
-		for(String s: open) {
-			for(Valve v: valves) {
-				if(v.name.equals(s)) {
-					currSum+= v.flow;
-				}
-			}
-		}
-		if(open.size()==numPossible) {
-			return currSum * minLeft;
-		}
-		minLeft--;
-		if(!startingValve.name.equals(startingValve2.name)) {
-			if(!open.contains(startingValve2.name) && startingValve2.flow > 0) {
-				if(!open.contains(startingValve.name) && startingValve.flow > 0) {
-					List<String> newOpen = new ArrayList<>();
-					newOpen.addAll(open);
-					newOpen.add(startingValve.name);
-					newOpen.add(startingValve2.name);
-					max = Math.max(max,optimize(newOpen, valves, startingValve, startingValve2, minLeft, numPossible,memo));
-				}
-			}
-		}
-		for(String s: startingValve.tunnels) {
-			for(Valve v: valves) {
-				if(v.name.equals(s)) {
-					if(!open.contains(startingValve2.name) && startingValve2.flow > 0) {
-						List<String> newOpen = new ArrayList<>();
-						newOpen.addAll(open);
-						newOpen.add(startingValve2.name);
-						max = Math.max(max,optimize(newOpen, valves, v, startingValve2, minLeft, numPossible,memo));
-					}
-				}
-			}
-		}
-		
-		for(String s: startingValve2.tunnels) {
-			for(Valve v: valves) {
-				if(v.name.equals(s)) {
-					if(!open.contains(startingValve.name) && startingValve.flow > 0) {
-						List<String> newOpen = new ArrayList<>();
-						newOpen.addAll(open);
-						newOpen.add(startingValve.name);
-						max = Math.max(max,optimize(newOpen, valves, startingValve, v, minLeft, numPossible,memo));
-					}
-				}
-			}
-		}
-		for(String s: startingValve.tunnels) {
-			for(Valve v: valves) {
-				if(v.name.equals(s)) {
-					for(String s2: startingValve.tunnels) {
-						for(Valve v2: valves) {
-							if(v2.name.equals(s2)) {
-								max = Math.max(max, optimize(open, valves, v, v2, minLeft, numPossible,memo));
-							}
-						}
-					}
-				}
-			}
-		}
-		return currSum + max;
+		cache2.put(hash, ans - current);
+		return ans;
 	}
-	
-	@Override
-	public boolean exclude() {
-		return true;
+
+	public int helper2(int minLeft, int current, int index, int currentFlow, List<Integer> open) {
+		String hash = "";
+		for(int i = 0; i < usefulValves.size();i++) {
+			hash+= open.contains(i)?"0":"1";
+		}
+		hash+="|" + index + "|" + minLeft;
+		if(cache1.containsKey(hash)) {
+			return current + cache1.get(hash);
+		}
+		if (minLeft == 0) {
+			cache1.put(hash, helper(26, 0, usefulNames.indexOf("AA"), 0, open, current));
+			return current + helper(26, 0, usefulNames.indexOf("AA"), 0, open, current);
+		}
+		int ans = current + currentFlow * minLeft
+				+ helper(26, 0, usefulNames.indexOf("AA"), 0, open, current + currentFlow * minLeft);
+		for (int j = 0; j < usefulMatrix[0].length; j++) {
+			if (!open.contains(j)) {
+				List<Integer> newOpen = new ArrayList<>();
+				newOpen.addAll(open);
+				newOpen.add(j);
+				if (minLeft > usefulMatrix[index][j]) {
+					int newVal = helper2(minLeft - usefulMatrix[index][j] - 1,
+							current + (usefulMatrix[index][j] + 1) * currentFlow, j,
+							currentFlow + usefulValves.get(j).flow, newOpen);
+					if (newVal > ans) {
+						ans = newVal;
+					}
+				}
+			}
+		}
+		cache1.put(hash, ans - current);
+		return ans;
 	}
 }
 
-class Valve{
+class Valve {
 	int flow;
 	String name;
 	List<String> tunnels = new ArrayList<>();
-	int designation;
-	int num;
+
 	public Valve(String name, int flow, List<String> tunnels) {
 		this.name = name;
 		this.flow = flow;
