@@ -65,7 +65,7 @@ public class Day16 extends DayTemplate {
 				}
 			}
 		}
-		helper(part1?30:26,0,0,0,0);
+		helper(part1 ? 30 : 26, 0, 0, 0, 0);
 		if (part1) {
 			for (Integer key : cache.keySet()) {
 				if (cache.get(key) > answer) {
