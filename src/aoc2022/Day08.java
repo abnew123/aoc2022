@@ -23,7 +23,9 @@ public class Day08 extends DayTemplate {
 				if (checkVisibility(grid, i, j)) {
 					visibleTrees++;
 				}
-				bestScore = Math.max(bestScore, calculateScore(grid, i, j));
+				if(!part1) {
+					bestScore = Math.max(bestScore, calculateScore(grid, i, j));
+				}
 			}
 		}
 		return "" + (part1 ? visibleTrees : bestScore);
@@ -38,6 +40,7 @@ public class Day08 extends DayTemplate {
 		for (int row = i + 1; row < grid.size(); row++) {
 			if (grid.get(row).get(j) >= grid.get(i).get(j)) {
 				directionVisible = false;
+				break;
 			}
 		}
 		visible = visible || directionVisible;
@@ -45,6 +48,7 @@ public class Day08 extends DayTemplate {
 		for (int row = i - 1; row >= 0; row--) {
 			if (grid.get(row).get(j) >= grid.get(i).get(j)) {
 				directionVisible = false;
+				break;
 			}
 		}
 		visible = visible || directionVisible;
@@ -52,6 +56,7 @@ public class Day08 extends DayTemplate {
 		for (int column = j + 1; column < grid.get(0).size(); column++) {
 			if (grid.get(i).get(column) >= grid.get(i).get(j)) {
 				directionVisible = false;
+				break;
 			}
 		}
 		visible = visible || directionVisible;
@@ -59,6 +64,7 @@ public class Day08 extends DayTemplate {
 		for (int column = j - 1; column >= 0; column--) {
 			if (grid.get(i).get(column) >= grid.get(i).get(j)) {
 				directionVisible = false;
+				break;
 			}
 		}
 		visible = visible || directionVisible;
