@@ -2,210 +2,176 @@ package aoc2022;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Day17 extends DayTemplate {
+	private static final int CHAMBER_WIDTH = 7;
+	private static final long PART_1_ROCKS = 2022;
+	private static final long PART_2_ROCKS = 1000000000000L;
+	private static final Piece[] PIECES = {
+			new Piece(new int[] { 0b1111 }, 4),
+			new Piece(new int[] { 0b010, 0b111, 0b010 }, 3),
+			new Piece(new int[] { 0b111, 0b100, 0b100 }, 3),
+			new Piece(new int[] { 0b1, 0b1, 0b1, 0b1 }, 1),
+			new Piece(new int[] { 0b11, 0b11 }, 2)
+	};
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		long answer = 0;
-		String[] pushes = in.nextLine().split("");
-		boolean[] left = new boolean[pushes.length];
-		for (int i = 0; i < left.length; i++) {
-			left[i] = pushes[i].equals("<");
-		}
-		long goal = part1 ? 2022 : 1000000000000L;
-
-		if (part1) {
-			answer = helper(goal, left)[0];
-		} else {
-			long[] vals = helper(10000, left);
-			long cycle = vals[1];
-			long increment = vals[2];
-			long cycles = goal / cycle - 1;
-			answer = cycles * increment + helper(goal - (cycles * cycle), left)[0];
-		}
-		return "" + answer;
+		boolean[] pushesLeft = parsePushes(in.nextLine());
+		long goal = part1 ? PART_1_ROCKS : PART_2_ROCKS;
+		return "" + simulate(goal, pushesLeft);
 	}
 
-	public long[] helper(long num, boolean[] left) {
-		List<Integer> indices = new ArrayList<>();
-		List<Integer> heights = new ArrayList<>();
+	private boolean[] parsePushes(String pushes) {
+		boolean[] pushesLeft = new boolean[pushes.length()];
+		for (int i = 0; i < pushesLeft.length; i++) {
+			pushesLeft[i] = pushes.charAt(i) == '<';
+		}
+		return pushesLeft;
+	}
+
+	private long simulate(long goal, boolean[] pushesLeft) {
+		List<Integer> chamber = new ArrayList<>();
+		Map<State, long[]> seen = new HashMap<>();
+		int[] columnHeights = new int[CHAMBER_WIDTH];
 		int jetIndex = 0;
-		int lowest = 0;
-		int lowestOffset = 0;
-		int[][] chamber = new int[7][210];
-		for (int i = 0; i < num; i++) {
-			switch (i % 5) {
-			case 0:
-				chamber[2][lowest + 3] = 2;
-				chamber[3][lowest + 3] = 2;
-				chamber[4][lowest + 3] = 2;
-				chamber[5][lowest + 3] = 2;
-				break;
-			case 1:
-				chamber[3][lowest + 5] = 2;
-				chamber[2][lowest + 4] = 2;
-				chamber[3][lowest + 4] = 2;
-				chamber[4][lowest + 4] = 2;
-				chamber[3][lowest + 3] = 2;
-				break;
-			case 2:
-				chamber[4][lowest + 5] = 2;
-				chamber[4][lowest + 4] = 2;
-				chamber[2][lowest + 3] = 2;
-				chamber[3][lowest + 3] = 2;
-				chamber[4][lowest + 3] = 2;
-				break;
-			case 3:
-				chamber[2][lowest + 6] = 2;
-				chamber[2][lowest + 5] = 2;
-				chamber[2][lowest + 4] = 2;
-				chamber[2][lowest + 3] = 2;
-				break;
-			case 4:
-				chamber[2][lowest + 3] = 2;
-				chamber[3][lowest + 3] = 2;
-				chamber[2][lowest + 4] = 2;
-				chamber[3][lowest + 4] = 2;
-				break;
-			}
+		long rocks = 0;
+		long skippedHeight = 0;
+		boolean skippedCycle = false;
+
+		while (rocks < goal) {
+			Piece piece = PIECES[(int) (rocks % PIECES.length)];
+			int x = 2;
+			int y = chamber.size() + 3;
+
 			while (true) {
-				jet(chamber, left[jetIndex]);
-				jetIndex = (jetIndex + 1) % left.length;
-				if (jetIndex == 0) {
-					indices.add(i);
-					heights.add(lowest + lowestOffset);
+				int pushedX = x + (pushesLeft[jetIndex] ? -1 : 1);
+				jetIndex = (jetIndex + 1) % pushesLeft.length;
+				if (canMove(piece, pushedX, y, chamber)) {
+					x = pushedX;
 				}
-				if (resting(chamber)) {
+
+				if (canMove(piece, x, y - 1, chamber)) {
+					y--;
+				} else {
+					settle(piece, x, y, chamber, columnHeights);
 					break;
 				}
-				down(chamber);
 			}
-			settle(chamber);
 
-			lowest = findLowest(chamber);
-			if (lowest > 200) {
-				lowestOffset += 100;
-				lowest -= 100;
-				compact(chamber);
-			}
-		}
-		long[] answer = new long[3];
-		answer[0] = lowest + lowestOffset;
-		if (heights.size() > 2) {
-			answer[1] = indices.get(heights.size() - 1) - indices.get(heights.size() - 2);
-			answer[2] = heights.get(heights.size() - 1) - heights.get(heights.size() - 2);
-		}
-		return answer;
-	}
-
-	public void compact(int[][] chamber) {
-		int[][] tmp = new int[chamber.length][chamber[0].length];
-		for (int i = 100; i < chamber[0].length; i++) {
-			for (int j = 0; j < chamber.length; j++) {
-				tmp[j][i - 100] = chamber[j][i];
-			}
-		}
-		for (int i = 0; i < chamber[0].length; i++) {
-			for (int j = 0; j < chamber.length; j++) {
-				chamber[j][i] = tmp[j][i];
-			}
-		}
-	}
-
-	public int findLowest(int[][] chamber) {
-		int lowest = 0;
-		for (int i = 0; i < chamber[0].length; i++) {
-			boolean exists = false;
-			for (int j = 0; j < chamber.length; j++) {
-				exists |= (chamber[j][i] > 0);
-			}
-			if (exists) {
-				lowest++;
-			}
-			if (!exists) {
-				return lowest;
-			}
-		}
-		return lowest;
-	}
-
-	public boolean resting(int[][] chamber) {
-		for (int j = 0; j < chamber.length; j++) {
-			if (chamber[j][0] == 2) {
-				return true;
-			}
-		}
-		for (int i = 1; i < chamber[0].length; i++) {
-			for (int j = 0; j < chamber.length; j++) {
-				if (chamber[j][i] == 2) {
-					if (chamber[j][i - 1] == 1) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
-	}
-
-	public void down(int[][] chamber) {
-		if (!resting(chamber)) {
-			for (int i = 0; i < chamber[0].length; i++) {
-				for (int j = 0; j < chamber.length; j++) {
-					if (chamber[j][i] == 2) {
-						chamber[j][i - 1] = 2;
-						chamber[j][i] = 0;
-					}
-				}
-			}
-		}
-	}
-
-	public void jet(int[][] chamber, boolean left) {
-		for (int i = 0; i < chamber[0].length; i++) {
-			if (chamber[left ? 0 : (chamber.length - 1)][i] == 2) {
-				return;
-			}
-		}
-		for (int i = 0; i < chamber[0].length; i++) {
-			for (int j = left ? 1 : 0; j < chamber.length - (left ? 0 : 1); j++) {
-				if (chamber[j][i] == 2) {
-					if (chamber[j + (left ? -1 : 1)][i] == 1) {
-						return;
-					}
-				}
-			}
-		}
-		for (int i = 0; i < chamber[0].length; i++) {
-			if (left) {
-				for (int j = 1; j < chamber.length; j++) {
-					if (chamber[j][i] == 2) {
-						chamber[j - 1][i] = 2;
-						chamber[j][i] = 0;
-					}
-				}
-			}
-			if (!left) {
-				for (int j = chamber.length - 2; j >= 0; j--) {
-					if (chamber[j][i] == 2) {
-						chamber[j + 1][i] = 2;
-						chamber[j][i] = 0;
+			rocks++;
+			if (!skippedCycle) {
+				State state = new State((int) (rocks % PIECES.length), jetIndex, chamber, columnHeights);
+				long height = skippedHeight + chamber.size();
+				long[] previous = seen.get(state);
+				if (previous == null) {
+					seen.put(state, new long[] { rocks, height });
+				} else {
+					long cycleRocks = rocks - previous[0];
+					long cycleHeight = height - previous[1];
+					long cycles = (goal - rocks) / cycleRocks;
+					if (cycles > 0) {
+						rocks += cycles * cycleRocks;
+						skippedHeight += cycles * cycleHeight;
+						skippedCycle = true;
 					}
 				}
 			}
 		}
 
+		return skippedHeight + chamber.size();
 	}
 
-	public void settle(int[][] chamber) {
-		for (int i = 0; i < chamber[0].length; i++) {
-			for (int j = 0; j < chamber.length; j++) {
-				if (chamber[j][i] == 2) {
-					chamber[j][i] = 1;
+	private boolean canMove(Piece piece, int x, int y, List<Integer> chamber) {
+		if (x < 0 || x + piece.width > CHAMBER_WIDTH || y < 0) {
+			return false;
+		}
+		for (int row = 0; row < piece.rows.length; row++) {
+			int chamberY = y + row;
+			if (chamberY < chamber.size() && ((piece.rows[row] << x) & chamber.get(chamberY)) != 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private void settle(Piece piece, int x, int y, List<Integer> chamber, int[] columnHeights) {
+		for (int row = 0; row < piece.rows.length; row++) {
+			int chamberY = y + row;
+			while (chamber.size() <= chamberY) {
+				chamber.add(0);
+			}
+			// Each chamber row is a seven-bit mask; bit 0 is the left wall side.
+			int shiftedRow = piece.rows[row] << x;
+			chamber.set(chamberY, chamber.get(chamberY) | shiftedRow);
+			for (int column = 0; column < CHAMBER_WIDTH; column++) {
+				if ((shiftedRow & (1 << column)) != 0) {
+					columnHeights[column] = Math.max(columnHeights[column], chamberY + 1);
 				}
 			}
 		}
+	}
 
+	private static class Piece {
+		private final int[] rows;
+		private final int width;
+
+		private Piece(int[] rows, int width) {
+			this.rows = rows;
+			this.width = width;
+		}
+	}
+
+	private static class State {
+		private final int pieceIndex;
+		private final int jetIndex;
+		private final int[] topRows;
+		private final int[] columnDepths;
+
+		private State(int pieceIndex, int jetIndex, List<Integer> chamber, int[] columnHeights) {
+			this.pieceIndex = pieceIndex;
+			this.jetIndex = jetIndex;
+			int lowestReachableRow = min(columnHeights);
+			this.topRows = new int[chamber.size() - lowestReachableRow];
+			for (int i = 0; i < topRows.length; i++) {
+				int y = chamber.size() - 1 - i;
+				topRows[i] = chamber.get(y);
+			}
+
+			this.columnDepths = new int[CHAMBER_WIDTH];
+			for (int x = 0; x < CHAMBER_WIDTH; x++) {
+				columnDepths[x] = chamber.size() - columnHeights[x];
+			}
+		}
+
+		private int min(int[] values) {
+			int min = values[0];
+			for (int value : values) {
+				min = Math.min(min, value);
+			}
+			return min;
+		}
+
+		public boolean equals(Object other) {
+			if (!(other instanceof State)) {
+				return false;
+			}
+			State state = (State) other;
+			return pieceIndex == state.pieceIndex
+					&& jetIndex == state.jetIndex
+					&& Arrays.equals(topRows, state.topRows)
+					&& Arrays.equals(columnDepths, state.columnDepths);
+		}
+
+		public int hashCode() {
+			int result = 31 * pieceIndex + jetIndex;
+			result = 31 * result + Arrays.hashCode(topRows);
+			result = 31 * result + Arrays.hashCode(columnDepths);
+			return result;
+		}
 	}
 }
