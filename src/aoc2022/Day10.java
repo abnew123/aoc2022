@@ -1,9 +1,25 @@
 package aoc2022;
 
 import java.io.*;
+import java.util.Map;
 import java.util.*;
 
 public class Day10 extends DayTemplate {
+	private static final Map<String, Character> LETTERS = Map.ofEntries(
+			Map.entry(".##..|#..#.|#..#.|####.|#..#.|#..#.", 'A'),
+			Map.entry("###..|#..#.|#..#.|###..|#..#.|###..", 'B'),
+			Map.entry(".##..|#..#.|#....|#....|#..#.|.##..", 'C'),
+			Map.entry("####.|#....|###..|#....|#....|####.", 'E'),
+			Map.entry("####.|#....|###..|#....|#....|#....", 'F'),
+			Map.entry(".##..|#..#.|#....|#.##.|#..#.|.###.", 'G'),
+			Map.entry("#..#.|#..#.|####.|#..#.|#..#.|#..#.", 'H'),
+			Map.entry("..##.|...#.|...#.|...#.|#..#.|.##..", 'J'),
+			Map.entry("#..#.|#.#..|##...|#.#..|#.#..|#..#.", 'K'),
+			Map.entry("#....|#....|#....|#....|#....|####.", 'L'),
+			Map.entry("###..|#..#.|#..#.|###..|#....|#....", 'P'),
+			Map.entry("###..|#..#.|#..#.|###..|#.#..|#..#.", 'R'),
+			Map.entry("#..#.|#..#.|#..#.|#..#.|#..#.|.##..", 'U'),
+			Map.entry("####.|...#.|..#..|.#...|#....|####.", 'Z'));
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		int answer = 0;
@@ -32,14 +48,28 @@ public class Day10 extends DayTemplate {
 				screen[cycle / 40][cycle % 40] = (Math.abs(curVal - (cycle % 40)) < 2) ? '█' : ' ';
 				cycle++;
 			}
-			// uncomment below code to see the screen (which gives the answer returned).
-//			for (int i = 0; i < screen.length; i++) {
-//				for (int j = 0; j < screen[0].length; j++) {
-//					System.out.print(screen[i][j]);
-//				}
-//				System.out.println();
-//			}
-			return "ECZUZALR";
+			return readScreen(screen);
 		}
+	}
+
+	private String readScreen(char[][] screen) {
+		StringBuilder result = new StringBuilder();
+		for (int letter = 0; letter < screen[0].length / 5; letter++) {
+			StringBuilder glyph = new StringBuilder();
+			for (int row = 0; row < screen.length; row++) {
+				if (row > 0) {
+					glyph.append('|');
+				}
+				for (int col = letter * 5; col < letter * 5 + 5; col++) {
+					glyph.append(screen[row][col] == '█' ? '#' : '.');
+				}
+			}
+			Character decoded = LETTERS.get(glyph.toString());
+			if (decoded == null) {
+				throw new IllegalStateException("Unknown CRT glyph: " + glyph);
+			}
+			result.append(decoded);
+		}
+		return result.toString();
 	}
 }
