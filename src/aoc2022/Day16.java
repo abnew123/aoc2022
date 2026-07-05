@@ -5,96 +5,101 @@ import java.util.*;
 
 public class Day16 extends DayTemplate {
 
-	int[][] usefulMatrix;
-	List<Valve> usefulValves = new ArrayList<>();
-	Map<Integer, Integer> cache = new HashMap<>();
-
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		int answer = 0;
-		List<Valve> valves = new ArrayList<>();
+		Map<String, Valve> valvesByName = new HashMap<>();
 		while (in.hasNext()) {
 			String[] line = in.nextLine().split(" ");
 			List<String> tunnels = new ArrayList<>();
 			for (int i = 9; i < line.length; i++) {
 				tunnels.add(line[i].substring(0, 2));
 			}
-			Valve valve = new Valve(line[1], Integer.parseInt(line[4].substring(5, line[4].length() - 1)), tunnels);
-			valves.add(valve);
+			valvesByName.put(line[1], new Valve(line[1], Integer.parseInt(line[4].substring(5, line[4].length() - 1)), tunnels));
 		}
-		Collections.sort(valves, (a, b) -> a.name.compareTo(b.name));
-		for (int i = 0; i < valves.size(); i++) {
-			Valve valve = valves.get(i);
-			if (valve.flow > 0 || valves.get(i).name.equals("AA")) {
+		List<Valve> usefulValves = new ArrayList<>();
+		usefulValves.add(valvesByName.get("AA"));
+		for (Valve valve : valvesByName.values()) {
+			if (valve.flow > 0) {
 				usefulValves.add(valve);
 			}
 		}
-		int[][] matrix = new int[valves.size()][valves.size()];
-		for (int i = 0; i < valves.size(); i++) {
-			for (int j = 0; j < valves.size(); j++) {
-				matrix[i][j] = 99999; // INF
-				if (valves.get(i).tunnels.contains(valves.get(j).name)) {
-					matrix[i][j] = 1;
-				}
-				if (i == j) {
-					matrix[i][j] = 0;
-				}
-			}
+		usefulValves.subList(1, usefulValves.size()).sort(Comparator.comparing(valve -> valve.name));
+		int[][] distances = usefulDistances(usefulValves, valvesByName);
+		int[] rates = new int[usefulValves.size()];
+		for (int i = 0; i < usefulValves.size(); i++) {
+			rates[i] = usefulValves.get(i).flow;
 		}
-		for (int k = 0; k < valves.size(); k++) {
-			for (int i = 0; i < valves.size(); i++) {
-				for (int j = 0; j < valves.size(); j++) {
-					if (matrix[i][k] + matrix[k][j] < matrix[i][j]) {
-						matrix[i][j] = matrix[i][k] + matrix[k][j];
-					}
-				}
-			}
-		}
-		usefulMatrix = new int[usefulValves.size()][usefulValves.size()];
-		int index1 = -1;
-		for (int i = 0; i < valves.size(); i++) {
-			if (i == 0 || valves.get(i).flow > 0) {
-				index1++;
-			}
-			int index2 = -1;
-			for (int j = 0; j < valves.size(); j++) {
-				if (j == 0 || valves.get(j).flow > 0) {
-					index2++;
-				}
-				if ((i == 0 || valves.get(i).flow > 0) && (j == 0 || valves.get(j).flow > 0)) {
-					usefulMatrix[index1][index2] = matrix[i][j];
-				}
-			}
-		}
-		helper(part1 ? 30 : 26, 0, 0, 0, 0);
 		if (part1) {
-			for (Integer key : cache.keySet()) {
-				if (cache.get(key) > answer) {
-					answer = cache.get(key);
-				}
-			}
-		} else {
-			for (Integer key1 : cache.keySet()) {
-				for (Integer key2 : cache.keySet()) {
-					if ((key1 & key2) == 0) {
-						if (cache.get(key1) + cache.get(key2) > answer) {
-							answer = cache.get(key1) + cache.get(key2);
-						}
-					}
+			return bestPressure(0, 30, 0, distances, rates, new HashMap<>()) + "";
+		}
+		Map<Integer, Integer> bestByMask = new HashMap<>();
+		recordBestMasks(0, 26, 0, 0, distances, rates, bestByMask);
+		int answer = 0;
+		for (Map.Entry<Integer, Integer> first : bestByMask.entrySet()) {
+			for (Map.Entry<Integer, Integer> second : bestByMask.entrySet()) {
+				if ((first.getKey() & second.getKey()) == 0) {
+					answer = Math.max(answer, first.getValue() + second.getValue());
 				}
 			}
 		}
-		return "" + answer;
+		return answer + "";
 	}
 
-	public void helper(int minLeft, int current, int index, int currentFlow, int open) {
-		int end = current + currentFlow * minLeft;
-		if (!cache.containsKey(open) || end > cache.get(open)) {
-			cache.put(open, end);
+	private int[][] usefulDistances(List<Valve> usefulValves, Map<String, Valve> valvesByName) {
+		int[][] distances = new int[usefulValves.size()][usefulValves.size()];
+		for (int i = 0; i < usefulValves.size(); i++) {
+			Map<String, Integer> fromValve = distancesFrom(usefulValves.get(i).name, valvesByName);
+			for (int j = 0; j < usefulValves.size(); j++) {
+				distances[i][j] = fromValve.get(usefulValves.get(j).name);
+			}
 		}
-		for (int j = 1; j < usefulMatrix[0].length; j++) {
-			if ((open % (1 << (j + 1)) == open % (1 << j)) && minLeft > usefulMatrix[index][j]) {
-				helper(minLeft - usefulMatrix[index][j] - 1, current + (usefulMatrix[index][j] + 1) * currentFlow, j,
-						currentFlow + usefulValves.get(j).flow, open + (1 << j));
+		return distances;
+	}
+
+	private Map<String, Integer> distancesFrom(String start, Map<String, Valve> valvesByName) {
+		Map<String, Integer> distances = new HashMap<>();
+		ArrayDeque<String> queue = new ArrayDeque<>();
+		distances.put(start, 0);
+		queue.add(start);
+		while (!queue.isEmpty()) {
+			String current = queue.poll();
+			int nextDistance = distances.get(current) + 1;
+			for (String next : valvesByName.get(current).tunnels) {
+				if (!distances.containsKey(next)) {
+					distances.put(next, nextDistance);
+					queue.add(next);
+				}
+			}
+		}
+		return distances;
+	}
+
+	private int bestPressure(int current, int timeLeft, int openMask, int[][] distances, int[] rates, Map<Long, Integer> memo) {
+		long key = (((long) current) << 48) | (((long) timeLeft) << 32) | openMask;
+		if (memo.containsKey(key)) {
+			return memo.get(key);
+		}
+		int best = 0;
+		for (int next = 1; next < rates.length; next++) {
+			int bit = 1 << (next - 1);
+			int nextTime = timeLeft - distances[current][next] - 1;
+			if ((openMask & bit) == 0 && nextTime > 0) {
+				int released = rates[next] * nextTime;
+				best = Math.max(best, released + bestPressure(next, nextTime, openMask | bit, distances, rates, memo));
+			}
+		}
+		memo.put(key, best);
+		return best;
+	}
+
+	private void recordBestMasks(int current, int timeLeft, int openMask, int pressure, int[][] distances, int[] rates,
+			Map<Integer, Integer> bestByMask) {
+		bestByMask.merge(openMask, pressure, Math::max);
+		for (int next = 1; next < rates.length; next++) {
+			int bit = 1 << (next - 1);
+			int nextTime = timeLeft - distances[current][next] - 1;
+			if ((openMask & bit) == 0 && nextTime > 0) {
+				recordBestMasks(next, nextTime, openMask | bit, pressure + rates[next] * nextTime, distances, rates,
+						bestByMask);
 			}
 		}
 	}
