@@ -8,104 +8,112 @@ import java.util.Scanner;
 public class Day08 extends DayTemplate {
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
+		List<String> lines = new ArrayList<>();
+		while (in.hasNextLine()) {
+			lines.add(in.nextLine());
+		}
+		int rows = lines.size();
+		int cols = lines.get(0).length();
+		int[][] grid = new int[rows][cols];
+		for (int row = 0; row < rows; row++) {
+			String line = lines.get(row);
+			for (int col = 0; col < cols; col++) {
+				grid[row][col] = line.charAt(col) - '0';
+			}
+		}
+
 		int visibleTrees = 0;
 		int bestScore = 0;
-		List<List<Integer>> grid = new ArrayList<>();
-		while (in.hasNext()) {
-			List<Integer> temp = new ArrayList<>();
-			for (String s : in.nextLine().split("")) {
-				temp.add(Integer.parseInt(s));
-			}
-			grid.add(temp);
-		}
-		for (int i = 0; i < grid.size(); i++) {
-			for (int j = 0; j < grid.get(0).size(); j++) {
-				if (checkVisibility(grid, i, j)) {
+		for (int row = 0; row < rows; row++) {
+			for (int col = 0; col < cols; col++) {
+				if (checkVisibility(grid, row, col)) {
 					visibleTrees++;
 				}
-				if(!part1) {
-					bestScore = Math.max(bestScore, calculateScore(grid, i, j));
+				if (!part1) {
+					bestScore = Math.max(bestScore, calculateScore(grid, row, col));
 				}
 			}
 		}
 		return "" + (part1 ? visibleTrees : bestScore);
 	}
 
-	public boolean checkVisibility(List<List<Integer>> grid, int i, int j) {
-		if (i == 0 || j == 0 || (i == grid.size() - 1) || (j == grid.get(0).size() - 1)) {
+	private boolean checkVisibility(int[][] grid, int row, int col) {
+		if (row == 0 || col == 0 || row == grid.length - 1 || col == grid[0].length - 1) {
 			return true;
 		}
-		boolean visible = false;
-		boolean directionVisible = true;
-		for (int row = i + 1; row < grid.size(); row++) {
-			if (grid.get(row).get(j) >= grid.get(i).get(j)) {
-				directionVisible = false;
+		int height = grid[row][col];
+		boolean visible = true;
+		for (int r = row + 1; r < grid.length; r++) {
+			if (grid[r][col] >= height) {
+				visible = false;
 				break;
 			}
 		}
-		visible = visible || directionVisible;
-		directionVisible = true;
-		for (int row = i - 1; row >= 0; row--) {
-			if (grid.get(row).get(j) >= grid.get(i).get(j)) {
-				directionVisible = false;
+		if (visible) {
+			return true;
+		}
+		visible = true;
+		for (int r = row - 1; r >= 0; r--) {
+			if (grid[r][col] >= height) {
+				visible = false;
 				break;
 			}
 		}
-		visible = visible || directionVisible;
-		directionVisible = true;
-		for (int column = j + 1; column < grid.get(0).size(); column++) {
-			if (grid.get(i).get(column) >= grid.get(i).get(j)) {
-				directionVisible = false;
+		if (visible) {
+			return true;
+		}
+		visible = true;
+		for (int c = col + 1; c < grid[0].length; c++) {
+			if (grid[row][c] >= height) {
+				visible = false;
 				break;
 			}
 		}
-		visible = visible || directionVisible;
-		directionVisible = true;
-		for (int column = j - 1; column >= 0; column--) {
-			if (grid.get(i).get(column) >= grid.get(i).get(j)) {
-				directionVisible = false;
-				break;
+		if (visible) {
+			return true;
+		}
+		for (int c = col - 1; c >= 0; c--) {
+			if (grid[row][c] >= height) {
+				return false;
 			}
 		}
-		visible = visible || directionVisible;
-		return visible;
+		return true;
 	}
 
-	public int calculateScore(List<List<Integer>> grid, int i, int j) {
+	private int calculateScore(int[][] grid, int row, int col) {
+		int height = grid[row][col];
 		int score = 1;
-		int directionVisible = 0;
-		for (int row = i + 1; row < grid.size(); row++) {
-			directionVisible++;
-			if (grid.get(row).get(j) >= grid.get(i).get(j)) {
+		int distance = 0;
+		for (int r = row + 1; r < grid.length; r++) {
+			distance++;
+			if (grid[r][col] >= height) {
 				break;
 			}
 		}
-		score *= directionVisible;
-		directionVisible = 0;
-		for (int row = i - 1; row >= 0; row--) {
-			directionVisible++;
-			if (grid.get(row).get(j) >= grid.get(i).get(j)) {
+		score *= distance;
+		distance = 0;
+		for (int r = row - 1; r >= 0; r--) {
+			distance++;
+			if (grid[r][col] >= height) {
 				break;
 			}
 		}
-		score *= directionVisible;
-		directionVisible = 0;
-		for (int column = j + 1; column < grid.get(0).size(); column++) {
-			directionVisible++;
-			if (grid.get(i).get(column) >= grid.get(i).get(j)) {
+		score *= distance;
+		distance = 0;
+		for (int c = col + 1; c < grid[0].length; c++) {
+			distance++;
+			if (grid[row][c] >= height) {
 				break;
 			}
 		}
-		score *= directionVisible;
-		directionVisible = 0;
-		for (int column = j - 1; column >= 0; column--) {
-			directionVisible++;
-			if (grid.get(i).get(column) >= grid.get(i).get(j)) {
-
+		score *= distance;
+		distance = 0;
+		for (int c = col - 1; c >= 0; c--) {
+			distance++;
+			if (grid[row][c] >= height) {
 				break;
 			}
 		}
-		score *= directionVisible;
-		return score;
+		return score * distance;
 	}
 }
