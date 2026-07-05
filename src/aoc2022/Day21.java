@@ -1,134 +1,94 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Day21 extends DayTemplate {
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		List<Monkey2> all = new ArrayList<>();
-		List<Monkey2> yelled = new ArrayList<>();
+		Map<String, Monkey2> monkeys = new HashMap<>();
 		while (in.hasNext()) {
-			String orig = in.nextLine();
-			if (orig.contains("root") && !part1) {
-				orig = orig.replace('+', '=');
-				orig = orig.replace('-', '=');
-				orig = orig.replace('/', '=');
-				orig = orig.replace('*', '=');
-			}
-			all.add(new Monkey2(orig, part1));
+			Monkey2 monkey = new Monkey2(in.nextLine(), part1);
+			monkeys.put(monkey.name, monkey);
 		}
-		return helper(all, yelled, part1) + "";
+		if (part1) {
+			return evaluate("root", monkeys) + "";
+		}
+		Monkey2 root = monkeys.get("root");
+		Long left = tryEvaluate(root.wait1, monkeys);
+		Long right = tryEvaluate(root.wait2, monkeys);
+		return (left == null ? solveUnknown(root.wait1, right, monkeys) : solveUnknown(root.wait2, left, monkeys)) + "";
 	}
 
-	public long helper(List<Monkey2> all, List<Monkey2> yelled, boolean part1) {
-		int solved = 0;
-		boolean[] solves = new boolean[all.size()];
-		while (solved < all.size()) {
-			for (int i = all.size() - 1; i >= 0; i--) {
-				if (solves[i]) {
-					continue;
-				}
-				if (all.get(i).orig.length() <= 10) {
-					if (!all.get(i).name.equals("humn") || part1) {
-						solved++;
-						solves[i] = true;
-						continue;
-					}
-				}
-				if (!part1 && all.get(i).name.equals("humn") && all.get(i).val != Long.MIN_VALUE) {
-					return all.get(i).val;
-				}
-				if (!all.get(i).name.equals("humn")) {
-					Monkey2 left = null;
-					Monkey2 right = null;
-					for (int j = 0; j < all.size(); j++) {
-						if (all.get(j).name.equals(all.get(i).wait1)) {
-							left = all.get(j);
-						}
-						if (all.get(j).name.equals(all.get(i).wait2)) {
-							right = all.get(j);
-						}
-					}
-					boolean valUnknown = (all.get(i).val == Long.MIN_VALUE);
-					boolean leftUnknown = (left.val == Long.MIN_VALUE);
-					boolean rightUnknown = (right.val == Long.MIN_VALUE);
-					int known = valUnknown ? 0 : 1;
-					known += (left.val == Long.MIN_VALUE) ? 0 : 1;
-					known += (right.val == Long.MIN_VALUE) ? 0 : 1;
-					if (known == 3) {
-						solved++;
-						solves[i] = true;
-					}
-					if (known == 2 || (!part1 && known == 1 && all.get(i).name.equals("root"))) {
-						if (all.get(i).operation == 1) {
-							if (leftUnknown) {
-								left.val = all.get(i).val - right.val;
-							}
-							if (rightUnknown) {
-								right.val = all.get(i).val - left.val;
-							}
-							if (valUnknown) {
-								all.get(i).val = left.val + right.val;
-							}
+	private long evaluate(String name, Map<String, Monkey2> monkeys) {
+		Monkey2 monkey = monkeys.get(name);
+		if (monkey.val != Long.MIN_VALUE) {
+			return monkey.val;
+		}
+		long left = evaluate(monkey.wait1, monkeys);
+		long right = evaluate(monkey.wait2, monkeys);
+		return apply(monkey.operation, left, right);
+	}
 
-						}
-						if (all.get(i).operation == 2) {
-							if (leftUnknown) {
-								left.val = all.get(i).val + right.val;
-							}
-							if (rightUnknown) {
-								right.val = left.val - all.get(i).val;
-							}
-							if (valUnknown) {
-								all.get(i).val = left.val - right.val;
-							}
-						}
-						if (all.get(i).operation == 3) {
-							if (leftUnknown) {
-								left.val = all.get(i).val / right.val;
-							}
-							if (rightUnknown) {
-								right.val = all.get(i).val / left.val;
-							}
-							if (valUnknown) {
-								all.get(i).val = left.val * right.val;
-							}
-						}
-						if (all.get(i).operation == 4) {
-							if (leftUnknown) {
-								left.val = all.get(i).val * right.val;
-							}
-							if (rightUnknown) {
-								right.val = left.val / all.get(i).val;
-							}
-							if (valUnknown) {
-								all.get(i).val = left.val / right.val;
-							}
-						}
-						if (all.get(i).operation == 5) {
-							if (leftUnknown) {
-								left.val = right.val;
-							}
-							if (rightUnknown) {
-								right.val = left.val;
-							}
-							solved++;
-							solves[i] = true;
-						}
-					}
-				}
-			}
+	private Long tryEvaluate(String name, Map<String, Monkey2> monkeys) {
+		if (name.equals("humn")) {
+			return null;
 		}
-		long answer = 0;
-		for (int i = 0; i < all.size(); i++) {
-			if (all.get(i).name.equals("root")) {
-				answer = all.get(i).val;
-			}
+		Monkey2 monkey = monkeys.get(name);
+		if (monkey.val != Long.MIN_VALUE) {
+			return monkey.val;
 		}
-		return answer;
+		Long left = tryEvaluate(monkey.wait1, monkeys);
+		Long right = tryEvaluate(monkey.wait2, monkeys);
+		if (left == null || right == null) {
+			return null;
+		}
+		return apply(monkey.operation, left, right);
+	}
+
+	private long solveUnknown(String name, long target, Map<String, Monkey2> monkeys) {
+		if (name.equals("humn")) {
+			return target;
+		}
+		Monkey2 monkey = monkeys.get(name);
+		Long left = tryEvaluate(monkey.wait1, monkeys);
+		Long right = tryEvaluate(monkey.wait2, monkeys);
+		if (left == null) {
+			return solveUnknown(monkey.wait1, targetForLeft(monkey.operation, target, right), monkeys);
+		}
+		return solveUnknown(monkey.wait2, targetForRight(monkey.operation, target, left), monkeys);
+	}
+
+	private long apply(int operation, long left, long right) {
+		return switch (operation) {
+		case 1 -> left + right;
+		case 2 -> left - right;
+		case 3 -> left * right;
+		case 4 -> left / right;
+		default -> throw new IllegalArgumentException("Unknown operation " + operation);
+		};
+	}
+
+	private long targetForLeft(int operation, long target, long right) {
+		return switch (operation) {
+		case 1 -> target - right;
+		case 2 -> target + right;
+		case 3 -> target / right;
+		case 4 -> target * right;
+		default -> throw new IllegalArgumentException("Unknown operation " + operation);
+		};
+	}
+
+	private long targetForRight(int operation, long target, long left) {
+		return switch (operation) {
+		case 1 -> target - left;
+		case 2 -> left - target;
+		case 3 -> target / left;
+		case 4 -> left / target;
+		default -> throw new IllegalArgumentException("Unknown operation " + operation);
+		};
 	}
 }
 
@@ -141,7 +101,6 @@ class Monkey2 {
 	String orig;
 
 	public Monkey2(String line, boolean part1) {
-		orig = line;
 		name = line.split(":")[0];
 		if (line.length() > 10) {
 			val = Long.MIN_VALUE;
