@@ -13,7 +13,9 @@ Inputs:
 
 To see a given day's solution, go to DayX.java, where X is the day in question. 
 
-Current timings are 10-run averages per part using the existing `DayTemplate.timer` convention. Total benchmark time across all 50 parts is roughly 199ms on a 2024 MacBook Pro.
+Current one-pass timing for `MasterSolver` is roughly 234ms on a 2024 MacBook Pro. The table below shows warm 10-run averages per part using the existing `DayTemplate.timer` convention; those numbers are useful for comparing individual solver changes, but they understate the first-run cost someone sees when running all 50 parts once.
+
+See [performance notes](PERFORMANCE.md) for visual before/after examples and benchmark caveats.
 
 | Day | Problem | Solution | Part 1 (ms) | Part 2 (ms) |
 | --- | --- | --- |------------:|------------:|
