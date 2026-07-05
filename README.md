@@ -13,57 +13,32 @@ Inputs:
 
 To see a given day's solution, go to DayX.java, where X is the day in question. 
 
-Current timings:
+Current timings are 10-run averages per part using the existing `DayTemplate.timer` convention. Total benchmark time across all 50 parts is roughly 199ms on a 2024 MacBook Pro.
 
-* Day 01 part 1 execution time: 41.2ms (acceptable)
-* Day 01 part 2 execution time: 16.9ms (fast)
-* Day 02 part 1 execution time: 11.0ms (fast)
-* Day 02 part 2 execution time: 8.7ms (fast)
-* Day 03 part 1 execution time: 8.5ms (fast)
-* Day 03 part 2 execution time: 4.8ms (fast)
-* Day 04 part 1 execution time: 11.6ms (fast)
-* Day 04 part 2 execution time: 5.0ms (fast)
-* Day 05 part 1 execution time: 5.5ms (fast)
-* Day 05 part 2 execution time: 4.1ms (fast)
-* Day 06 part 1 execution time: 3.0ms (fast)
-* Day 06 part 2 execution time: 7.9ms (fast)
-* Day 07 part 1 execution time: 16.8ms (fast)
-* Day 07 part 2 execution time: 3.9ms (fast)
-* Day 08 part 1 execution time: 22.0ms (acceptable)
-* Day 08 part 2 execution time: 22.1ms (acceptable)
-* Day 09 part 1 execution time: 12.7ms (fast)
-* Day 09 part 2 execution time: 28.1ms (acceptable)
-* Day 10 part 1 execution time: 0.7ms (fast)
-* Day 10 part 2 execution time: 0.6ms (fast)
-* Day 11 part 1 execution time: 4.8ms (fast)
-* Day 11 part 2 execution time: 52.0ms (slow)
-* Day 12 part 1 execution time: 50.7ms (slow)
-* Day 12 part 2 execution time: 28.2ms (acceptable)
-* Day 13 part 1 execution time: 11.0ms (fast)
-* Day 13 part 2 execution time: 7.0ms (fast)
-* Day 14 part 1 execution time: 9.1ms (fast)
-* Day 14 part 2 execution time: 21.4ms (acceptable)
-* Day 15 part 1 execution time: 624.0ms (slow)
-* Day 15 part 2 execution time: 0.7ms (fast)
-* Day 16 part 1 execution time: 107.8ms (slow)
-* Day 16 part 2 execution time: 473.7ms (slow)
-* Day 17 part 1 execution time: 121.7ms (slow)
-* Day 17 part 2 execution time: 431.8ms (slow)
-* Day 18 part 1 execution time: 12.0ms (fast)
-* Day 18 part 2 execution time: 7.5ms (fast)
-* Day 19 part 1 execution time: 53.1ms (slow)
-* Day 19 part 2 execution time: 159.6ms (slow)
-* Day 20 part 1 execution time: 61.0ms (slow)
-* Day 20 part 2 execution time: 524.9ms (slow)
-* Day 21 part 1 execution time: 315.1ms (slow)
-* Day 21 part 2 execution time: 332.8ms (slow)
-* Day 22 part 1 execution time: 10.9ms (fast)
-* Day 22 part 2 execution time: 9.7ms (fast)
-* Day 23 part 1 execution time: 130.6ms (slow)
-* Day 23 part 2 execution time: 361.4ms (slow)
-* Day 24 part 1 execution time: 500.3ms (slow)
-* Day 24 part 2 execution time: 975.4ms (slow)
-* Day 25 part 1 execution time: 0.3ms (fast)
-* Day 25 part 2 execution time: 0.3ms (fast)
-* Total execution time : 5633.8ms
-* Slow parts: 17. Acceptable parts: 6. Fast parts: 27.
+| Day | Problem | Solution | Part 1 (ms) | Part 2 (ms) |
+| --- | --- | --- |------------:|------------:|
+| 1 | [Calorie Counting](https://adventofcode.com/2022/day/1) | [Source](src/aoc2022/Day01.java) | 1.835 | 1.843 |
+| 2 | [Rock Paper Scissors](https://adventofcode.com/2022/day/2) | [Source](src/aoc2022/Day02.java) | 1.597 | 1.593 |
+| 3 | [Rucksack Reorganization](https://adventofcode.com/2022/day/3) | [Source](src/aoc2022/Day03.java) | 1.394 | 1.403 |
+| 4 | [Camp Cleanup](https://adventofcode.com/2022/day/4) | [Source](src/aoc2022/Day04.java) | 2.129 | 1.991 |
+| 5 | [Supply Stacks](https://adventofcode.com/2022/day/5) | [Source](src/aoc2022/Day05.java) | 1.554 | 1.586 |
+| 6 | [Tuning Trouble](https://adventofcode.com/2022/day/6) | [Source](src/aoc2022/Day06.java) | 1.355 | 2.123 |
+| 7 | [No Space Left On Device](https://adventofcode.com/2022/day/7) | [Source](src/aoc2022/Day07.java) | 2.005 | 2.162 |
+| 8 | [Treetop Tree House](https://adventofcode.com/2022/day/8) | [Source](src/aoc2022/Day08.java) | 1.355 | 1.714 |
+| 9 | [Rope Bridge](https://adventofcode.com/2022/day/9) | [Source](src/aoc2022/Day09.java) | 2.378 | 6.588 |
+| 10 | [Cathode-Ray Tube](https://adventofcode.com/2022/day/10) | [Source](src/aoc2022/Day10.java) | 0.787 | 0.777 |
+| 11 | [Monkey in the Middle](https://adventofcode.com/2022/day/11) | [Source](src/aoc2022/Day11.java) | 0.986 | 2.648 |
+| 12 | [Hill Climbing Algorithm](https://adventofcode.com/2022/day/12) | [Source](src/aoc2022/Day12.java) | 1.255 | 1.306 |
+| 13 | [Distress Signal](https://adventofcode.com/2022/day/13) | [Source](src/aoc2022/Day13.java) | 1.697 | 1.817 |
+| 14 | [Regolith Reservoir](https://adventofcode.com/2022/day/14) | [Source](src/aoc2022/Day14.java) | 2.206 | 2.713 |
+| 15 | [Beacon Exclusion Zone](https://adventofcode.com/2022/day/15) | [Source](src/aoc2022/Day15.java) | 1.089 | 1.145 |
+| 16 | [Proboscidea Volcanium](https://adventofcode.com/2022/day/16) | [Source](src/aoc2022/Day16.java) | 7.275 | 3.414 |
+| 17 | [Pyroclastic Flow](https://adventofcode.com/2022/day/17) | [Source](src/aoc2022/Day17.java) | 2.729 | 2.790 |
+| 18 | [Boiling Boulders](https://adventofcode.com/2022/day/18) | [Source](src/aoc2022/Day18.java) | 3.520 | 3.743 |
+| 19 | [Not Enough Minerals](https://adventofcode.com/2022/day/19) | [Source](src/aoc2022/Day19.java) | 6.983 | 9.972 |
+| 20 | [Grove Positioning System](https://adventofcode.com/2022/day/20) | [Source](src/aoc2022/Day20.java) | 5.741 | 32.145 |
+| 21 | [Monkey Math](https://adventofcode.com/2022/day/21) | [Source](src/aoc2022/Day21.java) | 3.364 | 4.817 |
+| 22 | [Monkey Map](https://adventofcode.com/2022/day/22) | [Source](src/aoc2022/Day22.java) | 5.053 | 4.466 |
+| 23 | [Unstable Diffusion](https://adventofcode.com/2022/day/23) | [Source](src/aoc2022/Day23.java) | 2.656 | 25.245 |
+| 24 | [Blizzard Basin](https://adventofcode.com/2022/day/24) | [Source](src/aoc2022/Day24.java) | 6.860 | 10.805 |
+| 25 | [Full of Hot Air](https://adventofcode.com/2022/day/25) | [Source](src/aoc2022/Day25.java) | 1.109 | 1.079 |
