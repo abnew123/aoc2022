@@ -48,16 +48,14 @@ public class MasterSolver {
 		Double totalTime = 0.0;
 		for (int day = 1; day <= 25; day++) {
 			String zeroFilledDay = (day < 10 ? "0" : "") + day;
-			for (int part = 1; part <= 2; part++) {
-				Double time = (Double) Class.forName("aoc2022.Day" + zeroFilledDay)
-						.getMethod("timer", boolean.class, Scanner.class)
-						.invoke(Class.forName("aoc2022.Day" + zeroFilledDay).getDeclaredConstructor().newInstance(),
-								part == 1, new Scanner(new File("./data/day" + zeroFilledDay + ".txt")));
-				if (!total) {
-					System.out.println("Day " + zeroFilledDay + " part " + part + " execution time: " + time);
-				}
-				totalTime += time;
+			Double time = (Double) Class.forName("aoc2022.Day" + zeroFilledDay)
+					.getMethod("dayTimer", Scanner.class)
+					.invoke(Class.forName("aoc2022.Day" + zeroFilledDay).getDeclaredConstructor().newInstance(),
+							new Scanner(new File("./data/day" + zeroFilledDay + ".txt")));
+			if (!total) {
+				System.out.println("Day " + zeroFilledDay + " execution time: " + time);
 			}
+			totalTime += time;
 		}
 		System.out.println("Total execution time (ms): " + totalTime);
 	}

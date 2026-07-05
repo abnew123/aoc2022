@@ -5,7 +5,32 @@ import java.util.*;
 
 public class Day16 extends DayTemplate {
 
+	@Override
+	public String[] fullSolve(Scanner in) throws FileNotFoundException {
+		ValveNetwork network = parse(in);
+		int[] rates = network.rates();
+		int[][] distances = network.distances();
+		int maskCount = 1 << (rates.length - 1);
+		int part1 = bestPressure(0, 30, 0, distances, rates, new int[rates.length * 31 * maskCount], maskCount);
+		int[] bestByMask = new int[maskCount];
+		recordBestMasks(0, 26, 0, 0, distances, rates, bestByMask);
+		return new String[] { part1 + "", bestTwoActorPressure(bestByMask) + "" };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
+		ValveNetwork network = parse(in);
+		int[] rates = network.rates();
+		int[][] distances = network.distances();
+		int maskCount = 1 << (rates.length - 1);
+		if (part1) {
+			return bestPressure(0, 30, 0, distances, rates, new int[rates.length * 31 * maskCount], maskCount) + "";
+		}
+		int[] bestByMask = new int[maskCount];
+		recordBestMasks(0, 26, 0, 0, distances, rates, bestByMask);
+		return bestTwoActorPressure(bestByMask) + "";
+	}
+
+	private ValveNetwork parse(Scanner in) {
 		Map<String, Valve> valvesByName = new HashMap<>();
 		while (in.hasNext()) {
 			String[] line = in.nextLine().split(" ");
@@ -28,12 +53,10 @@ public class Day16 extends DayTemplate {
 		for (int i = 0; i < usefulValves.size(); i++) {
 			rates[i] = usefulValves.get(i).flow;
 		}
-		int maskCount = 1 << (rates.length - 1);
-		if (part1) {
-			return bestPressure(0, 30, 0, distances, rates, new int[rates.length * 31 * maskCount], maskCount) + "";
-		}
-		int[] bestByMask = new int[maskCount];
-		recordBestMasks(0, 26, 0, 0, distances, rates, bestByMask);
+		return new ValveNetwork(distances, rates);
+	}
+
+	private int bestTwoActorPressure(int[] bestByMask) {
 		int[] bestSubset = bestByMask.clone();
 		for (int bit = 1; bit < bestSubset.length; bit <<= 1) {
 			for (int mask = 0; mask < bestSubset.length; mask++) {
@@ -47,7 +70,7 @@ public class Day16 extends DayTemplate {
 		for (int mask = 0; mask < bestByMask.length; mask++) {
 			answer = Math.max(answer, bestByMask[mask] + bestSubset[allValves ^ mask]);
 		}
-		return answer + "";
+		return answer;
 	}
 
 	private int[][] usefulDistances(List<Valve> usefulValves, Map<String, Valve> valvesByName) {
@@ -110,6 +133,9 @@ public class Day16 extends DayTemplate {
 						bestByMask);
 			}
 		}
+	}
+
+	private record ValveNetwork(int[][] distances, int[] rates) {
 	}
 }
 

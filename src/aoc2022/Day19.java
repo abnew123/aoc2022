@@ -7,8 +7,18 @@ import java.util.Scanner;
 
 public class Day19 extends DayTemplate {
 
+	@Override
+	public String[] fullSolve(Scanner in) throws FileNotFoundException {
+		List<BluePrint> blueprints = parse(in);
+		return new String[] { part1(blueprints) + "", part2(blueprints) + "" };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		int answer = part1 ? 0 : 1;
+		List<BluePrint> blueprints = parse(in);
+		return (part1 ? part1(blueprints) : part2(blueprints)) + "";
+	}
+
+	private List<BluePrint> parse(Scanner in) {
 		List<BluePrint> blueprints = new ArrayList<>();
 		while (in.hasNext()) {
 			String[] line = in.nextLine().split(" ");
@@ -20,14 +30,23 @@ public class Day19 extends DayTemplate {
 			int ob4 = Integer.parseInt(line[30]);
 			blueprints.add(new BluePrint(o1, o2, o3, o4, c3, ob4));
 		}
-		for (int i = 0; i < (part1 ? blueprints.size() : 3); i++) {
-			if (part1) {
-				answer += (i + 1) * blueprints.get(i).result(24);
-			} else {
-				answer *= blueprints.get(i).result(32);
-			}
+		return blueprints;
+	}
+
+	private int part1(List<BluePrint> blueprints) {
+		int answer = 0;
+		for (int i = 0; i < blueprints.size(); i++) {
+			answer += (i + 1) * blueprints.get(i).result(24);
 		}
-		return "" + answer;
+		return answer;
+	}
+
+	private int part2(List<BluePrint> blueprints) {
+		int answer = 1;
+		for (int i = 0; i < 3; i++) {
+			answer *= blueprints.get(i).result(32);
+		}
+		return answer;
 	}
 }
 

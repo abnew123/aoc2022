@@ -43,6 +43,40 @@ public class Day23 extends DayTemplate {
 		return "" + simulation.firstRoundWithoutMovement();
 	}
 
+	@Override
+	public String[] fullSolve(Scanner in) throws FileNotFoundException {
+		List<String> lines = new ArrayList<>();
+		int elfCount = 0;
+		while (in.hasNextLine()) {
+			String line = in.nextLine();
+			lines.add(line);
+			for (int col = 0; col < line.length(); col++) {
+				if (line.charAt(col) == '#') {
+					elfCount++;
+				}
+			}
+		}
+
+		int[] rows = new int[elfCount];
+		int[] cols = new int[elfCount];
+		int index = 0;
+		for (int row = 0; row < lines.size(); row++) {
+			String line = lines.get(row);
+			for (int col = 0; col < line.length(); col++) {
+				if (line.charAt(col) == '#') {
+					rows[index] = row;
+					cols[index] = col;
+					index++;
+				}
+			}
+		}
+
+		Simulation simulation = new Simulation(rows, cols);
+		simulation.runRounds(10);
+		long part1 = simulation.emptyGroundInBoundingBox();
+		return new String[] { part1 + "", simulation.firstRoundWithoutMovement(10) + "" };
+	}
+
 	private static final class Simulation {
 		private final int[] rows;
 		private final int[] cols;
@@ -70,7 +104,11 @@ public class Day23 extends DayTemplate {
 		}
 
 		int firstRoundWithoutMovement() {
-			for (int round = 0;; round++) {
+			return firstRoundWithoutMovement(0);
+		}
+
+		int firstRoundWithoutMovement(int startRound) {
+			for (int round = startRound;; round++) {
 				if (!runRound(round)) {
 					return round + 1;
 				}

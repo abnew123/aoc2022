@@ -58,6 +58,56 @@ public class Day24 extends DayTemplate {
 		return "" + trip3;
 	}
 
+	@Override
+	public String[] fullSolve(Scanner in) throws FileNotFoundException {
+		List<String> lines = new ArrayList<>();
+		while (in.hasNextLine()) {
+			lines.add(in.nextLine());
+		}
+		int rows = lines.size();
+		int cols = lines.get(0).length();
+		int cells = rows * cols;
+		boolean[] walls = new boolean[cells];
+		int[] blizzardX = new int[cells];
+		int[] blizzardY = new int[cells];
+		byte[] blizzardDirections = new byte[cells];
+		int blizzardCount = 0;
+		int startX = -1;
+		int startY = -1;
+		boolean first = true;
+		int endX = -1;
+		int endY = -1;
+		for (int i = 0; i < lines.size(); i++) {
+			for (int j = 0; j < cols; j++) {
+				char c = lines.get(i).charAt(j);
+				if (c == '.') {
+					if (first) {
+						startX = i;
+						startY = j;
+						first = false;
+					}
+					endX = i;
+					endY = j;
+				} else if (c == '^' || c == '>' || c == 'v' || c == '<') {
+					blizzardX[blizzardCount] = i;
+					blizzardY[blizzardCount] = j;
+					blizzardDirections[blizzardCount] = direction(c);
+					blizzardCount++;
+				} else if (c == '#') {
+					walls[i * cols + j] = true;
+				}
+			}
+		}
+		Valley valley = buildBlockedStates(rows, cols, walls, blizzardX, blizzardY, blizzardDirections, blizzardCount);
+		int start = startX * cols + startY;
+		int end = endX * cols + endY;
+		byte[] seen = new byte[valley.blocked().length];
+		int trip1 = travel(start, end, 0, valley, seen, (byte) 1);
+		int trip2 = travel(end, start, trip1, valley, seen, (byte) 2);
+		int trip3 = travel(start, end, trip2, valley, seen, (byte) 3);
+		return new String[] { trip1 + "", trip3 + "" };
+	}
+
 	private Valley buildBlockedStates(int rows, int cols, boolean[] walls, int[] blizzardX, int[] blizzardY,
 			byte[] blizzardDirections, int blizzardCount) {
 		int cells = rows * cols;
