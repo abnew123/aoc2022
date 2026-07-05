@@ -31,15 +31,20 @@ public class Day16 extends DayTemplate {
 		if (part1) {
 			return bestPressure(0, 30, 0, distances, rates, new HashMap<>()) + "";
 		}
-		Map<Integer, Integer> bestByMask = new HashMap<>();
+		int[] bestByMask = new int[1 << (rates.length - 1)];
 		recordBestMasks(0, 26, 0, 0, distances, rates, bestByMask);
-		int answer = 0;
-		for (Map.Entry<Integer, Integer> first : bestByMask.entrySet()) {
-			for (Map.Entry<Integer, Integer> second : bestByMask.entrySet()) {
-				if ((first.getKey() & second.getKey()) == 0) {
-					answer = Math.max(answer, first.getValue() + second.getValue());
+		int[] bestSubset = bestByMask.clone();
+		for (int bit = 1; bit < bestSubset.length; bit <<= 1) {
+			for (int mask = 0; mask < bestSubset.length; mask++) {
+				if ((mask & bit) != 0) {
+					bestSubset[mask] = Math.max(bestSubset[mask], bestSubset[mask ^ bit]);
 				}
 			}
+		}
+		int answer = 0;
+		int allValves = bestByMask.length - 1;
+		for (int mask = 0; mask < bestByMask.length; mask++) {
+			answer = Math.max(answer, bestByMask[mask] + bestSubset[allValves ^ mask]);
 		}
 		return answer + "";
 	}
@@ -92,8 +97,8 @@ public class Day16 extends DayTemplate {
 	}
 
 	private void recordBestMasks(int current, int timeLeft, int openMask, int pressure, int[][] distances, int[] rates,
-			Map<Integer, Integer> bestByMask) {
-		bestByMask.merge(openMask, pressure, Math::max);
+			int[] bestByMask) {
+		bestByMask[openMask] = Math.max(bestByMask[openMask], pressure);
 		for (int next = 1; next < rates.length; next++) {
 			int bit = 1 << (next - 1);
 			int nextTime = timeLeft - distances[current][next] - 1;
