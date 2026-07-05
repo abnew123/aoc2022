@@ -48,29 +48,7 @@ class Packet implements Comparable<Packet> {
 	public Packet(String packet) {
 		str = packet;
 		children = new ArrayList<>();
-		if (packet.equals("[]")) {
-			val = -1;
-		}
-		if (!packet.startsWith("[")) {
-			val = Integer.parseInt(packet);
-		} else {
-			packet = packet.substring(1, packet.length() - 1);
-			int level = 0;
-			String tmp = "";
-			for (char c : packet.toCharArray()) {
-				if (c == ',' && level == 0) {
-					children.add(new Packet(tmp));
-					tmp = "";
-				} else {
-					level += (c == '[') ? 1 : (c == ']') ? -1 : 0;
-					tmp += c;
-				}
-			}
-			if (!tmp.equals("")) {
-				children.add(new Packet(tmp));
-			}
-			integer = false;
-		}
+		parse(packet, 0);
 	}
 
 	public int compareTo(Packet other) {
@@ -86,8 +64,58 @@ class Packet implements Comparable<Packet> {
 			}
 			return other.children.size() - children.size();
 		}
-		Packet lst1 = integer ? new Packet("[" + val + "]") : this;
-		Packet lst2 = other.integer ? new Packet("[" + other.val + "]") : other;
-		return lst1.compareTo(lst2);
+		return integer ? compareIntegerToList(val, other) : compareListToInteger(this, other.val);
+	}
+
+	private int parse(String packet, int index) {
+		if (packet.charAt(index) != '[') {
+			int value = 0;
+			while (index < packet.length() && Character.isDigit(packet.charAt(index))) {
+				value = 10 * value + packet.charAt(index) - '0';
+				index++;
+			}
+			val = value;
+			integer = true;
+			return index;
+		}
+		integer = false;
+		index++;
+		while (packet.charAt(index) != ']') {
+			Packet child = new Packet();
+			index = child.parse(packet, index);
+			children.add(child);
+			if (packet.charAt(index) == ',') {
+				index++;
+			}
+		}
+		return index + 1;
+	}
+
+	private Packet() {
+		children = new ArrayList<>();
+	}
+
+	private int compareIntegerToList(int value, Packet list) {
+		if (list.children.isEmpty()) {
+			return -1;
+		}
+		int firstComparison = compareIntegerToPacket(value, list.children.get(0));
+		return firstComparison != 0 ? firstComparison : list.children.size() - 1;
+	}
+
+	private int compareListToInteger(Packet list, int value) {
+		if (list.children.isEmpty()) {
+			return 1;
+		}
+		int firstComparison = comparePacketToInteger(list.children.get(0), value);
+		return firstComparison != 0 ? firstComparison : 1 - list.children.size();
+	}
+
+	private int compareIntegerToPacket(int value, Packet other) {
+		return other.integer ? other.val - value : compareIntegerToList(value, other);
+	}
+
+	private int comparePacketToInteger(Packet packet, int value) {
+		return packet.integer ? value - packet.val : compareListToInteger(packet, value);
 	}
 }
