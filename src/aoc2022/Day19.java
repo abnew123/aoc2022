@@ -2,9 +2,7 @@ package aoc2022;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 
 public class Day19 extends DayTemplate {
@@ -44,7 +42,7 @@ class BluePrint {
 	final int maxClayCost;
 	final int maxObsidianCost;
 	int best;
-	Map<State, Integer> seen;
+	LongIntMap[] seen;
 
 	public BluePrint(int o1, int o2, int o3, int o4, int c3, int ob4) {
 		oreRobotOre = o1;
@@ -60,7 +58,10 @@ class BluePrint {
 
 	public int result(int minutes) {
 		best = 0;
-		seen = new HashMap<>(minutes == 24 ? 4096 : 32768);
+		seen = new LongIntMap[minutes + 1];
+		for (int i = 0; i < seen.length; i++) {
+			seen[i] = new LongIntMap(minutes == 24 ? 512 : 4096);
+		}
 		search(minutes, 1, 0, 0, 0, 0, 0, 0, 0);
 		return best;
 	}
@@ -83,12 +84,12 @@ class BluePrint {
 		clay = cappedResource(clay, clayRobots, maxClayCost, minutes);
 		obsidian = cappedResource(obsidian, obsidianRobots, maxObsidianCost, minutes);
 
-		State state = new State(minutes, oreRobots, clayRobots, obsidianRobots, geodeRobots, ore, clay, obsidian);
-		Integer previousGeodes = seen.get(state);
-		if (previousGeodes != null && previousGeodes >= geodes) {
+		long state = packState(oreRobots, clayRobots, obsidianRobots, geodeRobots, ore, clay, obsidian);
+		int previousGeodes = seen[minutes].getOrDefault(state, -1);
+		if (previousGeodes >= geodes) {
 			return;
 		}
-		seen.put(state, geodes);
+		seen[minutes].put(state, geodes);
 
 		buildGeodeRobot(minutes, oreRobots, clayRobots, obsidianRobots, geodeRobots, ore, clay, obsidian, geodes);
 		if (obsidianRobots < maxObsidianCost) {
@@ -164,50 +165,79 @@ class BluePrint {
 		return Math.min(resource, Math.max(0, maxSpend * minutes - robots * (minutes - 1)));
 	}
 
-	private static class State {
-		final int minutes;
-		final int oreRobots;
-		final int clayRobots;
-		final int obsidianRobots;
-		final int geodeRobots;
-		final int ore;
-		final int clay;
-		final int obsidian;
+	private long packState(int oreRobots, int clayRobots, int obsidianRobots, int geodeRobots, int ore, int clay,
+			int obsidian) {
+		return oreRobots | ((long) clayRobots << 6) | ((long) obsidianRobots << 12) | ((long) geodeRobots << 18)
+				| ((long) ore << 24) | ((long) clay << 34) | ((long) obsidian << 44);
+	}
+}
 
-		State(int minutes, int oreRobots, int clayRobots, int obsidianRobots, int geodeRobots, int ore, int clay,
-				int obsidian) {
-			this.minutes = minutes;
-			this.oreRobots = oreRobots;
-			this.clayRobots = clayRobots;
-			this.obsidianRobots = obsidianRobots;
-			this.geodeRobots = geodeRobots;
-			this.ore = ore;
-			this.clay = clay;
-			this.obsidian = obsidian;
+class LongIntMap {
+	private static final long EMPTY = 0L;
+	private long[] keys;
+	private int[] values;
+	private int mask;
+	private int size;
+	private int maxSize;
+
+	LongIntMap(int capacity) {
+		int actual = 1;
+		while (actual < capacity * 2) {
+			actual <<= 1;
 		}
+		keys = new long[actual];
+		values = new int[actual];
+		mask = actual - 1;
+		maxSize = actual / 2;
+	}
 
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
+	int getOrDefault(long key, int defaultValue) {
+		int index = index(key);
+		while (keys[index] != EMPTY) {
+			if (keys[index] == key) {
+				return values[index];
 			}
-			if (!(obj instanceof State)) {
-				return false;
-			}
-			State other = (State) obj;
-			return minutes == other.minutes && oreRobots == other.oreRobots && clayRobots == other.clayRobots
-					&& obsidianRobots == other.obsidianRobots && geodeRobots == other.geodeRobots && ore == other.ore
-					&& clay == other.clay && obsidian == other.obsidian;
+			index = (index + 1) & mask;
 		}
+		return defaultValue;
+	}
 
-		public int hashCode() {
-			int hash = minutes;
-			hash = 31 * hash + oreRobots;
-			hash = 31 * hash + clayRobots;
-			hash = 31 * hash + obsidianRobots;
-			hash = 31 * hash + geodeRobots;
-			hash = 31 * hash + ore;
-			hash = 31 * hash + clay;
-			return 31 * hash + obsidian;
+	void put(long key, int value) {
+		if (size >= maxSize) {
+			grow();
 		}
+		int index = index(key);
+		while (keys[index] != EMPTY) {
+			if (keys[index] == key) {
+				values[index] = value;
+				return;
+			}
+			index = (index + 1) & mask;
+		}
+		keys[index] = key;
+		values[index] = value;
+		size++;
+	}
+
+	private void grow() {
+		long[] oldKeys = keys;
+		int[] oldValues = values;
+		keys = new long[oldKeys.length * 2];
+		values = new int[oldValues.length * 2];
+		mask = keys.length - 1;
+		maxSize = keys.length / 2;
+		size = 0;
+		for (int i = 0; i < oldKeys.length; i++) {
+			if (oldKeys[i] != EMPTY) {
+				put(oldKeys[i], oldValues[i]);
+			}
+		}
+	}
+
+	private int index(long key) {
+		key ^= key >>> 33;
+		key *= 0xff51afd7ed558ccdL;
+		key ^= key >>> 33;
+		return (int) key & mask;
 	}
 }
