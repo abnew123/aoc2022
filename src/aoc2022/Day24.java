@@ -1,161 +1,132 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Queue;
 import java.util.Scanner;
 
 public class Day24 extends DayTemplate {
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		List<String> lines = new ArrayList<>();
-		Map<Integer, List<CoordTime>> blizzards = new HashMap<>();
 		while (in.hasNext()) {
 			lines.add(in.nextLine());
 		}
-		int width = lines.size();
-		int height = lines.get(0).length();
-		List<CoordTime> initBlizzards = new ArrayList<>();
-		CoordTime start = null;
+		int rows = lines.size();
+		int cols = lines.get(0).length();
+		List<Blizzard> blizzards = new ArrayList<>();
+		int startX = -1;
+		int startY = -1;
 		boolean first = true;
-		CoordTime end = null;
+		int endX = -1;
+		int endY = -1;
 		for (int i = 0; i < lines.size(); i++) {
 			for (int j = 0; j < lines.get(0).length(); j++) {
-				if (lines.get(i).charAt(j) == '.') {
+				char c = lines.get(i).charAt(j);
+				if (c == '.') {
 					if (first) {
-						start = new CoordTime(i, j, 0, -1);
+						startX = i;
+						startY = j;
 						first = false;
 					}
-					end = new CoordTime(i, j, 0, -1);
-				}
-				if (lines.get(i).charAt(j) == '#') {
-					initBlizzards.add(new CoordTime(i, j, 0, -1));
-				}
-				if (lines.get(i).charAt(j) == '^') {
-					initBlizzards.add(new CoordTime(i, j, 0, 1));
-				}
-				if (lines.get(i).charAt(j) == '>') {
-					initBlizzards.add(new CoordTime(i, j, 0, 2));
-				}
-				if (lines.get(i).charAt(j) == 'v') {
-					initBlizzards.add(new CoordTime(i, j, 0, 3));
-				}
-				if (lines.get(i).charAt(j) == '<') {
-					initBlizzards.add(new CoordTime(i, j, 0, 4));
+					endX = i;
+					endY = j;
+				} else if (c == '^' || c == '>' || c == 'v' || c == '<') {
+					blizzards.add(new Blizzard(i, j, c));
 				}
 			}
 		}
-		blizzards.put(0, initBlizzards);
-		for (int i = 1; i < 1000; i++) {
-			blizzards.put(i, advance(blizzards.get(i - 1), width, height));
-		}
-		int trip1 = helper(start, end, width, height, blizzards, 0);
+		boolean[][][] blocked = buildBlockedStates(lines, blizzards);
+		int trip1 = travel(startX, startY, endX, endY, 0, blocked);
 		if (part1) {
 			return "" + trip1;
 		}
-		int trip2 = helper(end, start, width, height, blizzards, trip1);
-		int trip3 = helper(start, end, width, height, blizzards, trip2);
+		int trip2 = travel(endX, endY, startX, startY, trip1, blocked);
+		int trip3 = travel(startX, startY, endX, endY, trip2, blocked);
 		return "" + trip3;
 	}
 
-	public boolean inBounds(CoordTime candidate, int width, int height) {
-		if (candidate.direction == -1) {
-			return (candidate.x >= 0 && candidate.y >= 0 && candidate.x < width && candidate.y < height);
-		}
-		return (candidate.x >= 1 && candidate.y >= 1 && candidate.x < width - 1 && candidate.y < height - 1);
-	}
-
-	public List<CoordTime> advance(List<CoordTime> current, int width, int height) {
-		List<CoordTime> next = new ArrayList<>();
-		for (CoordTime blizzard : current) {
-			int deltax = (blizzard.direction == 1) ? -1 : (blizzard.direction == 3) ? 1 : 0;
-			int deltay = (blizzard.direction == 4) ? -1 : (blizzard.direction == 2) ? 1 : 0;
-			CoordTime candidate = new CoordTime(blizzard.x + deltax, blizzard.y + deltay, blizzard.time + 1,
-					blizzard.direction);
-			if (inBounds(candidate, width, height)) {
-				next.add(candidate);
-			} else {
-				if (candidate.x == 0) {
-					next.add(new CoordTime(width - 2, candidate.y, candidate.time, candidate.direction));
+	private boolean[][][] buildBlockedStates(List<String> lines, List<Blizzard> blizzards) {
+		int rows = lines.size();
+		int cols = lines.get(0).length();
+		int period = lcm(rows - 2, cols - 2);
+		boolean[][][] blocked = new boolean[period][rows][cols];
+		for (int time = 0; time < period; time++) {
+			for (int x = 0; x < rows; x++) {
+				for (int y = 0; y < cols; y++) {
+					blocked[time][x][y] = lines.get(x).charAt(y) == '#';
 				}
-				if (candidate.x == width - 1) {
-					next.add(new CoordTime(1, candidate.y, candidate.time, candidate.direction));
+			}
+			for (Blizzard blizzard : blizzards) {
+				int x = blizzard.x();
+				int y = blizzard.y();
+				if (blizzard.direction() == '^') {
+					x = 1 + mod(blizzard.x() - 1 - time, rows - 2);
+				} else if (blizzard.direction() == 'v') {
+					x = 1 + mod(blizzard.x() - 1 + time, rows - 2);
+				} else if (blizzard.direction() == '<') {
+					y = 1 + mod(blizzard.y() - 1 - time, cols - 2);
+				} else if (blizzard.direction() == '>') {
+					y = 1 + mod(blizzard.y() - 1 + time, cols - 2);
 				}
-				if (candidate.y == 0) {
-					next.add(new CoordTime(candidate.x, height - 2, candidate.time, candidate.direction));
-				}
-				if (candidate.y == height - 1) {
-					next.add(new CoordTime(candidate.x, 1, candidate.time, candidate.direction));
-				}
+				blocked[time][x][y] = true;
 			}
 		}
-		return next;
+		return blocked;
 	}
 
-	public int helper(CoordTime start, CoordTime end, int width, int height, Map<Integer, List<CoordTime>> blizzards,
-			int startTime) {
-		Queue<CoordTime> bfs = new LinkedList<>();
-		Queue<CoordTime> bfs2 = new LinkedList<>();
-		int[][] blizz = new int[width][height];
-		int[] deltax = new int[] { -1, 0, 1, 0, 0 };
-		int[] deltay = new int[] { 0, -1, 0, 1, 0 };
-		int timestamp = startTime;
-		bfs.add(new CoordTime(start.x, start.y, startTime, -1));
-		while (!bfs.isEmpty() || !bfs2.isEmpty()) {
-			if(bfs.isEmpty()) {
-				timestamp++;
-				bfs.addAll(bfs2);
-				bfs2 = new LinkedList<>();
-				blizz = new int[width][height];
-				List<CoordTime> nextBlizzards = blizzards.get(timestamp + 1);
-				for (CoordTime c : nextBlizzards) {
-					blizz[c.x][c.y] += 1;
+	private int travel(int startX, int startY, int endX, int endY, int startTime, boolean[][][] blocked) {
+		int rows = blocked[0].length;
+		int cols = blocked[0][0].length;
+		int period = blocked.length;
+		int[] dx = new int[] { -1, 0, 1, 0, 0 };
+		int[] dy = new int[] { 0, -1, 0, 1, 0 };
+		boolean[][][] visited = new boolean[period][rows][cols];
+		ArrayDeque<int[]> queue = new ArrayDeque<>();
+		queue.add(new int[] { startX, startY, startTime });
+		visited[startTime % period][startX][startY] = true;
+		while (!queue.isEmpty()) {
+			int[] current = queue.poll();
+			int nextTime = current[2] + 1;
+			int timeIndex = nextTime % period;
+			for (int move = 0; move < dx.length; move++) {
+				int nextX = current[0] + dx[move];
+				int nextY = current[1] + dy[move];
+				if (nextX == endX && nextY == endY) {
+					return nextTime;
 				}
-			}
-			CoordTime next = bfs.poll();
-			if (next.x == end.x && next.y == end.y) {
-				return next.time;
-			}
-			for (int i = 0; i < deltax.length; i++) {
-				CoordTime candidate = new CoordTime(next.x + deltax[i], next.y + deltay[i], next.time + 1,
-						next.direction);
-				if (inBounds(candidate, width, height) && blizz[candidate.x][candidate.y] == 0 
-						&& !bfs2.contains(candidate)) {
-					bfs2.add(candidate);
+				if (inBounds(nextX, nextY, rows, cols) && !blocked[timeIndex][nextX][nextY]
+						&& !visited[timeIndex][nextX][nextY]) {
+					visited[timeIndex][nextX][nextY] = true;
+					queue.add(new int[] { nextX, nextY, nextTime });
 				}
 			}
 		}
 		return -1;
 	}
-}
 
-class CoordTime {
-	int x;
-	int y;
-	int time;
-	int direction;
-
-	public CoordTime(int x, int y, int time, int direction) {
-		this.x = x;
-		this.y = y;
-		this.time = time;
-		this.direction = direction; // 1 = N, 2 = E, 3 = S, 4 = W, -1 = not a blizzard
+	private boolean inBounds(int x, int y, int rows, int cols) {
+		return x >= 0 && y >= 0 && x < rows && y < cols;
 	}
 
-	@Override
-	public boolean equals(Object other) {
-		if (other == null || !other.getClass().equals(this.getClass())) {
-			return false;
+	private int lcm(int a, int b) {
+		return a / gcd(a, b) * b;
+	}
+
+	private int gcd(int a, int b) {
+		while (b != 0) {
+			int tmp = a % b;
+			a = b;
+			b = tmp;
 		}
-		CoordTime o = (CoordTime) other;
-		return o.x == x && o.y == y && o.time == time;
+		return a;
 	}
 
-	@Override
-	public String toString() {
-		return x + " " + y + " " + time + " " + direction;
+	private int mod(int value, int divisor) {
+		int result = value % divisor;
+		return result < 0 ? result + divisor : result;
+	}
+
+	private record Blizzard(int x, int y, char direction) {
 	}
 }
