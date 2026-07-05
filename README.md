@@ -7,13 +7,12 @@ To run, go into class MasterSolver.java
 Inputs:
 * runTimer - if true, will run the timer method to gather information on execution times
 * totalTimer - if true, timer will return just the total execution time. Otherwise, will return every day's execution time
-* exclusionTimer - if true, will skip days where answer cannot be displayed simply. if false, will run all days regardless (not recommended)
 * int[] days  - determines which days to solve
 * boolean[] parts - determines which parts to solve
 
 To see a given day's solution, go to DayX.java, where X is the day in question. 
 
-Current one-pass timing for `MasterSolver` is roughly 234ms on a 2024 MacBook Pro. The table below shows warm 10-run averages per part using the existing `DayTemplate.timer` convention; those numbers are useful for comparing individual solver changes, but they understate the first-run cost someone sees when running all 50 parts once.
+Current one-pass timing for `MasterSolver` is roughly 237ms on a 2024 MacBook Pro. The table below shows warm 10-run averages per part using the existing `DayTemplate.timer` convention; those numbers are useful for comparing individual solver changes, but they understate the first-run cost someone sees when running all 50 parts once.
 
 See [performance notes](PERFORMANCE.md) for visual before/after examples and benchmark caveats.
 
@@ -37,7 +36,7 @@ See [performance notes](PERFORMANCE.md) for visual before/after examples and ben
 | 16 | [Proboscidea Volcanium](https://adventofcode.com/2022/day/16) | [Source](src/aoc2022/Day16.java) | 7.275 | 3.414 |
 | 17 | [Pyroclastic Flow](https://adventofcode.com/2022/day/17) | [Source](src/aoc2022/Day17.java) | 2.729 | 2.790 |
 | 18 | [Boiling Boulders](https://adventofcode.com/2022/day/18) | [Source](src/aoc2022/Day18.java) | 3.520 | 3.743 |
-| 19 | [Not Enough Minerals](https://adventofcode.com/2022/day/19) | [Source](src/aoc2022/Day19.java) | 6.983 | 9.972 |
+| 19 | [Not Enough Minerals](https://adventofcode.com/2022/day/19) | [Source](src/aoc2022/Day19.java) | 7.140 | 7.702 |
 | 20 | [Grove Positioning System](https://adventofcode.com/2022/day/20) | [Source](src/aoc2022/Day20.java) | 5.741 | 32.145 |
 | 21 | [Monkey Math](https://adventofcode.com/2022/day/21) | [Source](src/aoc2022/Day21.java) | 3.364 | 4.817 |
 | 22 | [Monkey Map](https://adventofcode.com/2022/day/22) | [Source](src/aoc2022/Day22.java) | 5.053 | 4.466 |

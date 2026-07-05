@@ -91,7 +91,9 @@ class BluePrint {
 		}
 		seen[minutes].put(state, geodes);
 
-		buildGeodeRobot(minutes, oreRobots, clayRobots, obsidianRobots, geodeRobots, ore, clay, obsidian, geodes);
+		if (buildGeodeRobot(minutes, oreRobots, clayRobots, obsidianRobots, geodeRobots, ore, clay, obsidian, geodes)) {
+			return;
+		}
 		if (obsidianRobots < maxObsidianCost) {
 			buildObsidianRobot(minutes, oreRobots, clayRobots, obsidianRobots, geodeRobots, ore, clay, obsidian, geodes);
 		}
@@ -103,7 +105,7 @@ class BluePrint {
 		}
 	}
 
-	private void buildGeodeRobot(int minutes, int oreRobots, int clayRobots, int obsidianRobots, int geodeRobots,
+	private boolean buildGeodeRobot(int minutes, int oreRobots, int clayRobots, int obsidianRobots, int geodeRobots,
 			int ore, int clay, int obsidian, int geodes) {
 		int wait = waitTime(ore, oreRobots, geodeRobotOre, obsidian, obsidianRobots, geodeRobotObsidian);
 		if (wait < minutes) {
@@ -111,7 +113,9 @@ class BluePrint {
 			search(minutes - elapsed, oreRobots, clayRobots, obsidianRobots, geodeRobots + 1,
 					ore + oreRobots * elapsed - geodeRobotOre, clay + clayRobots * elapsed,
 					obsidian + obsidianRobots * elapsed - geodeRobotObsidian, geodes + geodeRobots * elapsed);
+			return wait == 0;
 		}
+		return false;
 	}
 
 	private void buildObsidianRobot(int minutes, int oreRobots, int clayRobots, int obsidianRobots, int geodeRobots,
