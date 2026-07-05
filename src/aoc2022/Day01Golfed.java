@@ -1,0 +1,1 @@
+package aoc2022;class A{String s(boolean p,String x){int a[]=new int[x.length()],i=0;for(String l:x.split("\n"))if(l.isEmpty())i++;else a[i]+=$.i(l);$.o(a);i=a.length;return""+(p?a[--i]:a[--i]+a[--i]+a[--i]);}}
