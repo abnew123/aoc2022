@@ -10,7 +10,7 @@ public class Day22 extends DayTemplate {
 		int[][] grid = new int[1000][1000];
 		int xloc = 0;
 		int yloc = 0;
-		int dir = 0; // right = 0, down = 1, left = 2, up = 3
+		int dir = 0;
 		List<String> instructions = new ArrayList<>();
 		int counter = 0;
 		while (in.hasNext()) {
@@ -102,59 +102,59 @@ public class Day22 extends DayTemplate {
 	public int[] helper(int xloc, int yloc, int dir) {
 		if (xloc < 50) {
 			if (yloc >= 50 && yloc < 100) {
-				if (dir == 2) {// 2->5
+				if (dir == 2) {
 					return new int[] { 0, 149 - xloc, yloc };
 				}
-				if (dir == 3) {// 2->6
+				if (dir == 3) {
 					return new int[] { 0, yloc + 100, 0 };
 				}
 			}
 			if (yloc >= 100) {
-				if (dir == 0) {// 1->4
+				if (dir == 0) {
 					return new int[] { 2, 149 - xloc, 99 };
 				}
-				if (dir == 1) {// 1->3
+				if (dir == 1) {
 					return new int[] { 2, yloc - 50, 99 };
 				}
-				if (dir == 3) {// 1->6
+				if (dir == 3) {
 					return new int[] { 3, 199, yloc - 100 };
 				}
 			}
 		}
 		if (xloc >= 50 && xloc < 100) {
-			if (yloc == 50 && dir == 2) {// 3->5
+			if (yloc == 50 && dir == 2) {
 				return new int[] { 1, 100, xloc - 50 };
 			}
-			if (yloc == 99 && dir == 0) {// 3->1
+			if (yloc == 99 && dir == 0) {
 				return new int[] { 3, 49, xloc + 50 };
 			}
 		}
 		if (xloc >= 100 && xloc < 150) {
 			if (yloc < 50) {
-				if (dir == 2) {// 5->2
+				if (dir == 2) {
 					return new int[] { 0, 149 - xloc, 50 };
 				}
-				if (dir == 3) {// 5->3
+				if (dir == 3) {
 					return new int[] { 0, yloc + 50, 50 };
 				}
 			}
 			if (yloc >= 50) {
-				if (dir == 0) {// 4->1
+				if (dir == 0) {
 					return new int[] { 2, 149 - xloc, 149 };
 				}
-				if (dir == 1) {// 4->6
+				if (dir == 1) {
 					return new int[] { 2, yloc + 100, 49 };
 				}
 			}
 		}
 		if (xloc >= 150) {
-			if (dir == 0) {// 6->4
+			if (dir == 0) {
 				return new int[] { 3, 149, xloc - 100 };
 			}
-			if (dir == 1) {// 6->1
+			if (dir == 1) {
 				return new int[] { 1, 0, xloc - 100 };
 			}
-			if (dir == 2) {// 6->2
+			if (dir == 2) {
 				return new int[] { 1, 0, xloc - 100 };
 			}
 		}

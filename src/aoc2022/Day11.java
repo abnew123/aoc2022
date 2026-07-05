@@ -1,121 +1,49 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Day11 extends DayTemplate {
-
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		List<FastMonkey> monkeys = new ArrayList<>();
-		List<Long> startingItems = new ArrayList<>();
-		int[] constants = new int[5];
-		int modulo = 1;
+		ArrayList<ArrayDeque<Long>> q = new ArrayList<>();
+		int[] div = new int[16], yes = new int[16], no = new int[16], val = new int[16];
+		char[] op = new char[16];
+		int mod = 1, n = 0;
 		while (in.hasNextLine()) {
-			String line = in.nextLine();
-			if (line.startsWith("Monkey") || line.equals("")) {
-				continue;
+			in.nextLine();
+			ArrayDeque<Long> items = new ArrayDeque<>();
+			for (String s : in.nextLine().split(": ")[1].split(", ")) {
+				items.add(Long.parseLong(s));
 			}
-			String[] parts = line.split(": ")[1].split(" ");
-			if (line.startsWith("  Starting items")) {
-				String[] items = line.split(": ")[1].split(", ");
-				for (String item : items) {
-					startingItems.add(Long.parseLong(item));
+			String[] o = in.nextLine().split(" ");
+			op[n] = o[6].charAt(0);
+			val[n] = o[7].equals("old") ? -1 : Integer.parseInt(o[7]);
+			div[n] = num(in.nextLine());
+			yes[n] = num(in.nextLine());
+			no[n] = num(in.nextLine());
+			if (in.hasNextLine()) {
+				in.nextLine();
+			}
+			q.add(items);
+			mod *= div[n++];
+		}
+		long[] count = new long[n];
+		for (int r = part1 ? 20 : 10000; r-- > 0;) {
+			for (int i = 0; i < n; i++) {
+				while (!q.get(i).isEmpty()) {
+					long x = q.get(i).remove(), y = val[i] < 0 ? x : val[i];
+					x = op[i] == '+' ? x + y : x * y;
+					x = part1 ? x / 3 : x % mod;
+					q.get(x % div[i] == 0 ? yes[i] : no[i]).add(x);
+					count[i]++;
 				}
-			} else if (line.startsWith("  Operation")) {
-				constants[0] = parts[4].equals("old") ? 2 : parts[3].equals("+") ? 0 : 1;
-				constants[1] = Integer.parseInt(parts[4].equals("old") ? "0" : parts[4]);
-			} else if (line.startsWith("  Test")) {
-				constants[2] = Integer.parseInt(parts[2]);
-			} else if (line.startsWith("    If true")) {
-				constants[3] = Integer.parseInt(parts[3]);
-			} else if (line.startsWith("    If false")) {
-				constants[4] = Integer.parseInt(parts[3]);
-				monkeys.add(new FastMonkey(startingItems, constants));
-				modulo *= constants[2];
-				startingItems.clear();
-				constants = new int[5];
 			}
 		}
-
-		FastMonkey[] monkeyArray = monkeys.toArray(new FastMonkey[0]);
-		for (int round = 0; round < (part1 ? 20 : 10000); round++) {
-			for (FastMonkey monkey : monkeyArray) {
-				monkey.turn(monkeyArray, part1, modulo);
-			}
-		}
-
-		long top = 0;
-		long second = 0;
-		for (FastMonkey monkey : monkeyArray) {
-			if (monkey.counter > top) {
-				second = top;
-				top = monkey.counter;
-			} else if (monkey.counter > second) {
-				second = monkey.counter;
-			}
-		}
-		return "" + (top * second);
-	}
-}
-
-class FastMonkey {
-	private long[] items;
-	private int head;
-	private int tail;
-	private final int operation;
-	private final int operand;
-	private final int divisor;
-	private final int trueTarget;
-	private final int falseTarget;
-	long counter;
-
-	FastMonkey(List<Long> startingItems, int[] constants) {
-		items = new long[Math.max(16, startingItems.size() * 2)];
-		for (long item : startingItems) {
-			items[tail++] = item;
-		}
-		operation = constants[0];
-		operand = constants[1];
-		divisor = constants[2];
-		trueTarget = constants[3];
-		falseTarget = constants[4];
+		Arrays.sort(count);
+		return "" + count[n - 1] * count[n - 2];
 	}
 
-	void turn(FastMonkey[] monkeys, boolean part1, int modulo) {
-		while (head < tail) {
-			long item = items[head++];
-			switch (operation) {
-			case 0:
-				item += operand;
-				break;
-			case 1:
-				item *= operand;
-				break;
-			default:
-				item *= item;
-				break;
-			}
-			if (part1) {
-				item /= 3;
-			}
-			item %= modulo;
-			monkeys[item % divisor == 0 ? trueTarget : falseTarget].add(item);
-			counter++;
-		}
-		head = 0;
-		tail = 0;
-	}
-
-	private void add(long item) {
-		if (tail == items.length) {
-			long[] grown = new long[items.length * 2];
-			System.arraycopy(items, head, grown, 0, tail - head);
-			tail -= head;
-			head = 0;
-			items = grown;
-		}
-		items[tail++] = item;
+	int num(String s) {
+		return Integer.parseInt(s.replaceAll("\\D+", ""));
 	}
 }

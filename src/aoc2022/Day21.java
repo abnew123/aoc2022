@@ -1,132 +1,74 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class Day21 extends DayTemplate {
+	Map<String, Job> m;
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		Map<String, Monkey2> monkeys = new HashMap<>();
+		m = new HashMap<>();
 		while (in.hasNext()) {
-			Monkey2 monkey = new Monkey2(in.nextLine(), part1);
-			monkeys.put(monkey.name, monkey);
+			String[] a = in.nextLine().split(": | ");
+			m.put(a[0], a.length == 2 ? new Job(Long.parseLong(a[1]), null, null, '?')
+					: new Job(Long.MIN_VALUE, a[1], a[3], a[2].charAt(0)));
 		}
 		if (part1) {
-			return evaluate("root", monkeys) + "";
+			return "" + eval("root");
 		}
-		Monkey2 root = monkeys.get("root");
-		Long left = tryEvaluate(root.wait1, monkeys);
-		Long right = tryEvaluate(root.wait2, monkeys);
-		return (left == null ? solveUnknown(root.wait1, right, monkeys) : solveUnknown(root.wait2, left, monkeys)) + "";
+		Job root = m.get("root");
+		Long left = maybe(root.a), right = maybe(root.b);
+		return "" + (left == null ? need(root.a, right) : need(root.b, left));
 	}
 
-	private long evaluate(String name, Map<String, Monkey2> monkeys) {
-		Monkey2 monkey = monkeys.get(name);
-		if (monkey.val != Long.MIN_VALUE) {
-			return monkey.val;
-		}
-		long left = evaluate(monkey.wait1, monkeys);
-		long right = evaluate(monkey.wait2, monkeys);
-		return apply(monkey.operation, left, right);
+	long eval(String s) {
+		Job j = m.get(s);
+		return j.v != Long.MIN_VALUE ? j.v : calc(j.op, eval(j.a), eval(j.b));
 	}
 
-	private Long tryEvaluate(String name, Map<String, Monkey2> monkeys) {
-		if (name.equals("humn")) {
+	Long maybe(String s) {
+		if (s.equals("humn")) {
 			return null;
 		}
-		Monkey2 monkey = monkeys.get(name);
-		if (monkey.val != Long.MIN_VALUE) {
-			return monkey.val;
+		Job j = m.get(s);
+		if (j.v != Long.MIN_VALUE) {
+			return j.v;
 		}
-		Long left = tryEvaluate(monkey.wait1, monkeys);
-		Long right = tryEvaluate(monkey.wait2, monkeys);
-		if (left == null || right == null) {
-			return null;
-		}
-		return apply(monkey.operation, left, right);
+		Long a = maybe(j.a), b = maybe(j.b);
+		return a == null || b == null ? null : calc(j.op, a, b);
 	}
 
-	private long solveUnknown(String name, long target, Map<String, Monkey2> monkeys) {
-		if (name.equals("humn")) {
+	long need(String s, long target) {
+		if (s.equals("humn")) {
 			return target;
 		}
-		Monkey2 monkey = monkeys.get(name);
-		Long left = tryEvaluate(monkey.wait1, monkeys);
-		Long right = tryEvaluate(monkey.wait2, monkeys);
-		if (left == null) {
-			return solveUnknown(monkey.wait1, targetForLeft(monkey.operation, target, right), monkeys);
+		Job j = m.get(s);
+		Long a = maybe(j.a), b = maybe(j.b);
+		if (a == null) {
+			return need(j.a, switch (j.op) {
+			case '+' -> target - b;
+			case '-' -> target + b;
+			case '*' -> target / b;
+			default -> target * b;
+			});
 		}
-		return solveUnknown(monkey.wait2, targetForRight(monkey.operation, target, left), monkeys);
+		return need(j.b, switch (j.op) {
+		case '+' -> target - a;
+		case '-' -> a - target;
+		case '*' -> target / a;
+		default -> a / target;
+		});
 	}
 
-	private long apply(int operation, long left, long right) {
-		return switch (operation) {
-		case 1 -> left + right;
-		case 2 -> left - right;
-		case 3 -> left * right;
-		case 4 -> left / right;
-		default -> throw new IllegalArgumentException("Unknown operation " + operation);
+	long calc(char op, long a, long b) {
+		return switch (op) {
+		case '+' -> a + b;
+		case '-' -> a - b;
+		case '*' -> a * b;
+		default -> a / b;
 		};
 	}
 
-	private long targetForLeft(int operation, long target, long right) {
-		return switch (operation) {
-		case 1 -> target - right;
-		case 2 -> target + right;
-		case 3 -> target / right;
-		case 4 -> target * right;
-		default -> throw new IllegalArgumentException("Unknown operation " + operation);
-		};
-	}
-
-	private long targetForRight(int operation, long target, long left) {
-		return switch (operation) {
-		case 1 -> target - left;
-		case 2 -> left - target;
-		case 3 -> target / left;
-		case 4 -> left / target;
-		default -> throw new IllegalArgumentException("Unknown operation " + operation);
-		};
-	}
-}
-
-class Monkey2 {
-	long val;
-	String name;
-	int operation; // +, -, * , /, =
-	String wait1;
-	String wait2;
-	String orig;
-
-	public Monkey2(String line, boolean part1) {
-		name = line.split(":")[0];
-		if (line.length() > 10) {
-			val = Long.MIN_VALUE;
-			wait1 = line.split(" ")[1];
-			wait2 = line.split(" ")[3];
-			String op = line.split(" ")[2];
-			if (op.equals("+")) {
-				operation = 1;
-			}
-			if (op.equals("-")) {
-				operation = 2;
-			}
-			if (op.equals("*")) {
-				operation = 3;
-			}
-			if (op.equals("/")) {
-				operation = 4;
-			}
-			if (op.equals("=")) {
-				operation = 5;
-			}
-		} else {
-			val = Long.parseLong(line.split(" ")[1]);
-		}
-		if (name.equals("humn") && !part1) {
-			val = Long.MIN_VALUE;
-		}
+	record Job(long v, String a, String b, char op) {
 	}
 }

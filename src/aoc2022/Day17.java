@@ -1,177 +1,87 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class Day17 extends DayTemplate {
-	private static final int CHAMBER_WIDTH = 7;
-	private static final long PART_1_ROCKS = 2022;
-	private static final long PART_2_ROCKS = 1000000000000L;
-	private static final Piece[] PIECES = {
-			new Piece(new int[] { 0b1111 }, 4),
-			new Piece(new int[] { 0b010, 0b111, 0b010 }, 3),
-			new Piece(new int[] { 0b111, 0b100, 0b100 }, 3),
-			new Piece(new int[] { 0b1, 0b1, 0b1, 0b1 }, 1),
-			new Piece(new int[] { 0b11, 0b11 }, 2)
-	};
+	int[][] P = {{15}, {2, 7, 2}, {7, 4, 4}, {1, 1, 1, 1}, {3, 3}};
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		boolean[] pushesLeft = parsePushes(in.nextLine());
-		long goal = part1 ? PART_1_ROCKS : PART_2_ROCKS;
-		return "" + simulate(goal, pushesLeft);
-	}
-
-	private boolean[] parsePushes(String pushes) {
-		boolean[] pushesLeft = new boolean[pushes.length()];
-		for (int i = 0; i < pushesLeft.length; i++) {
-			pushesLeft[i] = pushes.charAt(i) == '<';
-		}
-		return pushesLeft;
-	}
-
-	private long simulate(long goal, boolean[] pushesLeft) {
-		List<Integer> chamber = new ArrayList<>();
-		Map<State, long[]> seen = new HashMap<>();
-		int[] columnHeights = new int[CHAMBER_WIDTH];
-		int jetIndex = 0;
-		long rocks = 0;
-		long skippedHeight = 0;
-		boolean skippedCycle = false;
-
-		while (rocks < goal) {
-			Piece piece = PIECES[(int) (rocks % PIECES.length)];
-			int x = 2;
-			int y = chamber.size() + 3;
-
-			while (true) {
-				int pushedX = x + (pushesLeft[jetIndex] ? -1 : 1);
-				jetIndex = (jetIndex + 1) % pushesLeft.length;
-				if (canMove(piece, pushedX, y, chamber)) {
-					x = pushedX;
+		String jets = in.nextLine();
+		ArrayList<Integer> cave = new ArrayList<>();
+		HashMap<String, long[]> seen = new HashMap<>();
+		int[] high = new int[7];
+		long goal = part1 ? 2022 : 1000000000000L, rock = 0, extra = 0;
+		int jet = 0;
+		boolean skipped = false;
+		while (rock < goal) {
+			int pi = (int) (rock % 5), x = 2, y = cave.size() + 3;
+			for (;;) {
+				int nx = x + (jets.charAt(jet) == '<' ? -1 : 1);
+				jet = (jet + 1) % jets.length();
+				if (ok(P[pi], nx, y, cave)) {
+					x = nx;
 				}
-
-				if (canMove(piece, x, y - 1, chamber)) {
+				if (ok(P[pi], x, y - 1, cave)) {
 					y--;
 				} else {
-					settle(piece, x, y, chamber, columnHeights);
+					put(P[pi], x, y, cave, high);
 					break;
 				}
 			}
-
-			rocks++;
-			if (!skippedCycle) {
-				State state = new State((int) (rocks % PIECES.length), jetIndex, chamber, columnHeights);
-				long height = skippedHeight + chamber.size();
-				long[] previous = seen.get(state);
-				if (previous == null) {
-					seen.put(state, new long[] { rocks, height });
-				} else {
-					long cycleRocks = rocks - previous[0];
-					long cycleHeight = height - previous[1];
-					long cycles = (goal - rocks) / cycleRocks;
-					if (cycles > 0) {
-						rocks += cycles * cycleRocks;
-						skippedHeight += cycles * cycleHeight;
-						skippedCycle = true;
-					}
+			rock++;
+			if (!skipped) {
+				String key = key(rock, jet, cave, high);
+				long[] old = seen.putIfAbsent(key, new long[] {rock, cave.size()});
+				if (old != null) {
+					long dr = rock - old[0], dh = cave.size() - old[1], n = (goal - rock) / dr;
+					rock += n * dr;
+					extra += n * dh;
+					skipped = true;
 				}
 			}
 		}
-
-		return skippedHeight + chamber.size();
+		return "" + (extra + cave.size());
 	}
 
-	private boolean canMove(Piece piece, int x, int y, List<Integer> chamber) {
-		if (x < 0 || x + piece.width > CHAMBER_WIDTH || y < 0) {
+	boolean ok(int[] p, int x, int y, ArrayList<Integer> cave) {
+		if (x < 0 || y < 0) {
 			return false;
 		}
-		for (int row = 0; row < piece.rows.length; row++) {
-			int chamberY = y + row;
-			if (chamberY < chamber.size() && ((piece.rows[row] << x) & chamber.get(chamberY)) != 0) {
+		for (int r = 0; r < p.length; r++) {
+			int row = p[r] << x;
+			if ((row & ~127) != 0 || y + r < cave.size() && (row & cave.get(y + r)) != 0) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private void settle(Piece piece, int x, int y, List<Integer> chamber, int[] columnHeights) {
-		for (int row = 0; row < piece.rows.length; row++) {
-			int chamberY = y + row;
-			while (chamber.size() <= chamberY) {
-				chamber.add(0);
+	void put(int[] p, int x, int y, ArrayList<Integer> cave, int[] high) {
+		for (int r = 0; r < p.length; r++) {
+			while (cave.size() <= y + r) {
+				cave.add(0);
 			}
-			// Each chamber row is a seven-bit mask; bit 0 is the left wall side.
-			int shiftedRow = piece.rows[row] << x;
-			chamber.set(chamberY, chamber.get(chamberY) | shiftedRow);
-			for (int column = 0; column < CHAMBER_WIDTH; column++) {
-				if ((shiftedRow & (1 << column)) != 0) {
-					columnHeights[column] = Math.max(columnHeights[column], chamberY + 1);
+			int row = p[r] << x;
+			cave.set(y + r, cave.get(y + r) | row);
+			for (int c = 0; c < 7; c++) {
+				if ((row & 1 << c) != 0) {
+					high[c] = Math.max(high[c], y + r + 1);
 				}
 			}
 		}
 	}
 
-	private static class Piece {
-		private final int[] rows;
-		private final int width;
-
-		private Piece(int[] rows, int width) {
-			this.rows = rows;
-			this.width = width;
+	String key(long rock, int jet, ArrayList<Integer> cave, int[] high) {
+		int floor = cave.size();
+		StringBuilder s = new StringBuilder(rock % 5 + "," + jet);
+		for (int h : high) {
+			floor = Math.min(floor, h);
+			s.append(',').append(cave.size() - h);
 		}
-	}
-
-	private static class State {
-		private final int pieceIndex;
-		private final int jetIndex;
-		private final int[] topRows;
-		private final int[] columnDepths;
-
-		private State(int pieceIndex, int jetIndex, List<Integer> chamber, int[] columnHeights) {
-			this.pieceIndex = pieceIndex;
-			this.jetIndex = jetIndex;
-			int lowestReachableRow = min(columnHeights);
-			this.topRows = new int[chamber.size() - lowestReachableRow];
-			for (int i = 0; i < topRows.length; i++) {
-				int y = chamber.size() - 1 - i;
-				topRows[i] = chamber.get(y);
-			}
-
-			this.columnDepths = new int[CHAMBER_WIDTH];
-			for (int x = 0; x < CHAMBER_WIDTH; x++) {
-				columnDepths[x] = chamber.size() - columnHeights[x];
-			}
+		for (int y = floor; y < cave.size(); y++) {
+			s.append(',').append(cave.get(y));
 		}
-
-		private int min(int[] values) {
-			int min = values[0];
-			for (int value : values) {
-				min = Math.min(min, value);
-			}
-			return min;
-		}
-
-		public boolean equals(Object other) {
-			if (!(other instanceof State)) {
-				return false;
-			}
-			State state = (State) other;
-			return pieceIndex == state.pieceIndex
-					&& jetIndex == state.jetIndex
-					&& Arrays.equals(topRows, state.topRows)
-					&& Arrays.equals(columnDepths, state.columnDepths);
-		}
-
-		public int hashCode() {
-			int result = 31 * pieceIndex + jetIndex;
-			result = 31 * result + Arrays.hashCode(topRows);
-			result = 31 * result + Arrays.hashCode(columnDepths);
-			return result;
-		}
+		return s.toString();
 	}
 }

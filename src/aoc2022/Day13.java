@@ -1,121 +1,82 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Day13 extends DayTemplate {
-
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		int answer = 0;
-		int index = 1;
-		List<Packet> packets = new ArrayList<>();
-		while (in.hasNext()) {
-			Packet packet1 = new Packet(in.nextLine());
-			Packet packet2 = new Packet(in.nextLine());
-			packets.add(packet1);
-			packets.add(packet2);
-			in.nextLine();
-			if (part1) {
-				answer += (packet1.compareTo(packet2) > 0) ? index : 0;
-				index++;
+		ArrayList<Packet> packets = new ArrayList<>();
+		int ans = 0, i = 1;
+		while (in.hasNextLine()) {
+			Packet a = packet(in.nextLine()), b = packet(in.nextLine());
+			packets.add(a);
+			packets.add(b);
+			if (cmp(a.v, b.v) < 0) {
+				ans += i;
+			}
+			i++;
+			if (in.hasNextLine()) {
+				in.nextLine();
 			}
 		}
-		if (!part1) {
-			answer = 1;
-			packets.add(new Packet("[[2]]"));
-			packets.add(new Packet("[[6]]"));
-			Collections.sort(packets);
-			Collections.reverse(packets);
-			for (int i = 0; i < packets.size(); i++) {
-				if (packets.get(i).str.equals("[[2]]") || packets.get(i).str.equals("[[6]]")) {
-					answer *= (i + 1);
-				}
+		if (part1) {
+			return "" + ans;
+		}
+		packets.add(packet("[[2]]"));
+		packets.add(packet("[[6]]"));
+		packets.sort((a, b) -> cmp(a.v, b.v));
+		ans = 1;
+		for (i = 0; i < packets.size(); i++) {
+			if (packets.get(i).s.equals("[[2]]") || packets.get(i).s.equals("[[6]]")) {
+				ans *= i + 1;
 			}
 		}
-		return "" + answer;
-	}
-}
-
-class Packet implements Comparable<Packet> {
-	List<Packet> children;
-	int val;
-	boolean integer = true;
-	String str;
-
-	public Packet(String packet) {
-		str = packet;
-		children = new ArrayList<>();
-		parse(packet, 0);
+		return "" + ans;
 	}
 
-	public int compareTo(Packet other) {
-		if (integer && other.integer) {
-			return other.val - val;
-		}
-		if (!integer && !other.integer) {
-			for (int i = 0; i < Math.min(children.size(), other.children.size()); i++) {
-				int val = children.get(i).compareTo(other.children.get(i));
-				if (val != 0) {
-					return val;
-				}
+	Packet packet(String s) {
+		return new Packet(read(s, new int[1]), s);
+	}
+
+	Object read(String s, int[] i) {
+		if (s.charAt(i[0]) != '[') {
+			int n = 0;
+			while (i[0] < s.length() && Character.isDigit(s.charAt(i[0]))) {
+				n = n * 10 + s.charAt(i[0]++) - '0';
 			}
-			return other.children.size() - children.size();
+			return n;
 		}
-		return integer ? compareIntegerToList(val, other) : compareListToInteger(this, other.val);
-	}
-
-	private int parse(String packet, int index) {
-		if (packet.charAt(index) != '[') {
-			int value = 0;
-			while (index < packet.length() && Character.isDigit(packet.charAt(index))) {
-				value = 10 * value + packet.charAt(index) - '0';
-				index++;
-			}
-			val = value;
-			integer = true;
-			return index;
-		}
-		integer = false;
-		index++;
-		while (packet.charAt(index) != ']') {
-			Packet child = new Packet();
-			index = child.parse(packet, index);
-			children.add(child);
-			if (packet.charAt(index) == ',') {
-				index++;
+		ArrayList<Object> a = new ArrayList<>();
+		for (i[0]++; s.charAt(i[0]) != ']';) {
+			a.add(read(s, i));
+			if (s.charAt(i[0]) == ',') {
+				i[0]++;
 			}
 		}
-		return index + 1;
+		i[0]++;
+		return a;
 	}
 
-	private Packet() {
-		children = new ArrayList<>();
-	}
-
-	private int compareIntegerToList(int value, Packet list) {
-		if (list.children.isEmpty()) {
-			return -1;
+	int cmp(Object a, Object b) {
+		if (a instanceof Integer x && b instanceof Integer y) {
+			return x - y;
 		}
-		int firstComparison = compareIntegerToPacket(value, list.children.get(0));
-		return firstComparison != 0 ? firstComparison : list.children.size() - 1;
-	}
-
-	private int compareListToInteger(Packet list, int value) {
-		if (list.children.isEmpty()) {
-			return 1;
+		if (a instanceof Integer) {
+			a = List.of(a);
 		}
-		int firstComparison = comparePacketToInteger(list.children.get(0), value);
-		return firstComparison != 0 ? firstComparison : 1 - list.children.size();
+		if (b instanceof Integer) {
+			b = List.of(b);
+		}
+		List<?> x = (List<?>) a, y = (List<?>) b;
+		for (int i = 0; i < x.size() && i < y.size(); i++) {
+			int c = cmp(x.get(i), y.get(i));
+			if (c != 0) {
+				return c;
+			}
+		}
+		return x.size() - y.size();
 	}
 
-	private int compareIntegerToPacket(int value, Packet other) {
-		return other.integer ? other.val - value : compareIntegerToList(value, other);
-	}
-
-	private int comparePacketToInteger(Packet packet, int value) {
-		return packet.integer ? value - packet.val : compareListToInteger(packet, value);
+	record Packet(Object v, String s) {
 	}
 }

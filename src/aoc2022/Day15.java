@@ -1,149 +1,80 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Day15 extends DayTemplate {
-
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		long answer = 0;
-		List<Coord> sensors = new ArrayList<>();
-		List<Coord> beacons = new ArrayList<>();
-		List<Integer> distances = new ArrayList<>();
-		List<Integer> alreadyBeacons = new ArrayList<>();
-		List<Range> ranges = new ArrayList<>();
+		ArrayList<S> s = new ArrayList<>();
+		HashSet<Integer> beacons = new HashSet<>();
 		while (in.hasNext()) {
 			String[] line = in.nextLine().split("=|,|:");
 			int x1 = Integer.parseInt(line[1]);
 			int y1 = Integer.parseInt(line[3]);
 			int x2 = Integer.parseInt(line[5]);
 			int y2 = Integer.parseInt(line[7]);
-			if (y2 == 2000000 && !alreadyBeacons.contains(x2)) {
-				alreadyBeacons.add(x2);
+			int d = Math.abs(x1 - x2) + Math.abs(y1 - y2);
+			s.add(new S(x1, y1, d));
+			if (y2 == 2000000) {
+				beacons.add(x2);
 			}
-			sensors.add(new Coord(x1, y1));
-			beacons.add(new Coord(x2, y2));
-			distances.add(Math.abs(x1 - x2) + Math.abs(y1 - y2));
 		}
 		if (part1) {
-			for (int i = 0; i < sensors.size(); i++) {
-				int dy = Math.abs(sensors.get(i).y - 2000000);
-				if (dy <= distances.get(i)) {
-					int dx = distances.get(i) - dy;
-					ranges.add(new Range(sensors.get(i).x - dx, sensors.get(i).x + dx));
+			ArrayList<int[]> ranges = new ArrayList<>();
+			for (S a : s) {
+				int w = a.d - Math.abs(a.y - 2000000);
+				if (w >= 0) {
+					ranges.add(new int[] {a.x - w, a.x + w});
 				}
 			}
-			Collections.sort(ranges);
-			int s = ranges.get(0).start;
-			int e = ranges.get(0).end;
-			for (Range r : ranges) {
-				if (r.start > e) {
-					for(int b: alreadyBeacons) {
-						if(b >= s && b <= e) {
-							answer--;
-						}
-					}
-					answer += e - s + 1;
-					s = r.start;
-					e = r.end;
+			ranges.sort(Comparator.comparingInt(a -> a[0]));
+			long ans = 0;
+			int l = ranges.get(0)[0], r = ranges.get(0)[1];
+			for (int[] a : ranges) {
+				if (a[0] > r) {
+					ans += r - l + 1 - count(beacons, l, r);
+					l = a[0];
 				}
-				if (r.end > e) {
-					e = r.end;
-				}
+				r = Math.max(r, a[1]);
 			}
-			for(int b: alreadyBeacons) {
-				if(b >= s && b <= e) {
-					answer--;
-				}
-			}
-			answer += e - s + 1;
+			return "" + (ans + r - l + 1 - count(beacons, l, r));
 		}
-		if (!part1) {
-			List<Integer> positiveLines = new ArrayList<>();
-			List<Integer> negativeLines = new ArrayList<>();
-			for (int i = 0; i < sensors.size(); i++) {
-				positiveLines.add(sensors.get(i).y - sensors.get(i).x + distances.get(i) + 1);
-				positiveLines.add(sensors.get(i).y - sensors.get(i).x - distances.get(i) - 1);
-				negativeLines.add(sensors.get(i).x + sensors.get(i).y + distances.get(i) + 1);
-				negativeLines.add(sensors.get(i).x + sensors.get(i).y - distances.get(i) - 1);
-			}
-			for (int a : positiveLines) {
-				for (int b : negativeLines) {
-					if ((a + b) % 2 == 0) {
-						int x = (b - a) / 2;
-						int y = (b + a) / 2;
-						if (x >= 0 && y >= 0 && x <= 4000000 && y <= 4000000) {
-							if (checkPossible(x, y, sensors, distances) >= 0) {
-								return "" + (((long) x * 4000000) + y);
-							}
+		ArrayList<Integer> pos = new ArrayList<>(), neg = new ArrayList<>();
+		for (S a : s) {
+			pos.add(a.y - a.x + a.d + 1);
+			pos.add(a.y - a.x - a.d - 1);
+			neg.add(a.x + a.y + a.d + 1);
+			neg.add(a.x + a.y - a.d - 1);
+		}
+		for (int a : pos) {
+			for (int b : neg) {
+				if ((a + b) % 2 == 0) {
+					int x = (b - a) / 2, y = (b + a) / 2;
+					if (x >= 0 && y >= 0 && x <= 4000000 && y <= 4000000) {
+						boolean ok = true;
+						for (S z : s) {
+							ok &= Math.abs(x - z.x) + Math.abs(y - z.y) > z.d;
+						}
+						if (ok) {
+							return "" + ((long) x * 4000000 + y);
 						}
 					}
 				}
 			}
 		}
-		return "" + answer;
+		return "";
 	}
 
-	public int checkPossible(int x, int y, List<Coord> sensors, List<Integer> distances) {
-		int m = 1000000;
-		for (int i = 0; i < sensors.size(); i++) {
-			if (Math.abs(x - sensors.get(i).x) + Math.abs(y - sensors.get(i).y) <= distances.get(i)) {
-				return -1;
-			} else {
-				m = Math.min(m, Math.abs(x - sensors.get(i).x) + Math.abs(y - sensors.get(i).y) - distances.get(i));
+	int count(HashSet<Integer> xs, int l, int r) {
+		int n = 0;
+		for (int x : xs) {
+			if (x >= l && x <= r) {
+				n++;
 			}
 		}
-		return m - 1;
-	}
-}
-
-class Coord {
-	int x;
-	int y;
-
-	public Coord(int x1, int y1) {
-		x = x1;
-		y = y1;
+		return n;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == null) {
-			return false;
-		}
-
-		if (obj.getClass() != this.getClass()) {
-			return false;
-		}
-		Coord o = (Coord) obj;
-		return o.x == x && o.y == y;
-	}
-}
-
-class Range implements Comparable<Range> {
-	int start;
-	int end;
-
-	public Range(int s, int e) {
-		start = s;
-		end = e;
-	}
-
-	@Override
-	public int compareTo(Range o) {
-		Range other = (Range) o;
-		if (other.start != start) {
-			return start - other.start;
-		} else {
-			return end - other.end;
-		}
-	}
-
-	@Override
-	public String toString() {
-		return start + " " + end;
+	record S(int x, int y, int d) {
 	}
 }
