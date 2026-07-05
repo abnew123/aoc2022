@@ -12,6 +12,7 @@ public class Day09 extends DayTemplate {
 		int[] positionsY = new int[size];
 		boolean[][] grid = new boolean[1000][1000];
 		grid[positionsX[size - 1] + 500][positionsY[size - 1] + 500] = true;
+		answer = 1;
 		int[] xdiff = new int[] { -1, 1, 0, 0 };
 		int[] ydiff = new int[] { 0, 0, -1, 1 };
 		while (in.hasNext()) {
@@ -54,13 +55,12 @@ public class Day09 extends DayTemplate {
 						}
 					}
 				}
-				grid[positionsX[size - 1] + 500][positionsY[size - 1] + 500] = true;
-				;
-			}
-		}
-		for (boolean[] row : grid) {
-			for (boolean square : row) {
-				answer += square ? 1 : 0;
+				int tailX = positionsX[size - 1] + 500;
+				int tailY = positionsY[size - 1] + 500;
+				if (!grid[tailX][tailY]) {
+					grid[tailX][tailY] = true;
+					answer++;
+				}
 			}
 		}
 		return "" + answer;
