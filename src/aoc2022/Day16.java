@@ -28,10 +28,11 @@ public class Day16 extends DayTemplate {
 		for (int i = 0; i < usefulValves.size(); i++) {
 			rates[i] = usefulValves.get(i).flow;
 		}
+		int maskCount = 1 << (rates.length - 1);
 		if (part1) {
-			return bestPressure(0, 30, 0, distances, rates, new HashMap<>()) + "";
+			return bestPressure(0, 30, 0, distances, rates, new int[rates.length * 31 * maskCount], maskCount) + "";
 		}
-		int[] bestByMask = new int[1 << (rates.length - 1)];
+		int[] bestByMask = new int[maskCount];
 		recordBestMasks(0, 26, 0, 0, distances, rates, bestByMask);
 		int[] bestSubset = bestByMask.clone();
 		for (int bit = 1; bit < bestSubset.length; bit <<= 1) {
@@ -78,10 +79,11 @@ public class Day16 extends DayTemplate {
 		return distances;
 	}
 
-	private int bestPressure(int current, int timeLeft, int openMask, int[][] distances, int[] rates, Map<Long, Integer> memo) {
-		long key = (((long) current) << 48) | (((long) timeLeft) << 32) | openMask;
-		if (memo.containsKey(key)) {
-			return memo.get(key);
+	private int bestPressure(int current, int timeLeft, int openMask, int[][] distances, int[] rates, int[] memo,
+			int maskCount) {
+		int key = (current * 31 + timeLeft) * maskCount + openMask;
+		if (memo[key] != 0) {
+			return memo[key] - 1;
 		}
 		int best = 0;
 		for (int next = 1; next < rates.length; next++) {
@@ -89,10 +91,11 @@ public class Day16 extends DayTemplate {
 			int nextTime = timeLeft - distances[current][next] - 1;
 			if ((openMask & bit) == 0 && nextTime > 0) {
 				int released = rates[next] * nextTime;
-				best = Math.max(best, released + bestPressure(next, nextTime, openMask | bit, distances, rates, memo));
+				best = Math.max(best,
+						released + bestPressure(next, nextTime, openMask | bit, distances, rates, memo, maskCount));
 			}
 		}
-		memo.put(key, best);
+		memo[key] = best + 1;
 		return best;
 	}
 
