@@ -1,7 +1,6 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -9,19 +8,24 @@ import java.util.Scanner;
 public class Day24 extends DayTemplate {
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		List<String> lines = new ArrayList<>();
-		while (in.hasNext()) {
+		while (in.hasNextLine()) {
 			lines.add(in.nextLine());
 		}
 		int rows = lines.size();
 		int cols = lines.get(0).length();
-		List<Blizzard> blizzards = new ArrayList<>();
+		int cells = rows * cols;
+		boolean[] walls = new boolean[cells];
+		int[] blizzardX = new int[cells];
+		int[] blizzardY = new int[cells];
+		byte[] blizzardDirections = new byte[cells];
+		int blizzardCount = 0;
 		int startX = -1;
 		int startY = -1;
 		boolean first = true;
 		int endX = -1;
 		int endY = -1;
 		for (int i = 0; i < lines.size(); i++) {
-			for (int j = 0; j < lines.get(0).length(); j++) {
+			for (int j = 0; j < cols; j++) {
 				char c = lines.get(i).charAt(j);
 				if (c == '.') {
 					if (first) {
@@ -32,81 +36,161 @@ public class Day24 extends DayTemplate {
 					endX = i;
 					endY = j;
 				} else if (c == '^' || c == '>' || c == 'v' || c == '<') {
-					blizzards.add(new Blizzard(i, j, c));
+					blizzardX[blizzardCount] = i;
+					blizzardY[blizzardCount] = j;
+					blizzardDirections[blizzardCount] = direction(c);
+					blizzardCount++;
+				} else if (c == '#') {
+					walls[i * cols + j] = true;
 				}
 			}
 		}
-		boolean[][][] blocked = buildBlockedStates(lines, blizzards);
-		int trip1 = travel(startX, startY, endX, endY, 0, blocked);
+		Valley valley = buildBlockedStates(rows, cols, walls, blizzardX, blizzardY, blizzardDirections, blizzardCount);
+		int start = startX * cols + startY;
+		int end = endX * cols + endY;
+		byte[] seen = new byte[valley.blocked().length];
+		int trip1 = travel(start, end, 0, valley, seen, (byte) 1);
 		if (part1) {
 			return "" + trip1;
 		}
-		int trip2 = travel(endX, endY, startX, startY, trip1, blocked);
-		int trip3 = travel(startX, startY, endX, endY, trip2, blocked);
+		int trip2 = travel(end, start, trip1, valley, seen, (byte) 2);
+		int trip3 = travel(start, end, trip2, valley, seen, (byte) 3);
 		return "" + trip3;
 	}
 
-	private boolean[][][] buildBlockedStates(List<String> lines, List<Blizzard> blizzards) {
-		int rows = lines.size();
-		int cols = lines.get(0).length();
+	private Valley buildBlockedStates(int rows, int cols, boolean[] walls, int[] blizzardX, int[] blizzardY,
+			byte[] blizzardDirections, int blizzardCount) {
+		int cells = rows * cols;
 		int period = lcm(rows - 2, cols - 2);
-		boolean[][][] blocked = new boolean[period][rows][cols];
+		boolean[] blocked = new boolean[period * cells];
 		for (int time = 0; time < period; time++) {
-			for (int x = 0; x < rows; x++) {
-				for (int y = 0; y < cols; y++) {
-					blocked[time][x][y] = lines.get(x).charAt(y) == '#';
+			int offset = time * cells;
+			System.arraycopy(walls, 0, blocked, offset, cells);
+			for (int i = 0; i < blizzardCount; i++) {
+				int x = blizzardX[i];
+				int y = blizzardY[i];
+				blocked[offset + x * cols + y] = true;
+				if (blizzardDirections[i] == 0) {
+					x--;
+					if (x == 0) {
+						x = rows - 2;
+					}
+				} else if (blizzardDirections[i] == 1) {
+					y++;
+					if (y == cols - 1) {
+						y = 1;
+					}
+				} else if (blizzardDirections[i] == 2) {
+					x++;
+					if (x == rows - 1) {
+						x = 1;
+					}
+				} else {
+					y--;
+					if (y == 0) {
+						y = cols - 2;
+					}
 				}
-			}
-			for (Blizzard blizzard : blizzards) {
-				int x = blizzard.x();
-				int y = blizzard.y();
-				if (blizzard.direction() == '^') {
-					x = 1 + mod(blizzard.x() - 1 - time, rows - 2);
-				} else if (blizzard.direction() == 'v') {
-					x = 1 + mod(blizzard.x() - 1 + time, rows - 2);
-				} else if (blizzard.direction() == '<') {
-					y = 1 + mod(blizzard.y() - 1 - time, cols - 2);
-				} else if (blizzard.direction() == '>') {
-					y = 1 + mod(blizzard.y() - 1 + time, cols - 2);
-				}
-				blocked[time][x][y] = true;
+				blizzardX[i] = x;
+				blizzardY[i] = y;
 			}
 		}
-		return blocked;
+		return new Valley(cols, cells, period, blocked);
 	}
 
-	private int travel(int startX, int startY, int endX, int endY, int startTime, boolean[][][] blocked) {
-		int rows = blocked[0].length;
-		int cols = blocked[0][0].length;
-		int period = blocked.length;
-		int[] dx = new int[] { -1, 0, 1, 0, 0 };
-		int[] dy = new int[] { 0, -1, 0, 1, 0 };
-		boolean[][][] visited = new boolean[period][rows][cols];
-		ArrayDeque<int[]> queue = new ArrayDeque<>();
-		queue.add(new int[] { startX, startY, startTime });
-		visited[startTime % period][startX][startY] = true;
-		while (!queue.isEmpty()) {
-			int[] current = queue.poll();
-			int nextTime = current[2] + 1;
-			int timeIndex = nextTime % period;
-			for (int move = 0; move < dx.length; move++) {
-				int nextX = current[0] + dx[move];
-				int nextY = current[1] + dy[move];
-				if (nextX == endX && nextY == endY) {
-					return nextTime;
+	private int travel(int start, int end, int startTime, Valley valley, byte[] seen, byte seenMark) {
+		int cols = valley.cols();
+		int cells = valley.cells();
+		int period = valley.period();
+		boolean[] blocked = valley.blocked();
+		int[] frontier = new int[cells];
+		int[] next = new int[cells];
+		int frontierSize = 1;
+		int nextTime = startTime + 1;
+		int offset = (nextTime % period) * cells;
+		frontier[0] = start;
+		seen[(startTime % period) * cells + start] = seenMark;
+		while (frontierSize > 0) {
+			int nextSize = 0;
+			for (int i = 0; i < frontierSize; i++) {
+				int position = frontier[i];
+				int col = position % cols;
+				int candidate;
+				int seenIndex;
+				if (position >= cols) {
+					candidate = position - cols;
+					if (candidate == end) {
+						return nextTime;
+					}
+					seenIndex = offset + candidate;
+					if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
+						seen[seenIndex] = seenMark;
+						next[nextSize++] = candidate;
+					}
 				}
-				if (inBounds(nextX, nextY, rows, cols) && !blocked[timeIndex][nextX][nextY]
-						&& !visited[timeIndex][nextX][nextY]) {
-					visited[timeIndex][nextX][nextY] = true;
-					queue.add(new int[] { nextX, nextY, nextTime });
+				if (col > 0) {
+					candidate = position - 1;
+					if (candidate == end) {
+						return nextTime;
+					}
+					seenIndex = offset + candidate;
+					if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
+						seen[seenIndex] = seenMark;
+						next[nextSize++] = candidate;
+					}
 				}
+				if (position + cols < cells) {
+					candidate = position + cols;
+					if (candidate == end) {
+						return nextTime;
+					}
+					seenIndex = offset + candidate;
+					if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
+						seen[seenIndex] = seenMark;
+						next[nextSize++] = candidate;
+					}
+				}
+				if (col + 1 < cols) {
+					candidate = position + 1;
+					if (candidate == end) {
+						return nextTime;
+					}
+					seenIndex = offset + candidate;
+					if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
+						seen[seenIndex] = seenMark;
+						next[nextSize++] = candidate;
+					}
+				}
+				seenIndex = offset + position;
+				if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
+					seen[seenIndex] = seenMark;
+					next[nextSize++] = position;
+				}
+			}
+			int[] tmp = frontier;
+			frontier = next;
+			next = tmp;
+			frontierSize = nextSize;
+			nextTime++;
+			offset += cells;
+			if (offset == blocked.length) {
+				offset = 0;
 			}
 		}
 		return -1;
 	}
 
-	private boolean inBounds(int x, int y, int rows, int cols) {
-		return x >= 0 && y >= 0 && x < rows && y < cols;
+	private byte direction(char c) {
+		if (c == '^') {
+			return 0;
+		}
+		if (c == '>') {
+			return 1;
+		}
+		if (c == 'v') {
+			return 2;
+		}
+		return 3;
 	}
 
 	private int lcm(int a, int b) {
@@ -122,11 +206,6 @@ public class Day24 extends DayTemplate {
 		return a;
 	}
 
-	private int mod(int value, int divisor) {
-		int result = value % divisor;
-		return result < 0 ? result + divisor : result;
-	}
-
-	private record Blizzard(int x, int y, char direction) {
+	private record Valley(int cols, int cells, int period, boolean[] blocked) {
 	}
 }
