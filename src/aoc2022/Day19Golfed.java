@@ -5,7 +5,7 @@ class S{
 int[]O,C,B,M;int z;java.util.Map S;
 String s(boolean p,String I){
 int r=p?0:1,j=0;
-for(String l:I.split("\n")){
+for(var l:I.split("\n")){
 if(!p&j>2)break;
 int v=f(l.split("\\D+"),p?24:32);j++;
 r=p?r+j*v:r*v;

@@ -5,7 +5,7 @@ int[][]P={{15},{2,7,2},{7,4,4},{1,1,1,1},{3,3}};
 String s(boolean p,String j){
 j=j.trim();
 ArrayList<Integer>c=$.a();HashMap<String,long[]>m=$.h();
-int[]h=new int[7];long n=p?2022:1000000000000L,r=0,e=0;int q=0;boolean z=0>1;
+int[]h=new int[7];long n=p?2022:1000000000000L,r=0,e=0;int q=0;var z=0>1;
 for(;r<n;r++){
 int k=(int)(r%5),x=2,y=c.size()+3;
 for(;;){
@@ -14,7 +14,7 @@ if(o(P[k],X,y,c))x=X;
 if(o(P[k],x,y-1,c))y--;else{u(P[k],x,y,c,h);break;}
 }
 if(!z){
-String K=k(r+1,q,c,h);long[]v=m.putIfAbsent(K,new long[]{r+1,c.size()});
+var K=k(r+1,q,c,h);var v=m.putIfAbsent(K,new long[]{r+1,c.size()});
 if(v!=null){long a=r+1-v[0],b=c.size()-v[1],g=(n-r-1)/a;r+=g*a;e+=g*b;z=1>0;}
 }
 }
@@ -36,7 +36,7 @@ for(int i=0;i<7;i++)if((w&1<<i)!=0)h[i]=$.x(h[i],y+r+1);
 }
 }
 String k(long r,int q,ArrayList<Integer>c,int[]h){
-int f=c.size();String s=r%5+","+q;
+int f=c.size();var s=r%5+","+q;
 for(int x:h){f=$.n(f,x);s+=","+(c.size()-x);}
 for(int y=f;y<c.size();y++)s+=","+c.get(y);
 return s;
