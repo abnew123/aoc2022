@@ -1,9 +1,9 @@
 package aoc2022;
 class R{
-String s(boolean p,String in){
-int[][][]a=new int[25][25][25];
-for(var l:in.split("\n")){
-String[]w=l.split(",");
+String s(boolean p,String I){
+var a=new int[25][25][25];
+for(var l:I.split("\n")){
+var w=l.split(",");
 a[$.i(w[0])+1][$.i(w[1])+1][$.i(w[2])+1]=1;
 }
 int[]d={1,-1,25,-25,625,-625},q=new int[20000];a[0][0][0]=2;

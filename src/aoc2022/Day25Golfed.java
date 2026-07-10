@@ -1,8 +1,8 @@
 package aoc2022;
 class Y{
-String s(boolean p,String in){
+String s(boolean p,String I){
 long a=0;
-for(var l:in.split("\n")){
+for(var l:I.split("\n")){
 long v=0;
 for(char c:l.toCharArray())v=v*5+"=-012".indexOf(c)-2;
 a+=v;
