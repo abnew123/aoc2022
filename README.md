@@ -12,9 +12,23 @@ Inputs:
 
 To see a given day's solution, go to DayX.java, where X is the day in question. 
 
-Current day-level timing for `MasterSolver` averages roughly 233ms over 10 separate process runs on a 2024 MacBook Pro. `MasterSolver` now times each day once through `fullSolve`, so days can parse shared input once for both parts. The table below shows warm 10-run averages per part using the existing `DayTemplate.timer` convention; those numbers are still useful for comparing individual solver changes, but the day-level total is the better end-to-end number.
+[`FreshJvmBenchmark`](src/aoc2022/FreshJvmBenchmark.java) is the reproducible answer-consistency and fresh-process benchmark runner. On a 2024 MacBook Pro using OpenJDK 23.0.1, the current 10-process means are 287.626 ms wall time, 253.278 ms in child `main`, and 222.977 ms in the 25 `fullSolve` calls. See [performance notes](PERFORMANCE.md) for every sample, metric definitions, and the alternating baseline comparison.
 
-See [performance notes](PERFORMANCE.md) for visual before/after examples and benchmark caveats.
+From the repository root, compile for the project's Java 16 target, verify all answers, and run one cold process plus 10 measured fresh JVM processes with:
+
+```sh
+rm -rf /tmp/aoc2022-classes
+mkdir -p /tmp/aoc2022-classes
+javac --release 16 -d /tmp/aoc2022-classes $(git ls-files '*.java')
+java -cp /tmp/aoc2022-classes aoc2022.FreshJvmBenchmark --verify
+java -cp /tmp/aoc2022-classes aoc2022.FreshJvmBenchmark
+```
+
+The runner checks that 50 individual `solve` results equal the corresponding 25 two-answer `fullSolve` results; it does not independently know the expected puzzle answers. The ordered checksum is `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`, unchanged from the pristine known-good `a107970` pre-change snapshot. Correctness evidence also includes byte-identical before/after records for all 50 answers, the official Day 18 sample, and translated-coordinate regressions.
+
+Day 18 now computes both surface areas from one parse with dynamically checked padded bounds, flat primitive occupancy, and one exterior flood fill. It accepts signed coordinates whose one-cell-padded volume is representable by the flat arrays, and explicitly rejects coordinates outside those arithmetic or indexing limits rather than wrapping; the official sample remains 64/58 and all 50 repository answers are unchanged.
+
+The table below is the historical July warm 10-run per-part table from `DayTemplate.timer`. It is retained for solver-level context, but it is not directly comparable to the fresh-JVM numbers above.
 
 | Day | Problem | Solution | Part 1 (ms) | Part 2 (ms) |
 | --- | --- | --- |------------:|------------:|
