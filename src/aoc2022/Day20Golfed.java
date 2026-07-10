@@ -1,9 +1,9 @@
 package aoc2022;
 import java.util.*;
 class T{
-String s(boolean p,String in){
-var a=new ArrayList<long[]>();var o=new ArrayList<long[]>();
-for(var x:in.split("\n")){
+String s(boolean p,String I){
+List<long[]>a=$.a(),o=$.a();
+for(var x:I.split("\n")){
 long[]n={$.l(x)*(p?1:811589153L)};
 a.add(n);o.add(n);
 }
