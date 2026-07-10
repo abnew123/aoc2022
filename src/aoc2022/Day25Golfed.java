@@ -7,7 +7,7 @@ long v=0;
 for(char c:l.toCharArray())v=v*5+"=-012".indexOf(c)-2;
 a+=v;
 }
-String r="";
+var r="";
 for(;a>0;a/=5){
 r="012=-".charAt((int)(a%5))+r;
 if(a%5>2)a+=5;

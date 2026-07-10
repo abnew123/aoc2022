@@ -3,7 +3,7 @@ import java.util.*;
 class T{
 String s(boolean p,String in){
 var a=new ArrayList<long[]>();var o=new ArrayList<long[]>();
-for(String x:in.split("\n")){
+for(var x:in.split("\n")){
 long[]n={$.l(x)*(p?1:811589153L)};
 a.add(n);o.add(n);
 }
