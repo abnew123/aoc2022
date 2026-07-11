@@ -1,10 +1,10 @@
 package aoc2022;
 class V{
-String[]g;
+String[]g;int R;
 String s(boolean p,String[]I){
-var v=String.join("\n",I).split("\n\n");g=v[0].split("\n");
+g=I;for(;!I[R].isEmpty();R++);
 int x=0,y=g[0].indexOf(46),d=0,X[]={0,1,0,-1},Y[]={1,0,-1,0};
-var q=v[1].trim();int l=q.length();
+var q=I[R+1].trim();int l=q.length();
 for(int i=0,n=0,C=0;i<=l;i++)if(i<l&&(C=q.charAt(i))>47&C<58)n=n*10+C-48;else{
 for(;n-->0;){
 int c=d,u=x+X[d],w=y+Y[d];
@@ -21,7 +21,7 @@ return""+(1000*++x+4*++y+d);
 }
 int G(int x,int y){
 x=$.f(x,200);y=$.f(y,200);
-return x<g.length&&y<g[x].length()?g[x].charAt(y)&31:0;
+return x<R&&y<g[x].length()?g[x].charAt(y)&31:0;
 }
 int[]H(int x,int y,int d){
 if(d<1)return x<50?A(2,149-x,99):x<100?A(3,49,x+50):x<150?A(2,149-x,149):A(3,149,x-100);
