@@ -3,7 +3,7 @@ class V{
 String[]g;
 String s(boolean p,String I){
 var v=I.split("\n\n");g=v[0].split("\n");
-int x=0,y=g[0].indexOf(46),d=0;int[]X={0,1,0,-1},Y={1,0,-1,0};
+int x=0,y=g[0].indexOf(46),d=0,X[]={0,1,0,-1},Y[]={1,0,-1,0};
 var q=v[1].trim();int l=q.length();
 for(int i=0,n=0,C=0;i<=l;i++)if(i<l&&(C=q.charAt(i))>47&C<58)n=n*10+C-48;else{
 for(;n-->0;){

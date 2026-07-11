@@ -14,6 +14,6 @@ a.add($.f(i+n[0],a.size()),n);
 }
 int z=0,m=a.size();
 for(;a.get(z)[0]!=0;z++);
-return""+(a.get((z+1000)%m)[0]+a.get((z+2000)%m)[0]+a.get((z+3000)%m)[0]);
+long r=0;for(int i=4;--i>0;)r+=a.get((z+i*1000)%m)[0];return""+r;
 }
 }
