@@ -1,1 +1,1 @@
-package aoc2022;class A{String s(boolean p,String x){int a[]=new int[x.length()],i=0;for(var l:x.split("\n"))if(l.isEmpty())i++;else a[i]+=$.i(l);$.o(a);i=a.length;return""+(a[--i]+(p?0:a[--i]+a[--i]));}}
+package aoc2022;class A{String s(boolean p,String[]x){int a[]=new int[x.length],i=0;for(var l:x)if(l.isEmpty())i++;else a[i]+=$.i(l);$.o(a);i=a.length;return""+(a[--i]+(p?0:a[--i]+a[--i]));}}

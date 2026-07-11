@@ -2,14 +2,14 @@ package aoc2022;
 import java.util.*;
 class Q{
 int[][]P={{15},{2,7,2},{7,4,4},{1,1,1,1},{3,3}};
-String s(boolean p,String j){
-j=j.trim();
+String s(boolean p,String[]j){
+var J=j[0];
 List<Integer>c=$.a();Map<String,long[]>m=$.h();
 int[]h=new int[7];long n=p?2022:1000000000000L,r=0,e=0;int q=0;var z=0>1;
 for(;r<n;r++){
 int k=(int)(r%5),x=2,y=c.size()+3;
 for(;;){
-int X=x+(j.charAt(q)==60?-1:1);q=++q%j.length();
+int X=x+(J.charAt(q)==60?-1:1);q=++q%J.length();
 if(o(P[k],X,y,c))x=X;
 if(o(P[k],x,y-1,c))y--;else{u(P[k],x,y,c,h);break;}
 }

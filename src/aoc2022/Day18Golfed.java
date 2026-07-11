@@ -1,8 +1,8 @@
 package aoc2022;
 class R{
-String s(boolean p,String I){
+String s(boolean p,String[]I){
 var a=new int[25][25][25];
-for(var l:I.split("\n")){
+for(var l:I){
 var w=l.split(",");
 a[$.i(w[0])+1][$.i(w[1])+1][$.i(w[2])+1]=1;
 }

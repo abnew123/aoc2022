@@ -4,9 +4,9 @@ class U{
 Map<String,String>m;
 long N=1L<<63;
 boolean P;
-String s(boolean p,String I){
+String s(boolean p,String[]I){
 m=$.h();
-for(var l:I.split("\n"))m.put(l.substring(0,4),l.substring(6));
+for(var l:I)m.put(l.substring(0,4),l.substring(6));
 if(P=p)return""+q("root");
 String r=m.get("root"),a=r.substring(0,4),b=r.substring(7);
 var x=q(a);
