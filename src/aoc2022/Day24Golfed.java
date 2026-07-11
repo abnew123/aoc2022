@@ -2,8 +2,8 @@ package aoc2022;
 import java.util.*;
 class X{
 String[]g;int R,C;
-String s(boolean p,String I){
-g=I.split("\n");R=g.length;C=g[0].length();
+String s(boolean p,String[]I){
+g=I;R=g.length;C=g[0].length();
 int a=g[0].indexOf(46),b=(R-1)*C+g[R-1].indexOf(46),t=f(a,b,0);
 return""+(p?t:f(a,b,f(b,a,t)));
 }
