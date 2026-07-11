@@ -270,6 +270,46 @@ Their 10-process means were:
 
 The accepted evidence is the isolated paired Day 6 interval; the whole-suite interval is explicitly inconclusive under the user's nonuniform interactive load, and the complete phase split is retained transparently. Verification retained all 50 independent answers, all 25 combined solves, and checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`. All five official examples, absent-marker and exact-length edge cases, and 1,000 deterministic randomized streams containing ASCII and non-ASCII Java characters matched the exact pre-change implementation with and without final newlines.
 
+## Day 8 shared tree-grid analysis
+
+Day 8's default combined solve previously materialized the input, created two more Scanners, parsed the grid twice, and tested tree visibility in both parts even though part 2 only returns the scenic score. It now parses once and accumulates both answers in one grid traversal. Independent part 1 checks visibility only, while independent part 2 computes scenic scores only.
+
+An isolated runner constructed the solver and file `Scanner` before timing the exact `fullSolve` call, checked both answers, and ran one excluded cold JVM per variant followed by 10 counterbalanced pairs of separate JVMs. Odd pairs ran the `560b9b8` duplicate-analysis baseline then candidate (`B-C`); even pairs reversed the order (`C-B`).
+
+| Pair | Order | Duplicate analysis (ms) | Shared analysis (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 6.485 | 4.078 | -2.408 |
+| 2 | C-B | 6.474 | 4.049 | -2.425 |
+| 3 | B-C | 7.488 | 4.406 | -3.082 |
+| 4 | C-B | 6.074 | 3.987 | -2.087 |
+| 5 | B-C | 6.426 | 4.297 | -2.129 |
+| 6 | C-B | 6.243 | 3.809 | -2.434 |
+| 7 | B-C | 6.384 | 4.298 | -2.086 |
+| 8 | C-B | 5.975 | 3.905 | -2.070 |
+| 9 | B-C | 5.865 | 3.829 | -2.036 |
+| 10 | C-B | 6.006 | 4.043 | -1.963 |
+
+Table deltas and summary statistics use the unrounded nanosecond records. The excluded cold values were 6.427 ms baseline and 4.008 ms candidate. The measured means were **6.342 ms baseline** and **4.070 ms candidate**, a **2.272 ms (35.8%) reduction**. The paired-delta sample standard deviation was 0.334 ms and the t(9) 95% confidence interval was **[-2.511 ms, -2.033 ms]**.
+
+The authoritative whole-suite child comparison was noisy: its counterbalanced 10-pair solver means were 230.254 ms baseline and 233.104 ms candidate, a +2.850 ms delta with a 95% confidence interval of [-2.619 ms, +8.318 ms]. Separate standard phase runs had these excluded cold processes:
+
+| Variant | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Baseline | 334.833 | 281.474 | 251.348 | 35.716 | 30.127 |
+| Candidate | 300.537 | 253.855 | 223.206 | 28.696 | 30.649 |
+
+Their 10-process means were:
+
+| Metric | Baseline mean (ms) | Candidate mean (ms) | Change (ms) |
+| --- | ---: | ---: | ---: |
+| Wall | 312.576 | 305.008 | -7.568 |
+| Main | 271.479 | 265.006 | -6.473 |
+| Solver | 241.518 | 235.691 | -5.828 |
+| Startup | 27.277 | 26.437 | -0.840 |
+| Harness | 29.961 | 29.315 | -0.646 |
+
+The accepted evidence is the isolated paired Day 8 interval; the whole-suite paired interval is explicitly inconclusive under nonuniform interactive load, while the standard phase table is retained transparently. Verification retained all 50 independent answers, all 25 combined solves, and the established checksum. The official sample returned `21 / 8`, and 1,000 deterministic rectangular grids of varied sizes matched the exact pre-change implementation with separate/combined agreement and optional final newlines.
+
 ## Historical warm measurements
 
 The per-part table in the README is retained as a historical July warm 10-run snapshot using `DayTemplate.timer`. It is useful for the relative shape of individual solvers, but it excludes fresh JVM startup and is not directly comparable with the process-level results above.

@@ -8,6 +8,30 @@ import java.util.Scanner;
 public class Day08 extends DayTemplate {
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
+		int[][] grid = parse(in);
+		if (part1) {
+			return "" + countVisible(grid);
+		}
+		return "" + bestScenicScore(grid);
+	}
+
+	@Override
+	public String[] fullSolve(Scanner in) throws FileNotFoundException {
+		int[][] grid = parse(in);
+		int visibleTrees = 0;
+		int bestScore = 0;
+		for (int row = 0; row < grid.length; row++) {
+			for (int col = 0; col < grid[0].length; col++) {
+				if (checkVisibility(grid, row, col)) {
+					visibleTrees++;
+				}
+				bestScore = Math.max(bestScore, calculateScore(grid, row, col));
+			}
+		}
+		return new String[] { "" + visibleTrees, "" + bestScore };
+	}
+
+	private int[][] parse(Scanner in) {
 		List<String> lines = new ArrayList<>();
 		while (in.hasNextLine()) {
 			lines.add(in.nextLine());
@@ -21,20 +45,29 @@ public class Day08 extends DayTemplate {
 				grid[row][col] = line.charAt(col) - '0';
 			}
 		}
+		return grid;
+	}
 
+	private int countVisible(int[][] grid) {
 		int visibleTrees = 0;
-		int bestScore = 0;
-		for (int row = 0; row < rows; row++) {
-			for (int col = 0; col < cols; col++) {
+		for (int row = 0; row < grid.length; row++) {
+			for (int col = 0; col < grid[0].length; col++) {
 				if (checkVisibility(grid, row, col)) {
 					visibleTrees++;
 				}
-				if (!part1) {
-					bestScore = Math.max(bestScore, calculateScore(grid, row, col));
-				}
 			}
 		}
-		return "" + (part1 ? visibleTrees : bestScore);
+		return visibleTrees;
+	}
+
+	private int bestScenicScore(int[][] grid) {
+		int bestScore = 0;
+		for (int row = 0; row < grid.length; row++) {
+			for (int col = 0; col < grid[0].length; col++) {
+				bestScore = Math.max(bestScore, calculateScore(grid, row, col));
+			}
+		}
+		return bestScore;
 	}
 
 	private boolean checkVisibility(int[][] grid, int row, int col) {
