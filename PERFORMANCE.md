@@ -230,6 +230,46 @@ Their 10-process means were:
 
 The accepted evidence is the isolated paired Day 9 interval; the aggregate phase run contains visible outliers and is not interpreted as a code effect. Verification retained all 50 answers, all 25 combined solves, and the established checksum. Both official examples (`13 / 1` and `88 / 36`), 1,000 deterministic randomized motion lists against a reference `HashSet` simulator, whitespace and malformed-input cases, and a `R 5000` regression (`5000 / 4992`) all passed.
 
+## Day 6 single-pass marker detection
+
+Day 6 previously built a new boxed `HashSet<Character>` for every candidate window, rescanned each window, and repeated the input and marker scan for the combined solve. It now tracks each UTF-16 character's last-seen position in a primitive array, maintains the longest distinct suffix, and records the first suffix lengths reaching 4 and 14 in one pass. This retains the previous arbitrary Java-character domain and the previous zero result when no marker exists.
+
+An isolated runner constructed the solver and file `Scanner` before timing the exact `fullSolve` call, checked both answers, and ran one excluded cold JVM per variant followed by 10 counterbalanced pairs of separate JVMs. Odd pairs ran the `992e334` boxed-window baseline then candidate (`B-C`); even pairs reversed the order (`C-B`).
+
+| Pair | Order | Boxed windows (ms) | Last-seen scan (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 8.525 | 3.941 | -4.584 |
+| 2 | C-B | 8.501 | 3.797 | -4.705 |
+| 3 | B-C | 8.838 | 3.811 | -5.027 |
+| 4 | C-B | 9.033 | 3.706 | -5.327 |
+| 5 | B-C | 9.559 | 3.957 | -5.602 |
+| 6 | C-B | 8.743 | 3.908 | -4.834 |
+| 7 | B-C | 8.553 | 3.740 | -4.813 |
+| 8 | C-B | 8.643 | 3.684 | -4.959 |
+| 9 | B-C | 8.894 | 3.759 | -5.135 |
+| 10 | C-B | 8.262 | 4.162 | -4.100 |
+
+Table deltas and summary statistics use the unrounded nanosecond records. The excluded cold values were 8.431 ms baseline and 3.973 ms candidate. The measured means were **8.755 ms baseline** and **3.846 ms candidate**, a **4.909 ms (56.1%) reduction**. The paired-delta sample standard deviation was 0.413 ms and the t(9) 95% confidence interval was **[-5.204 ms, -4.613 ms]**.
+
+The authoritative whole-suite child comparison had a lower but noisy candidate point estimate: its counterbalanced 10-pair solver means were 235.746 ms baseline and 229.776 ms candidate, a -5.970 ms delta with a 95% confidence interval of [-15.780 ms, +3.840 ms]. Separate standard phase runs had these excluded cold processes:
+
+| Variant | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Baseline | 307.578 | 261.151 | 229.459 | 31.600 | 31.693 |
+| Candidate | 296.407 | 262.935 | 229.327 | 29.248 | 33.608 |
+
+Their 10-process means were:
+
+| Metric | Baseline mean (ms) | Candidate mean (ms) | Change (ms) |
+| --- | ---: | ---: | ---: |
+| Wall | 306.179 | 298.929 | -7.250 |
+| Main | 264.011 | 262.836 | -1.175 |
+| Solver | 231.986 | 230.324 | -1.661 |
+| Startup | 28.149 | 29.462 | +1.313 |
+| Harness | 32.025 | 32.512 | +0.486 |
+
+The accepted evidence is the isolated paired Day 6 interval; the whole-suite interval is explicitly inconclusive under the user's nonuniform interactive load, and the complete phase split is retained transparently. Verification retained all 50 independent answers, all 25 combined solves, and checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`. All five official examples, absent-marker and exact-length edge cases, and 1,000 deterministic randomized streams containing ASCII and non-ASCII Java characters matched the exact pre-change implementation with and without final newlines.
+
 ## Historical warm measurements
 
 The per-part table in the README is retained as a historical July warm 10-run snapshot using `DayTemplate.timer`. It is useful for the relative shape of individual solvers, but it excludes fresh JVM startup and is not directly comparable with the process-level results above.
