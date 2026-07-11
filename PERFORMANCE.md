@@ -117,6 +117,39 @@ Day 18 previously assumed nonnegative coordinates inside a fixed 25×25×25 arra
 
 The official sample remains 64/58, translated negative and greater-than-23 coordinate cases produce the same result, overflow or unrepresentable flat bounds fail explicitly, and the full 50-answer verification remains unchanged.
 
+## Direct solver factory
+
+The fresh-JVM and normal master harnesses now share a direct switch-based solver factory instead of formatting 25 class names and using `Class.forName`, constructor lookup, and reflective instantiation. Construction stays outside the solver timer, so this change targets harness work without moving parsing or solver logic across a timing boundary.
+
+Under nonuniform interactive machine load, the exact final factory and reflective baseline first ran a cold child each and then 10 counterbalanced pairs of fresh child JVMs. All children returned the established checksum. The cold harness values (`main - solver`) were 37.930ms reflection and 30.390ms factory.
+
+| Pair | Order | Reflection harness (ms) | Factory harness (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 33.989 | 31.284 | -2.705 |
+| 2 | C-B | 33.071 | 31.105 | -1.966 |
+| 3 | B-C | 31.666 | 31.086 | -0.580 |
+| 4 | C-B | 32.083 | 32.423 | +0.339 |
+| 5 | B-C | 32.168 | 30.138 | -2.030 |
+| 6 | C-B | 31.943 | 30.497 | -1.446 |
+| 7 | B-C | 31.411 | 30.615 | -0.796 |
+| 8 | C-B | 31.077 | 31.493 | +0.416 |
+| 9 | B-C | 32.656 | 28.662 | -3.995 |
+| 10 | C-B | 31.401 | 29.104 | -2.297 |
+
+The paired harness means were **32.147ms reflection** and **30.641ms factory**, a 1.506ms reduction. The paired-delta sample standard deviation was 1.383ms and the approximate 95% confidence interval was **[-2.50ms, -0.52ms]**.
+
+Separate standard cold-plus-10 parent runs recorded every phase:
+
+| Metric | Reflection mean (ms) | Factory mean (ms) | Change (ms) |
+| --- | ---: | ---: | ---: |
+| Wall | 326.803 | 333.055 | +6.252 |
+| Main | 281.042 | 286.189 | +5.147 |
+| Solver | 247.687 | 254.866 | +7.179 |
+| Startup | 29.735 | 29.791 | +0.057 |
+| Harness | 33.355 | 31.323 | **-2.032** |
+
+The full-run harness phase independently confirms the targeted reduction. Wall, main, and solver moved with unrelated interactive load and are not treated as evidence for or against this harness-only change. All 50 independent answers and all 25 combined solves remain unchanged.
+
 ## Historical warm measurements
 
 The per-part table in the README is retained as a historical July warm 10-run snapshot using `DayTemplate.timer`. It is useful for the relative shape of individual solvers, but it excludes fresh JVM startup and is not directly comparable with the process-level results above.

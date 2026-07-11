@@ -1,7 +1,6 @@
 package aoc2022;
 
 import java.io.File;
-import java.lang.reflect.Method;
 import java.util.Scanner;
 
 public class MasterSolver {
@@ -20,13 +19,11 @@ public class MasterSolver {
 			String zeroFilledDay = (day < 10 ? "0" : "") + day;
 			for (boolean part1 : parts) {
 				File file = new File("./data/day" + zeroFilledDay + ".txt");
-				Scanner in = new Scanner(file);
-				Class<?> cls = Class.forName("aoc2022.Day" + zeroFilledDay);
-				Method m = cls.getDeclaredMethod("solve", boolean.class, Scanner.class);
-				String answer = (String) m.invoke(cls.getDeclaredConstructor().newInstance(), part1, in);
-				System.out.println(
-						"Day " + zeroFilledDay+ " part " + (part1 ? 1 : 2) + " solution: " + answer);
-				in.close();
+				try (Scanner in = new Scanner(file)) {
+					String answer = SolverFactory.create(day).solve(part1, in);
+					System.out.println(
+							"Day " + zeroFilledDay+ " part " + (part1 ? 1 : 2) + " solution: " + answer);
+				}
 			}
 		}
 		if (runTimer) {
@@ -41,17 +38,17 @@ public class MasterSolver {
 	 *                  true. Timer will give individual days times by part if param
 	 *                  is set to false. Note that even if param is set to false,
 	 *                  total time will be given.
-	 * @throws Exception
+	 * @throws Exception when an input cannot be opened
 	 */
 
 	public static void timer(boolean total) throws Exception {
 		Double totalTime = 0.0;
 		for (int day = 1; day <= 25; day++) {
 			String zeroFilledDay = (day < 10 ? "0" : "") + day;
-			Double time = (Double) Class.forName("aoc2022.Day" + zeroFilledDay)
-					.getMethod("dayTimer", Scanner.class)
-					.invoke(Class.forName("aoc2022.Day" + zeroFilledDay).getDeclaredConstructor().newInstance(),
-							new Scanner(new File("./data/day" + zeroFilledDay + ".txt")));
+			double time;
+			try (Scanner scanner = new Scanner(new File("./data/day" + zeroFilledDay + ".txt"))) {
+				time = SolverFactory.create(day).dayTimer(scanner);
+			}
 			if (!total) {
 				System.out.println("Day " + zeroFilledDay + " execution time: " + time);
 			}
