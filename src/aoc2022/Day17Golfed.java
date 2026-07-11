@@ -9,7 +9,7 @@ int[]h=new int[7];long n=p?2022:1000000000000L,r=0,e=0;int q=0;var z=0>1;
 for(;r<n;r++){
 int k=(int)(r%5),x=2,y=c.size()+3;
 for(;;){
-int X=x+(j.charAt(q)==60?-1:1);q=(q+1)%j.length();
+int X=x+(j.charAt(q)==60?-1:1);q=++q%j.length();
 if(o(P[k],X,y,c))x=X;
 if(o(P[k],x,y-1,c))y--;else{u(P[k],x,y,c,h);break;}
 }
