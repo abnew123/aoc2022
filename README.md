@@ -12,7 +12,7 @@ Inputs:
 
 To see a given day's solution, go to DayX.java, where X is the day in question. 
 
-[`FreshJvmBenchmark`](src/aoc2022/FreshJvmBenchmark.java) is the reproducible answer-consistency and fresh-process benchmark runner. On a 2024 MacBook Pro using OpenJDK 23.0.1, the current 10-process means are 287.626 ms wall time, 253.278 ms in child `main`, and 222.977 ms in the 25 `fullSolve` calls. See [performance notes](PERFORMANCE.md) for every sample, metric definitions, and the alternating baseline comparison.
+[`FreshJvmBenchmark`](src/aoc2022/FreshJvmBenchmark.java) is the reproducible answer-consistency and fresh-process benchmark runner. On a 2024 MacBook Pro using OpenJDK 23.0.1, the latest 10-process means under explicitly nonuniform interactive load are 288.281 ms wall time, 252.786 ms in child `main`, and 223.893 ms in the 25 `fullSolve` calls. See [performance notes](PERFORMANCE.md) for every sample, metric definitions, and the paired optimization comparisons.
 
 From the repository root, compile for the project's Java 16 target, verify all answers, and run one cold process plus 10 measured fresh JVM processes with:
 
@@ -27,6 +27,8 @@ java -cp /tmp/aoc2022-classes aoc2022.FreshJvmBenchmark
 The runner checks that 50 individual `solve` results equal the corresponding 25 two-answer `fullSolve` results; it does not independently know the expected puzzle answers. The ordered checksum is `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`, unchanged from the pristine known-good `a107970` pre-change snapshot. Correctness evidence also includes byte-identical before/after records for all 50 answers, the official Day 18 sample, and translated-coordinate regressions.
 
 Day 18 now computes both surface areas from one parse with dynamically checked padded bounds, flat primitive occupancy, and one exterior flood fill. It accepts signed coordinates whose one-cell-padded volume is representable by the flat arrays, and explicitly rejects coordinates outside those arithmetic or indexing limits rather than wrapping; the official sample remains 64/58 and all 50 repository answers are unchanged.
+
+Day 17 now obtains both answers from one simulation, using a detected cycle first to approach the 2,022-rock checkpoint without passing it and then to approach one trillion rocks. A counterbalanced isolated fresh-process comparison reduced its mean from 12.758ms to 9.481ms (-25.7%), with a paired 95% confidence interval of [-3.57ms, -2.98ms]; the whole-suite comparison remained inconclusive under interactive load.
 
 The table below is the historical July warm 10-run per-part table from `DayTemplate.timer`. It is retained for solver-level context, but it is not directly comparable to the fresh-JVM numbers above.
 

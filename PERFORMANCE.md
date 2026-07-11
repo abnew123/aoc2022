@@ -48,30 +48,30 @@ The separately reported cold run was:
 
 | Run | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Cold | 296.779 | 253.532 | 223.092 | 24.813 | 30.439 |
+| Cold | 283.166 | 249.346 | 220.618 | 29.062 | 28.728 |
 
 The following 10 fresh JVM processes form the summary sample:
 
 | Run | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | 296.221 | 257.026 | 225.633 | 24.397 | 31.393 |
-| 2 | 301.574 | 258.153 | 225.137 | 24.182 | 33.016 |
-| 3 | 285.422 | 254.968 | 224.110 | 26.100 | 30.858 |
-| 4 | 278.571 | 250.291 | 221.143 | 23.801 | 29.148 |
-| 5 | 281.964 | 253.506 | 223.210 | 23.774 | 30.296 |
-| 6 | 295.040 | 253.459 | 223.278 | 24.188 | 30.182 |
-| 7 | 294.405 | 250.667 | 222.021 | 24.382 | 28.646 |
-| 8 | 284.041 | 252.397 | 222.384 | 27.291 | 30.012 |
-| 9 | 273.567 | 245.596 | 215.951 | 23.402 | 29.645 |
-| 10 | 285.458 | 256.721 | 226.900 | 24.233 | 29.821 |
+| 1 | 280.525 | 250.613 | 222.440 | 25.608 | 28.173 |
+| 2 | 297.428 | 251.369 | 222.974 | 26.389 | 28.395 |
+| 3 | 286.384 | 253.984 | 224.612 | 27.962 | 29.372 |
+| 4 | 279.398 | 249.642 | 220.943 | 25.587 | 28.699 |
+| 5 | 281.466 | 251.575 | 223.045 | 25.360 | 28.529 |
+| 6 | 275.525 | 247.284 | 217.809 | 24.196 | 29.475 |
+| 7 | 286.357 | 257.057 | 227.401 | 25.151 | 29.656 |
+| 8 | 305.209 | 261.252 | 230.879 | 24.265 | 30.373 |
+| 9 | 296.864 | 252.180 | 224.300 | 25.125 | 27.880 |
+| 10 | 293.657 | 252.904 | 224.530 | 25.054 | 28.374 |
 
 | Metric | Mean (ms) | Median (ms) | Sample standard deviation (ms) |
 | --- | ---: | ---: | ---: |
-| Wall | 287.626 | 285.440 | 8.841 |
-| Main | 253.278 | 253.483 | 3.773 |
-| Solver | 222.977 | 223.244 | 3.028 |
-| Startup | 24.575 | 24.210 | 1.193 |
-| Harness | 30.302 | 30.097 | 1.234 |
+| Wall | 288.281 | 286.371 | 9.594 |
+| Main | 252.786 | 251.877 | 3.945 |
+| Solver | 223.893 | 223.673 | 3.521 |
+| Startup | 25.470 | 25.255 | 1.084 |
+| Harness | 28.893 | 28.614 | 0.787 |
 
 ## Alternating baseline comparison
 
@@ -149,6 +149,46 @@ Separate standard cold-plus-10 parent runs recorded every phase:
 | Harness | 33.355 | 31.323 | **-2.032** |
 
 The full-run harness phase independently confirms the targeted reduction. Wall, main, and solver moved with unrelated interactive load and are not treated as evidence for or against this harness-only change. All 50 independent answers and all 25 combined solves remain unchanged.
+
+## Day 17 shared simulation and checkpointed cycle jump
+
+Day 17's `fullSolve` previously parsed the jet pattern twice and ran two independent cycle-detecting simulations. It now simulates once, records the exact tower height at rock 2,022, and continues to one trillion rocks. When a repeated normalized state is found before the checkpoint, the solver jumps by whole cycles without passing 2,022, records the translated checkpoint height, then reuses the same cycle toward the final goal. Individual `solve` calls retain the same generic single-goal path.
+
+An isolated runner constructed the solver and file `Scanner` before timing the exact `fullSolve` call, verified both answers, and ran one excluded cold JVM per variant followed by 10 counterbalanced pairs of separate JVMs. Odd pairs ran the `19b15c9` separate-simulation baseline then candidate (`B-C`); even pairs reversed the order (`C-B`).
+
+| Pair | Order | Separate simulations (ms) | Shared simulation (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 12.714 | 9.718 | -2.996 |
+| 2 | C-B | 12.547 | 9.279 | -3.268 |
+| 3 | B-C | 12.512 | 9.316 | -3.197 |
+| 4 | C-B | 12.655 | 9.289 | -3.367 |
+| 5 | B-C | 12.820 | 9.259 | -3.561 |
+| 6 | C-B | 13.010 | 9.298 | -3.712 |
+| 7 | B-C | 12.724 | 9.238 | -3.486 |
+| 8 | C-B | 12.833 | 9.379 | -3.454 |
+| 9 | B-C | 12.747 | 9.258 | -3.489 |
+| 10 | C-B | 13.022 | 10.780 | -2.242 |
+
+The excluded cold values were 12.752 ms separate and 9.682 ms shared. The measured means were **12.758 ms separate** and **9.481 ms shared**, a **3.277 ms (25.7%) reduction**. The paired-delta sample standard deviation was 0.415 ms and the t(9) 95% confidence interval was **[-3.57 ms, -2.98 ms]**.
+
+The exact final classpaths also ran through the authoritative whole-suite child. Its counterbalanced 10-pair solver means were 220.458 ms baseline and 222.481 ms candidate; the +2.023 ms paired delta had a wide 95% confidence interval of [-0.31 ms, +4.36 ms]. The standard phase runs had these excluded cold processes:
+
+| Variant | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Baseline | 279.909 | 246.534 | 217.914 | 28.735 | 28.620 |
+| Candidate | 283.166 | 249.346 | 220.618 | 29.062 | 28.728 |
+
+Their 10-process means were:
+
+| Metric | Baseline mean (ms) | Candidate mean (ms) | Change (ms) |
+| --- | ---: | ---: | ---: |
+| Wall | 293.423 | 288.281 | -5.142 |
+| Main | 251.786 | 252.786 | +1.000 |
+| Solver | 222.546 | 223.893 | +1.347 |
+| Startup | 28.088 | 25.470 | -2.618 |
+| Harness | 29.241 | 28.893 | -0.348 |
+
+Interactive machine load was explicitly nonuniform, so the aggregate movements across 24 unrelated days are retained transparently but are not used to judge the change. The accepted evidence is the isolated paired Day 17 interval. Verification retained all 50 independent answers, all 25 combined-solve pairs, and the established checksum. The official sample returned `3068 / 1514285714288`; 500 deterministic jet patterns, checkpoints, and small final goals also made the shared run match two independent single-goal simulations exactly.
 
 ## Historical warm measurements
 

@@ -26,6 +26,13 @@ public class Day17 extends DayTemplate {
 		return "" + simulate(goal, pushesLeft);
 	}
 
+	@Override
+	public String[] fullSolve(Scanner in) {
+		boolean[] pushesLeft = parsePushes(in.nextLine());
+		long[] heights = simulate(PART_2_ROCKS, PART_1_ROCKS, pushesLeft);
+		return new String[] { "" + heights[0], "" + heights[1] };
+	}
+
 	private boolean[] parsePushes(String pushes) {
 		boolean[] pushesLeft = new boolean[pushes.length()];
 		for (int i = 0; i < pushesLeft.length; i++) {
@@ -35,13 +42,20 @@ public class Day17 extends DayTemplate {
 	}
 
 	private long simulate(long goal, boolean[] pushesLeft) {
+		return simulate(goal, 0, pushesLeft)[1];
+	}
+
+	private long[] simulate(long goal, long checkpoint, boolean[] pushesLeft) {
 		List<Integer> chamber = new ArrayList<>();
 		Map<State, long[]> seen = new HashMap<>();
 		int[] columnHeights = new int[CHAMBER_WIDTH];
 		int jetIndex = 0;
 		long rocks = 0;
 		long skippedHeight = 0;
-		boolean skippedCycle = false;
+		long checkpointHeight = -1;
+		long cycleRocks = 0;
+		long cycleHeight = 0;
+		boolean cycleConsumed = false;
 
 		while (rocks < goal) {
 			Piece piece = PIECES[(int) (rocks % PIECES.length)];
@@ -64,26 +78,41 @@ public class Day17 extends DayTemplate {
 			}
 
 			rocks++;
-			if (!skippedCycle) {
+			if (rocks == checkpoint) {
+				checkpointHeight = skippedHeight + chamber.size();
+			}
+			if (!cycleConsumed && cycleRocks == 0) {
 				State state = new State((int) (rocks % PIECES.length), jetIndex, chamber, columnHeights);
 				long height = skippedHeight + chamber.size();
 				long[] previous = seen.get(state);
 				if (previous == null) {
 					seen.put(state, new long[] { rocks, height });
 				} else {
-					long cycleRocks = rocks - previous[0];
-					long cycleHeight = height - previous[1];
-					long cycles = (goal - rocks) / cycleRocks;
-					if (cycles > 0) {
-						rocks += cycles * cycleRocks;
-						skippedHeight += cycles * cycleHeight;
-						skippedCycle = true;
+					cycleRocks = rocks - previous[0];
+					cycleHeight = height - previous[1];
+				}
+			}
+
+			if (!cycleConsumed && cycleRocks > 0) {
+				if (checkpoint > 0 && checkpointHeight < 0) {
+					long cycles = (checkpoint - rocks) / cycleRocks;
+					rocks += cycles * cycleRocks;
+					skippedHeight += cycles * cycleHeight;
+					if (rocks == checkpoint) {
+						checkpointHeight = skippedHeight + chamber.size();
 					}
+				}
+
+				if (checkpoint == 0 || checkpointHeight >= 0) {
+					long cycles = (goal - rocks) / cycleRocks;
+					rocks += cycles * cycleRocks;
+					skippedHeight += cycles * cycleHeight;
+					cycleConsumed = true;
 				}
 			}
 		}
 
-		return skippedHeight + chamber.size();
+		return new long[] { checkpointHeight, skippedHeight + chamber.size() };
 	}
 
 	private boolean canMove(Piece piece, int x, int y, List<Integer> chamber) {
