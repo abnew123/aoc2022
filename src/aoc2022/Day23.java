@@ -72,9 +72,12 @@ public class Day23 extends DayTemplate {
 		}
 
 		Simulation simulation = new Simulation(rows, cols);
-		simulation.runRounds(10);
+		int firstRoundWithoutMovement = simulation.runRoundsFindingStop(10);
 		long part1 = simulation.emptyGroundInBoundingBox();
-		return new String[] { part1 + "", simulation.firstRoundWithoutMovement(10) + "" };
+		int part2 = firstRoundWithoutMovement == 0
+				? simulation.firstRoundWithoutMovement(10)
+				: firstRoundWithoutMovement;
+		return new String[] { part1 + "", part2 + "" };
 	}
 
 	private static final class Simulation {
@@ -101,6 +104,16 @@ public class Day23 extends DayTemplate {
 			for (int round = 0; round < rounds; round++) {
 				runRound(round);
 			}
+		}
+
+		int runRoundsFindingStop(int rounds) {
+			int firstRoundWithoutMovement = 0;
+			for (int round = 0; round < rounds; round++) {
+				if (!runRound(round) && firstRoundWithoutMovement == 0) {
+					firstRoundWithoutMovement = round + 1;
+				}
+			}
+			return firstRoundWithoutMovement;
 		}
 
 		int firstRoundWithoutMovement() {
@@ -160,6 +173,7 @@ public class Day23 extends DayTemplate {
 			}
 
 			boolean moved = false;
+			boolean resize = false;
 			for (int i = 0; i < proposedElfCount; i++) {
 				int elf = proposedElves[i];
 				if (grid.proposalCount(proposedPositions[elf]) == 1) {
@@ -169,9 +183,10 @@ public class Day23 extends DayTemplate {
 					rows[elf] += MOVE_ROWS[direction];
 					cols[elf] += MOVE_COLS[direction];
 					moved = true;
+					resize |= grid.needsResize(rows[elf], cols[elf]);
 				}
 			}
-			if (moved && grid.ensureOccupiedCovers(rows, cols)) {
+			if (resize) {
 				grid.rebuildOccupied(rows, cols, positions);
 			}
 			return moved;
@@ -214,8 +229,11 @@ public class Day23 extends DayTemplate {
 			}
 		}
 
-		boolean ensureOccupiedCovers(int[] rows, int[] cols) {
-			return ensureCovers(rows, cols, NEIGHBOR_MARGIN);
+		boolean needsResize(int row, int col) {
+			return (long) row - NEIGHBOR_MARGIN < baseRow
+					|| (long) row + NEIGHBOR_MARGIN >= (long) baseRow + height
+					|| (long) col - NEIGHBOR_MARGIN < baseCol
+					|| (long) col + NEIGHBOR_MARGIN >= (long) baseCol + width;
 		}
 
 		void clearProposals() {
@@ -311,10 +329,10 @@ public class Day23 extends DayTemplate {
 				maxCol = Math.max(maxCol, cols[i]);
 			}
 			if (occupiedStamp == null
-					|| minRow - margin < baseRow
-					|| maxRow + margin >= baseRow + height
-					|| minCol - margin < baseCol
-					|| maxCol + margin >= baseCol + width) {
+					|| (long) minRow - margin < baseRow
+					|| (long) maxRow + margin >= (long) baseRow + height
+					|| (long) minCol - margin < baseCol
+					|| (long) maxCol + margin >= (long) baseCol + width) {
 				resizeToFit(minRow, maxRow, minCol, maxCol, margin);
 				return true;
 			}

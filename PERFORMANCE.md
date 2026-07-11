@@ -310,6 +310,48 @@ Their 10-process means were:
 
 The accepted evidence is the isolated paired Day 8 interval; the whole-suite paired interval is explicitly inconclusive under nonuniform interactive load, while the standard phase table is retained transparently. Verification retained all 50 independent answers, all 25 combined solves, and the established checksum. The official sample returned `21 / 8`, and 1,000 deterministic rectangular grids of varied sizes matched the exact pre-change implementation with separate/combined agreement and optional final newlines.
 
+## Day 23 constant-time expansion detection
+
+Day 23 previously rescanned every elf's row and column after every moving round solely to determine whether the padded stamped grid needed expansion. The simulation now checks only successfully moved destinations against the same two-cell boundary invariant and performs the existing full rebuild only when one crosses it. A cardinal move from a margin-two starting cell remains safely in bounds until that end-of-round rebuild. The bounds comparisons also use `long` intermediates consistently to avoid integer wraparound.
+
+The combined solve now records a first no-movement round encountered during its mandatory first 10 rounds, while still completing all 10 rounds for part 1. This makes combined part 2 agree with the independent solver on already-stable and early-stabilizing maps; the personal input's first stopped round remains 1,016.
+
+An isolated runner constructed the solver and file `Scanner` before timing the exact `fullSolve` call, checked both answers, and ran one excluded cold JVM per variant followed by 10 counterbalanced pairs of separate JVMs. Odd pairs ran the `c42622c` full-boundary-scan baseline then candidate (`B-C`); even pairs reversed the order (`C-B`).
+
+| Pair | Order | Full boundary scan (ms) | Moved-cell check (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 41.082 | 35.243 | -5.840 |
+| 2 | C-B | 45.977 | 34.817 | -11.160 |
+| 3 | B-C | 43.303 | 39.504 | -3.799 |
+| 4 | C-B | 43.710 | 35.047 | -8.663 |
+| 5 | B-C | 46.313 | 39.782 | -6.531 |
+| 6 | C-B | 46.604 | 40.295 | -6.309 |
+| 7 | B-C | 49.841 | 36.949 | -12.892 |
+| 8 | C-B | 44.644 | 39.833 | -4.811 |
+| 9 | B-C | 49.052 | 35.025 | -14.027 |
+| 10 | C-B | 48.464 | 40.502 | -7.962 |
+
+Table deltas and summary statistics use the unrounded nanosecond records. The excluded cold values were 51.085 ms baseline and 35.086 ms candidate. The measured means were **45.899 ms baseline** and **37.700 ms candidate**, an **8.199 ms (17.9%) reduction**. The paired-delta sample standard deviation was 3.461 ms and the t(9) 95% confidence interval was **[-10.675 ms, -5.724 ms]**.
+
+The authoritative whole-suite counterbalanced comparison also showed a statistically clear solver reduction: its 10-pair means were 233.936 ms baseline and 226.219 ms candidate, a -7.717 ms delta with a 95% confidence interval of **[-13.184 ms, -2.251 ms]**. Separate standard phase runs had these excluded cold processes:
+
+| Variant | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Baseline | 295.762 | 259.918 | 230.067 | 30.120 | 29.851 |
+| Candidate | 312.885 | 261.649 | 230.584 | 36.221 | 31.065 |
+
+Their 10-process means were:
+
+| Metric | Baseline mean (ms) | Candidate mean (ms) | Change (ms) |
+| --- | ---: | ---: | ---: |
+| Wall | 308.512 | 309.805 | +1.293 |
+| Main | 271.709 | 269.979 | -1.730 |
+| Solver | 241.885 | 239.033 | -2.853 |
+| Startup | 27.015 | 27.561 | +0.546 |
+| Harness | 29.824 | 30.947 | +1.123 |
+
+All 50 independent answers and 25 combined solves retain checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`. The official sample returned `110 / 20`; empty and single-elf maps now return `0 / 1` consistently through separate and combined entry points; and 300 deterministic varied rectangular maps matched the exact pre-change independent answers.
+
 ## Historical warm measurements
 
 The per-part table in the README is retained as a historical July warm 10-run snapshot using `DayTemplate.timer`. It is useful for the relative shape of individual solvers, but it excludes fresh JVM startup and is not directly comparable with the process-level results above.
