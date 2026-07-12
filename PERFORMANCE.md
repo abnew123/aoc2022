@@ -474,6 +474,46 @@ Their 10-process means were:
 
 The accepted evidence is the isolated paired interval; aggregate movement across the other 24 days is explicitly inconclusive under interactive load. All 50 independent answers and 25 combined solves retain the established checksum. The official sample returned `24000 / 45000`; 300 deterministic prompt-valid inventories matched the exact pre-change implementation; and a candidate-only inventory beyond `long` range matched an independent `BigInteger` calculation.
 
+## Day 4 exact single-pass range checks
+
+Day 4's default combined solve previously copied the input into two Scanners and, for every part, created five regex-split arrays per assignment pair before parsing all four endpoints again. It now locates the three prompt delimiters directly, parses arbitrary-size nonnegative section IDs with `BigInteger`, and accumulates containment plus inclusive overlap in one pass.
+
+An isolated runner constructed the solver and input `Scanner` before timing the exact `fullSolve` call, checked both answers, and ran one excluded cold JVM per variant followed by 10 counterbalanced pairs of separate JVMs against baseline `5c60415`.
+
+| Pair | Order | Duplicate regex parsing (ms) | Direct exact parsing (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 9.318 | 7.126 | -2.192 |
+| 2 | C-B | 9.952 | 6.853 | -3.099 |
+| 3 | B-C | 9.978 | 7.062 | -2.916 |
+| 4 | C-B | 9.908 | 6.968 | -2.941 |
+| 5 | B-C | 10.007 | 7.265 | -2.743 |
+| 6 | C-B | 9.726 | 7.240 | -2.486 |
+| 7 | B-C | 10.513 | 7.244 | -3.270 |
+| 8 | C-B | 9.988 | 7.325 | -2.662 |
+| 9 | B-C | 9.923 | 7.063 | -2.860 |
+| 10 | C-B | 9.758 | 7.784 | -1.974 |
+
+The excluded cold values were 9.786ms baseline and 7.330ms candidate. The measured means were **9.907ms baseline** and **7.193ms candidate**, a **2.714ms (27.4%) reduction**. The paired-delta sample standard deviation was 0.401ms and the t(9) 95% confidence interval was **[-3.001ms, -2.427ms]**.
+
+The whole-suite comparison was directionally consistent but noisy: its counterbalanced 10-pair solver means were 216.977ms baseline and 216.128ms candidate, a -0.848ms delta with a 95% confidence interval of [-3.349ms, +1.652ms]. Separate standard phase runs had these excluded cold processes:
+
+| Variant | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Baseline | 292.677 | 255.374 | 222.872 | 33.880 | 32.501 |
+| Candidate | 294.184 | 262.475 | 229.069 | 28.073 | 33.406 |
+
+Their 10-process means were:
+
+| Metric | Baseline mean (ms) | Candidate mean (ms) | Change (ms) |
+| --- | ---: | ---: | ---: |
+| Wall | 299.262 | 305.741 | +6.480 |
+| Main | 262.752 | 267.085 | +4.333 |
+| Solver | 229.705 | 233.554 | +3.849 |
+| Startup | 28.056 | 29.178 | +1.122 |
+| Harness | 33.047 | 33.531 | +0.484 |
+
+The accepted evidence is the isolated paired interval; aggregate movement across the other 24 days is explicitly inconclusive under interactive load. All 50 independent answers and 25 combined solves retain the established checksum. The official sample returned `2 / 4`; 300 deterministic assignment sets matched the exact pre-change implementation; and candidate-only cases covered enormous IDs, equal ranges, touching endpoints, containment, and disjoint ranges.
+
 ## Historical warm measurements
 
 The per-part table in the README is retained as a historical July warm 10-run snapshot using `DayTemplate.timer`. It is useful for the relative shape of individual solvers, but it excludes fresh JVM startup and is not directly comparable with the process-level results above.
