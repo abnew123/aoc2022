@@ -1,12 +1,13 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
+import java.math.BigInteger;
 import java.util.Scanner;
 
 public class Day20 extends DayTemplate {
 	// Implicit treap stored in parallel arrays: in-order traversal is the mixed
 	// list, and parent pointers keep each mover's current index cheap to find.
-	private long[] values;
+	private BigInteger[] values;
 	private int[] left;
 	private int[] right;
 	private int[] parent;
@@ -14,68 +15,89 @@ public class Day20 extends DayTemplate {
 	private int[] priority;
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		values = new long[16];
-		left = new int[16];
-		right = new int[16];
-		parent = new int[16];
-		size = new int[16];
-		priority = new int[16];
+		BigInteger[] input = parse(in);
+		return mix(input, part1 ? BigInteger.ONE : BigInteger.valueOf(811589153L), part1 ? 1 : 10).toString();
+	}
+
+	@Override
+	public String[] fullSolve(Scanner in) throws FileNotFoundException {
+		BigInteger[] input = parse(in);
+		return new String[] {
+				mix(input, BigInteger.ONE, 1).toString(),
+				mix(input, BigInteger.valueOf(811589153L), 10).toString()
+		};
+	}
+
+	private BigInteger[] parse(Scanner in) {
+		BigInteger[] input = new BigInteger[1024];
 		int count = 0;
+		while (in.hasNext()) {
+			if (count == input.length) {
+				BigInteger[] grown = new BigInteger[input.length * 2];
+				System.arraycopy(input, 0, grown, 0, input.length);
+				input = grown;
+			}
+			input[count++] = new BigInteger(in.next());
+		}
+		BigInteger[] exact = new BigInteger[count];
+		System.arraycopy(input, 0, exact, 0, count);
+		return exact;
+	}
+
+	private BigInteger mix(BigInteger[] input, BigInteger key, int rounds) {
+		int count = input.length;
+		if (count == 0) {
+			throw new IllegalArgumentException("No values to mix");
+		}
+		values = new BigInteger[count];
+		left = new int[count];
+		right = new int[count];
+		parent = new int[count];
+		size = new int[count];
+		priority = new int[count];
 		int root = -1;
 		int zero = -1;
-		while (in.hasNext()) {
-			long val = Long.parseLong(in.nextLine());
-			if (count == values.length) {
-				grow();
+		for (int i = 0; i < count; i++) {
+			BigInteger val = input[i];
+			values[i] = val.multiply(key);
+			left[i] = -1;
+			right[i] = -1;
+			parent[i] = -1;
+			size[i] = 1;
+			priority[i] = priority(i);
+			if (val.signum() == 0) {
+				if (zero >= 0) {
+					throw new IllegalArgumentException("Multiple zero values");
+				}
+				zero = i;
 			}
-			values[count] = part1 ? val : val * 811589153L;
-			left[count] = -1;
-			right[count] = -1;
-			parent[count] = -1;
-			size[count] = 1;
-			priority[count] = priority(count);
-			if (val == 0) {
-				zero = count;
-			}
-			root = merge(root, count);
-			count++;
+			root = merge(root, i);
 		}
-		for (int k = 0; k < (part1 ? 1 : 10); k++) {
+		if (zero < 0) {
+			throw new IllegalArgumentException("Missing zero value");
+		}
+		if (count == 1) {
+			return values[zero].multiply(BigInteger.valueOf(3));
+		}
+		int[] rotations = new int[count];
+		BigInteger modulus = BigInteger.valueOf(count - 1L);
+		for (int i = 0; i < count; i++) {
+			rotations[i] = values[i].remainder(modulus).intValue();
+		}
+		for (int k = 0; k < rounds; k++) {
 			for (int i = 0; i < count; i++) {
 				int loc = indexOf(i);
 				root = remove(root, loc);
 
 				int sizeAfterRemoval = count - 1;
-				int rotate = (int) (values[i] % sizeAfterRemoval);
-				int nextLoc = Math.floorMod(loc + rotate, sizeAfterRemoval);
+				int nextLoc = (int) Math.floorMod((long) loc + rotations[i], sizeAfterRemoval);
 				root = insert(root, nextLoc, i);
 			}
 		}
 		int offset = indexOf(zero);
-		return "" + (values[get(root, (offset + 1000) % count)] + values[get(root, (offset + 2000) % count)]
-				+ values[get(root, (offset + 3000) % count)]);
-	}
-
-	private void grow() {
-		int nextCapacity = values.length * 2;
-		long[] grownValues = new long[nextCapacity];
-		int[] grownLeft = new int[nextCapacity];
-		int[] grownRight = new int[nextCapacity];
-		int[] grownParent = new int[nextCapacity];
-		int[] grownSize = new int[nextCapacity];
-		int[] grownPriority = new int[nextCapacity];
-		System.arraycopy(values, 0, grownValues, 0, values.length);
-		System.arraycopy(left, 0, grownLeft, 0, left.length);
-		System.arraycopy(right, 0, grownRight, 0, right.length);
-		System.arraycopy(parent, 0, grownParent, 0, parent.length);
-		System.arraycopy(size, 0, grownSize, 0, size.length);
-		System.arraycopy(priority, 0, grownPriority, 0, priority.length);
-		values = grownValues;
-		left = grownLeft;
-		right = grownRight;
-		parent = grownParent;
-		size = grownSize;
-		priority = grownPriority;
+		return values[get(root, (int) (((long) offset + 1000) % count))]
+				.add(values[get(root, (int) (((long) offset + 2000) % count))])
+				.add(values[get(root, (int) (((long) offset + 3000) % count))]);
 	}
 
 	private int insert(int root, int index, int mover) {

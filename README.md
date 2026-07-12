@@ -12,7 +12,7 @@ Inputs:
 
 To see a given day's solution, go to DayX.java, where X is the day in question. 
 
-[`FreshJvmBenchmark`](src/aoc2022/FreshJvmBenchmark.java) is the reproducible answer-consistency and fresh-process benchmark runner. On a 2024 MacBook Pro using OpenJDK 23.0.1, the latest 10-process means under explicitly nonuniform interactive load are 309.805 ms wall time, 269.979 ms in child `main`, and 239.033 ms in the 25 `fullSolve` calls. See [performance notes](PERFORMANCE.md) for every sample, metric definitions, and the paired optimization comparisons.
+[`FreshJvmBenchmark`](src/aoc2022/FreshJvmBenchmark.java) is the reproducible answer-consistency and fresh-process benchmark runner. On a 2024 MacBook Pro using OpenJDK 23.0.1, the latest 10-process means under explicitly nonuniform interactive load are 304.201 ms wall time, 263.060 ms in child `main`, and 230.484 ms in the 25 `fullSolve` calls. See [performance notes](PERFORMANCE.md) for every sample, metric definitions, and the paired optimization comparisons.
 
 From the repository root, compile for the project's Java 16 target, verify all answers, and run one cold process plus 10 measured fresh JVM processes with:
 
@@ -37,6 +37,8 @@ Day 6 now finds both distinct-character markers in one last-seen scan, eliminati
 Day 8 now parses the tree grid once for the combined solve and computes visibility and scenic scores in one grid traversal. Its isolated mean fell from 6.342ms to 4.070ms (-35.8%), with a paired 95% confidence interval of [-2.511ms, -2.033ms]; the whole-suite paired interval remained inconclusive under interactive load.
 
 Day 23 now detects grid-boundary expansion while applying successful moves instead of rescanning every elf after every moving round. Its isolated mean fell from 45.899ms to 37.700ms (-17.9%), with a paired 95% confidence interval of [-10.675ms, -5.724ms]; the whole-suite paired interval also excluded zero.
+
+Day 20 now parses the number list once, allocates exact treap storage, and precomputes modular rotations while retaining arbitrary-size integers. Its isolated mean fell from 52.521ms to 48.688ms (-7.3%), with a paired 95% confidence interval of [-4.437ms, -3.229ms]; the whole-suite paired interval remained inconclusive under interactive load.
 
 The table below is the historical July warm 10-run per-part table from `DayTemplate.timer`. It is retained for solver-level context, but it is not directly comparable to the fresh-JVM numbers above.
 

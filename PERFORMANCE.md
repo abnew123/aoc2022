@@ -352,6 +352,48 @@ Their 10-process means were:
 
 All 50 independent answers and 25 combined solves retain checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`. The official sample returned `110 / 20`; empty and single-elf maps now return `0 / 1` consistently through separate and combined entry points; and 300 deterministic varied rectangular maps matched the exact pre-change independent answers.
 
+## Day 20 single parse and exact treap storage
+
+Day 20's default combined solve previously materialized the input, created two additional Scanners, parsed 5,000 numbers twice, and repeatedly grew six parallel treap arrays from capacity 16. It now parses once, allocates exact node arrays for each independent mix, and precomputes every mover's remainder modulo `n - 1` before the rounds.
+
+The prompt gives no numeric bound, so values and coordinate sums now use `BigInteger` rather than retaining the old `long` overflow restriction. Movement still depends only on the small modular remainder, preserving the primitive treap hot path. Arbitrary whitespace is accepted, a missing or ambiguous duplicate zero is rejected explicitly, and a single zero value returns zero without dividing by `n - 1`.
+
+An isolated runner constructed the solver and file `Scanner` before timing the exact `fullSolve` call, checked both answers, and ran one excluded cold JVM per variant followed by 10 counterbalanced pairs of separate JVMs. Odd pairs ran the `bb03bc4` duplicate-parse/growing-array baseline then candidate (`B-C`); even pairs reversed the order (`C-B`).
+
+| Pair | Order | Duplicate/growing (ms) | Parse-once/exact (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 52.488 | 48.801 | -3.687 |
+| 2 | C-B | 51.868 | 48.598 | -3.270 |
+| 3 | B-C | 51.420 | 48.626 | -2.794 |
+| 4 | C-B | 53.527 | 48.331 | -5.196 |
+| 5 | B-C | 53.486 | 48.580 | -4.906 |
+| 6 | C-B | 52.970 | 48.671 | -4.299 |
+| 7 | B-C | 52.656 | 48.105 | -4.551 |
+| 8 | C-B | 52.066 | 48.741 | -3.325 |
+| 9 | B-C | 52.320 | 49.367 | -2.953 |
+| 10 | C-B | 52.408 | 49.057 | -3.351 |
+
+Table deltas and summary statistics use the unrounded nanosecond records. The excluded cold values were 52.044 ms baseline and 47.937 ms candidate. The measured means were **52.521 ms baseline** and **48.688 ms candidate**, a **3.833 ms (7.3%) reduction**. The paired-delta sample standard deviation was 0.845 ms and the t(9) 95% confidence interval was **[-4.437 ms, -3.229 ms]**.
+
+The authoritative whole-suite child comparison was directionally consistent but noisy: its counterbalanced 10-pair solver means were 228.037 ms baseline and 225.319 ms candidate, a -2.718 ms delta with a 95% confidence interval of [-5.881 ms, +0.444 ms]. Separate standard phase runs had these excluded cold processes:
+
+| Variant | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Baseline | 290.477 | 252.817 | 221.461 | 32.950 | 31.356 |
+| Candidate | 310.031 | 272.151 | 240.068 | 30.475 | 32.083 |
+
+Their 10-process means were:
+
+| Metric | Baseline mean (ms) | Candidate mean (ms) | Change (ms) |
+| --- | ---: | ---: | ---: |
+| Wall | 301.287 | 304.201 | +2.914 |
+| Main | 260.202 | 263.060 | +2.859 |
+| Solver | 228.440 | 230.484 | +2.044 |
+| Startup | 28.863 | 29.768 | +0.905 |
+| Harness | 31.762 | 32.577 | +0.815 |
+
+The accepted evidence is the isolated paired Day 20 interval; the whole-suite paired interval is explicitly inconclusive under nonuniform interactive load, and the complete phase split is retained transparently. All 50 independent answers and 25 combined solves retain the established checksum. The official sample returned `3 / 1623178306`; 300 deterministic signed single-zero lists matched the exact pre-change implementation; and candidate-only checks covered a one-element zero list plus an integer far beyond `long` range.
+
 ## Historical warm measurements
 
 The per-part table in the README is retained as a historical July warm 10-run snapshot using `DayTemplate.timer`. It is useful for the relative shape of individual solvers, but it excludes fresh JVM startup and is not directly comparable with the process-level results above.
