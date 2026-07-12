@@ -5,7 +5,7 @@ int[][]P={{15},{2,7,2},{7,4,4},{1,1,1,1},{3,3}};
 String s(boolean p,String[]j){
 var J=j[0];
 List<Integer>c=$.a();Map<String,long[]>m=$.h();
-int[]h=new int[7];long n=p?2022:1000000000000L,r=0,e=0;int q=0,z=0;
+int[]h=new int[7];long n=p?2022:1000000000000L,r=0,e=0;int q=0;
 for(;r<n;r++){
 int k=(int)(r%5),x=2,y=c.size()+3;
 for(;;){
@@ -13,9 +13,9 @@ int X=x+(J.charAt(q)==60?-1:1);q=++q%J.length();
 if(o(P[k],X,y,c))x=X;
 if(o(P[k],x,y-1,c))y--;else{u(P[k],x,y,c,h);break;}
 }
-if(z<1){
+if(e<1){
 var K=k(r+1,q,c,h);var v=m.putIfAbsent(K,new long[]{r+1,c.size()});
-if(v!=null){long a=r+1-v[0],b=c.size()-v[1],g=(n-r-1)/a;r+=g*a;e+=g*b;z=1;}
+if(v!=null){long a=r+1-v[0],b=c.size()-v[1],g=(n-r-1)/a;r+=g*a;e+=g*b;}
 }
 }
 return""+(e+c.size());
