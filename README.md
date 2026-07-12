@@ -12,7 +12,7 @@ Inputs:
 
 To see a given day's solution, go to DayX.java, where X is the day in question. 
 
-[`FreshJvmBenchmark`](src/aoc2022/FreshJvmBenchmark.java) is the reproducible answer-consistency and fresh-process benchmark runner. On a 2024 MacBook Pro using OpenJDK 23.0.1, the latest 10-process means under explicitly nonuniform interactive load are 304.201 ms wall time, 263.060 ms in child `main`, and 230.484 ms in the 25 `fullSolve` calls. See [performance notes](PERFORMANCE.md) for every sample, metric definitions, and the paired optimization comparisons.
+[`FreshJvmBenchmark`](src/aoc2022/FreshJvmBenchmark.java) is the reproducible answer-consistency and fresh-process benchmark runner. On a 2024 MacBook Pro using OpenJDK 23.0.1, the latest 10-process means under explicitly nonuniform interactive load are 310.700 ms wall time, 266.311 ms in child `main`, and 233.851 ms in the 25 `fullSolve` calls. See [performance notes](PERFORMANCE.md) for every sample, metric definitions, and the paired optimization comparisons.
 
 From the repository root, compile for the project's Java 16 target, verify all answers, and run one cold process plus 10 measured fresh JVM processes with:
 
@@ -29,6 +29,8 @@ The runner checks that 50 individual `solve` results equal the corresponding 25 
 Day 18 now computes both surface areas from one parse with dynamically checked padded bounds, flat primitive occupancy, and one exterior flood fill. It accepts signed coordinates whose one-cell-padded volume is representable by the flat arrays, and explicitly rejects coordinates outside those arithmetic or indexing limits rather than wrapping; the official sample remains 64/58 and all 50 repository answers are unchanged.
 
 Day 17 now obtains both answers from one simulation, using a detected cycle first to approach the 2,022-rock checkpoint without passing it and then to approach one trillion rocks. A counterbalanced isolated fresh-process comparison reduced its mean from 12.758ms to 9.481ms (-25.7%), with a paired 95% confidence interval of [-3.57ms, -2.98ms]; the whole-suite comparison remained inconclusive under interactive load.
+
+Day 3 now represents item sets as 52-bit masks and computes both priority totals in one input pass. Its isolated mean fell from 7.871ms to 3.918ms (-50.2%), with a paired 95% confidence interval of [-4.594ms, -3.312ms]; the whole-suite paired interval remained inconclusive under interactive load.
 
 Day 9 now counts both tails in one ten-knot simulation and stores full signed coordinates in primitive hash sets instead of fixed offset grids. Its isolated mean fell from 13.366ms to 10.185ms (-23.8%), with a paired 95% confidence interval of [-3.34ms, -3.02ms]; it also accepts the 5,000-step straight path that exceeded the old bounds.
 

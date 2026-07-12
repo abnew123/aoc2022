@@ -394,6 +394,46 @@ Their 10-process means were:
 
 The accepted evidence is the isolated paired Day 20 interval; the whole-suite paired interval is explicitly inconclusive under nonuniform interactive load, and the complete phase split is retained transparently. All 50 independent answers and 25 combined solves retain the established checksum. The official sample returned `3 / 1623178306`; 300 deterministic signed single-zero lists matched the exact pre-change implementation; and candidate-only checks covered a one-element zero list plus an integer far beyond `long` range.
 
+## Day 3 shared 52-bit item masks
+
+Day 3 previously converted each rucksack to character arrays and built/intersected boxed `HashSet<Character>` instances separately for both parts. Its default combined solve also copied the input into two new Scanners. It now maps the prompt's 52 letter item types to one `long` mask and accumulates compartment and three-elf intersections in one input pass. Totals use `long`; invalid letters, uneven compartments, incomplete groups, and nonsingleton shared-item sets are rejected explicitly according to the prompt grammar.
+
+An isolated runner constructed the solver and input `Scanner` before timing the exact `fullSolve` call, checked both answers, and ran one excluded cold JVM per variant followed by 10 counterbalanced pairs of separate JVMs against baseline `fbd06e5`.
+
+| Pair | Order | Hash sets/two scans (ms) | Shared bit masks (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 7.504 | 4.013 | -3.492 |
+| 2 | C-B | 9.896 | 3.701 | -6.195 |
+| 3 | B-C | 8.098 | 4.310 | -3.788 |
+| 4 | C-B | 7.987 | 4.926 | -3.061 |
+| 5 | B-C | 8.118 | 3.733 | -4.385 |
+| 6 | C-B | 7.001 | 4.016 | -2.985 |
+| 7 | B-C | 7.354 | 3.562 | -3.793 |
+| 8 | C-B | 7.529 | 3.701 | -3.828 |
+| 9 | B-C | 7.605 | 3.608 | -3.997 |
+| 10 | C-B | 7.619 | 3.615 | -4.004 |
+
+The excluded cold values were 7.202ms baseline and 3.661ms candidate. The measured means were **7.871ms baseline** and **3.918ms candidate**, a **3.953ms (50.2%) reduction**. The paired-delta sample standard deviation was 0.896ms and the t(9) 95% confidence interval was **[-4.594ms, -3.312ms]**.
+
+The whole-suite comparison was directionally consistent but noisy: its counterbalanced 10-pair solver means were 230.686ms baseline and 229.040ms candidate, a -1.646ms delta with a 95% confidence interval of [-7.116ms, +3.824ms]. Separate standard phase runs had these excluded cold processes:
+
+| Variant | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Baseline | 324.643 | 277.152 | 242.720 | 30.356 | 34.432 |
+| Candidate | 320.156 | 271.905 | 238.138 | 30.765 | 33.767 |
+
+Their 10-process means were:
+
+| Metric | Baseline mean (ms) | Candidate mean (ms) | Change (ms) |
+| --- | ---: | ---: | ---: |
+| Wall | 314.294 | 310.700 | -3.594 |
+| Main | 269.511 | 266.311 | -3.200 |
+| Solver | 236.991 | 233.851 | -3.140 |
+| Startup | 30.176 | 28.610 | -1.566 |
+| Harness | 32.520 | 32.459 | -0.061 |
+
+The accepted evidence is the isolated paired interval; aggregate movement across the other 24 days is explicitly inconclusive under interactive load. All 50 independent answers and 25 combined solves retain checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`. The official sample returned `157 / 70`, and 300 generated prompt-valid groups spanning all 52 priority values matched the exact pre-change implementation through separate and combined entry points.
+
 ## Historical warm measurements
 
 The per-part table in the README is retained as a historical July warm 10-run snapshot using `DayTemplate.timer`. It is useful for the relative shape of individual solvers, but it excludes fresh JVM startup and is not directly comparable with the process-level results above.
