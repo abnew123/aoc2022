@@ -434,6 +434,46 @@ Their 10-process means were:
 
 The accepted evidence is the isolated paired interval; aggregate movement across the other 24 days is explicitly inconclusive under interactive load. All 50 independent answers and 25 combined solves retain checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`. The official sample returned `157 / 70`, and 300 generated prompt-valid groups spanning all 52 priority values matched the exact pre-change implementation through separate and combined entry points.
 
+## Day 1 exact single-pass top three
+
+Day 1's default combined solve previously copied the input into two Scanners, parsed every calorie value twice, boxed every elf total, and sorted the complete list twice. It now parses once with `BigInteger`, maintains only the three largest totals, and derives both answers together. This also removes the previous `int` overflow restriction without assuming a minimum number of elves.
+
+An isolated runner constructed the solver and input `Scanner` before timing the exact `fullSolve` call, checked both answers, and ran one excluded cold JVM per variant followed by 10 counterbalanced pairs of separate JVMs against baseline `25644bb`.
+
+| Pair | Order | Duplicate list/sorts (ms) | Exact top three (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 8.884 | 7.012 | -1.873 |
+| 2 | C-B | 8.765 | 7.058 | -1.707 |
+| 3 | B-C | 8.726 | 7.000 | -1.726 |
+| 4 | C-B | 8.365 | 7.122 | -1.243 |
+| 5 | B-C | 8.778 | 7.242 | -1.536 |
+| 6 | C-B | 8.642 | 7.214 | -1.427 |
+| 7 | B-C | 9.068 | 7.209 | -1.859 |
+| 8 | C-B | 8.712 | 7.394 | -1.318 |
+| 9 | B-C | 8.915 | 7.447 | -1.469 |
+| 10 | C-B | 9.216 | 6.894 | -2.321 |
+
+The excluded cold values were 8.714ms baseline and 7.288ms candidate. The measured means were **8.807ms baseline** and **7.159ms candidate**, a **1.648ms (18.7%) reduction**. The paired-delta sample standard deviation was 0.320ms and the t(9) 95% confidence interval was **[-1.877ms, -1.419ms]**.
+
+The whole-suite comparison was directionally consistent but noisy: its counterbalanced 10-pair solver means were 221.078ms baseline and 219.783ms candidate, a -1.295ms delta with a 95% confidence interval of [-4.762ms, +2.173ms]. Separate standard phase runs had these excluded cold processes:
+
+| Variant | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Baseline | 294.079 | 244.401 | 213.516 | 28.499 | 30.885 |
+| Candidate | 280.547 | 247.583 | 216.898 | 28.127 | 30.686 |
+
+Their 10-process means were:
+
+| Metric | Baseline mean (ms) | Candidate mean (ms) | Change (ms) |
+| --- | ---: | ---: | ---: |
+| Wall | 294.101 | 286.549 | -7.551 |
+| Main | 249.100 | 251.420 | +2.319 |
+| Solver | 218.855 | 220.765 | +1.910 |
+| Startup | 25.822 | 25.725 | -0.097 |
+| Harness | 30.245 | 30.655 | +0.410 |
+
+The accepted evidence is the isolated paired interval; aggregate movement across the other 24 days is explicitly inconclusive under interactive load. All 50 independent answers and 25 combined solves retain the established checksum. The official sample returned `24000 / 45000`; 300 deterministic prompt-valid inventories matched the exact pre-change implementation; and a candidate-only inventory beyond `long` range matched an independent `BigInteger` calculation.
+
 ## Historical warm measurements
 
 The per-part table in the README is retained as a historical July warm 10-run snapshot using `DayTemplate.timer`. It is useful for the relative shape of individual solvers, but it excludes fresh JVM startup and is not directly comparable with the process-level results above.
