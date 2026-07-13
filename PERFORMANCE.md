@@ -561,6 +561,39 @@ Their 10-process means were:
 
 The accepted evidence is the clean isolated paired interval; the clean whole-suite paired interval and separate phase means are retained transparently as inconclusive aggregate evidence. All 50 independent answers and 25 combined solves retain the established checksum. The official sample returned `2 / 4`; 300 deterministic assignment sets matched the exact pre-change implementation; and candidate-only cases covered enormous IDs, equal ranges, touching endpoints, containment, and disjoint ranges.
 
+## Day 14 single-pass sand simulation
+
+The default combined solve previously copied the complete input, parsed and drew every rock path twice, allocated two oversized path stacks, and ran the part-one and part-two simulations independently. `fullSolve` now builds the reachable cave once, records the settled count when the first grain crosses below the deepest rock, and continues that same floor-enabled simulation to source blockage. If a sealed cave blocks the source before an abyss crossing, the common final count is returned for both parts. Path stacks are bounded by depth, singleton rock paths are retained, horizontal and vertical segments are clipped to the only x-coordinates sand can reach, and non-axis-aligned paths are rejected explicitly.
+
+An isolated runner constructed `Day14` and its file-backed `Scanner` before timing the exact `fullSolve` call. One excluded cold pair was followed by 10 separate counterbalanced JVM-process pairs:
+
+| Pair | Order | Duplicate simulations (ms) | Shared simulation (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 13.909 | 10.781 | -3.128 |
+| 2 | C-B | 14.265 | 10.645 | -3.620 |
+| 3 | B-C | 14.398 | 10.173 | -4.225 |
+| 4 | C-B | 13.676 | 10.501 | -3.175 |
+| 5 | B-C | 14.980 | 10.842 | -4.138 |
+| 6 | C-B | 14.733 | 10.490 | -4.243 |
+| 7 | B-C | 14.955 | 10.912 | -4.043 |
+| 8 | C-B | 13.445 | 10.818 | -2.627 |
+| 9 | B-C | 13.775 | 10.358 | -3.417 |
+| 10 | C-B | 14.009 | 10.998 | -3.011 |
+
+The excluded cold values were 14.410ms baseline and 11.071ms candidate. The measured means were **14.214ms baseline** and **10.652ms candidate**, a **3.563ms (25.1%) reduction**. The paired-delta sample standard deviation was 0.578ms and the t(9) 95% confidence interval was **[-3.976ms, -3.149ms]**.
+
+The same source revisions then ran one cold pair plus 10 counterbalanced full-suite pairs through the canonical child protocol. Aggregate movement across the other 24 days was noisy and is not attributed to this change:
+
+| Metric | Baseline mean (ms) | Candidate mean (ms) | Delta (ms) | Paired 95% CI (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| Wall | 290.505 | 290.869 | +0.364 | [-6.464, +7.191] |
+| Main | 250.247 | 251.811 | +1.564 | [-1.343, +4.471] |
+| Solver | 217.875 | 219.933 | +2.058 | [-0.961, +5.077] |
+| Startup | 29.596 | 29.302 | -0.293 | [-1.920, +1.333] |
+| Harness | 32.372 | 31.878 | -0.494 | [-1.219, +0.232] |
+
+The official sample returned `24 / 93`; empty, initially blocked, sealed-source, singleton-rock, huge irrelevant-segment, and huge clipped-segment cases passed. Another 500 deterministic prompt-valid axis-aligned caves matched the exact pre-change answers and separate entry points. Both revisions also verified all 50 repository answers and all 25 combined solves with checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`.
+
 ## Historical warm measurements
 
 The per-part table in the README is retained as a historical July warm 10-run snapshot using `DayTemplate.timer`. It is useful for the relative shape of individual solvers, but it excludes fresh JVM startup and is not directly comparable with the process-level results above.

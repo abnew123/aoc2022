@@ -12,7 +12,7 @@ Inputs:
 
 To see a given day's solution, go to DayX.java, where X is the day in question. 
 
-[`FreshJvmBenchmark`](src/aoc2022/FreshJvmBenchmark.java) is the reproducible answer-consistency and fresh-process benchmark runner. On a 2024 MacBook Pro using OpenJDK 23.0.1, the latest clean current-source 10-process means are 273.059 ms wall time, 239.715 ms in child `main`, and 211.585 ms in the 25 `fullSolve` calls. See [performance notes](PERFORMANCE.md) for every sample, metric definitions, recovery details, and the paired optimization comparisons.
+[`FreshJvmBenchmark`](src/aoc2022/FreshJvmBenchmark.java) is the reproducible answer-consistency and fresh-process benchmark runner. On a 2024 MacBook Pro using OpenJDK 23.0.1, the latest clean counterbalanced current-source 10-process means are 290.869 ms wall time, 251.811 ms in child `main`, and 219.933 ms in the 25 `fullSolve` calls. See [performance notes](PERFORMANCE.md) for every sample, metric definitions, recovery details, and the paired optimization comparisons.
 
 A clean counterbalanced cumulative comparison against pristine commit `a107970` measured the 25-day solver mean falling from 226.621ms to 210.329ms (-7.19%), with a paired 95% confidence interval of [-20.596ms, -11.988ms]. The paired process-wall interval also excluded zero.
 
@@ -47,6 +47,8 @@ Day 8 now parses the tree grid once for the combined solve and computes visibili
 Day 23 now detects grid-boundary expansion while applying successful moves instead of rescanning every elf after every moving round. Its isolated mean fell from 45.899ms to 37.700ms (-17.9%), with a paired 95% confidence interval of [-10.675ms, -5.724ms]; the whole-suite paired interval also excluded zero.
 
 Day 20 now parses the number list once, allocates exact treap storage, and precomputes modular rotations while retaining arbitrary-size integers. Its isolated mean fell from 52.521ms to 48.688ms (-7.3%), with a paired 95% confidence interval of [-4.437ms, -3.229ms]; the whole-suite paired interval remained inconclusive under interactive load.
+
+Day 14 now parses and builds the cave once, snapshots part 1 during the floor-enabled simulation, and continues the same run for part 2. Its isolated mean fell from 14.214ms to 10.652ms (-25.1%), with a paired 95% confidence interval of [-3.976ms, -3.149ms]. The reachable sand cone also bounds storage and rock drawing, so valid far-away rock segments no longer inflate the dense grid.
 
 The table below is the historical July warm 10-run per-part table from `DayTemplate.timer`. It is retained for solver-level context, but it is not directly comparable to the fresh-JVM numbers above.
 
