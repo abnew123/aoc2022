@@ -50,30 +50,30 @@ The separately reported cold run was:
 
 | Run | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Cold | 285.440 | 241.280 | 213.160 | 25.274 | 28.120 |
+| Cold | 269.756 | 237.058 | 208.725 | 28.362 | 28.333 |
 
 The following 10 fresh JVM processes form the summary sample:
 
 | Run | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | 266.254 | 237.307 | 208.906 | 25.113 | 28.401 |
-| 2 | 279.328 | 235.861 | 206.432 | 26.356 | 29.429 |
-| 3 | 285.874 | 241.166 | 213.039 | 25.606 | 28.127 |
-| 4 | 276.272 | 246.770 | 219.148 | 25.557 | 27.622 |
-| 5 | 272.643 | 244.379 | 216.770 | 23.732 | 27.609 |
-| 6 | 265.803 | 234.621 | 206.983 | 27.385 | 27.637 |
-| 7 | 268.948 | 241.380 | 213.831 | 23.603 | 27.549 |
-| 8 | 270.804 | 242.371 | 213.135 | 24.538 | 29.236 |
-| 9 | 278.131 | 235.954 | 208.524 | 23.206 | 27.431 |
-| 10 | 266.531 | 237.343 | 209.086 | 24.905 | 28.257 |
+| 1 | 274.426 | 244.858 | 216.546 | 24.901 | 28.312 |
+| 2 | 263.525 | 234.159 | 206.378 | 24.702 | 27.781 |
+| 3 | 269.238 | 235.460 | 207.632 | 28.648 | 27.828 |
+| 4 | 261.023 | 229.494 | 201.685 | 26.617 | 27.808 |
+| 5 | 275.247 | 244.215 | 215.807 | 26.126 | 28.408 |
+| 6 | 274.165 | 244.393 | 216.688 | 24.708 | 27.706 |
+| 7 | 261.371 | 231.602 | 203.574 | 24.795 | 28.028 |
+| 8 | 268.064 | 237.576 | 209.804 | 25.581 | 27.772 |
+| 9 | 279.863 | 248.288 | 218.300 | 26.982 | 29.987 |
+| 10 | 265.573 | 235.588 | 206.012 | 25.184 | 29.576 |
 
 | Metric | Mean (ms) | Median (ms) | Sample standard deviation (ms) |
 | --- | ---: | ---: | ---: |
-| Wall | 273.059 | 271.723 | 6.694 |
-| Main | 239.715 | 239.255 | 4.080 |
-| Solver | 211.585 | 211.063 | 4.271 |
-| Startup | 25.000 | 25.009 | 1.300 |
-| Harness | 28.130 | 27.882 | 0.715 |
+| Wall | 269.250 | 268.651 | 6.472 |
+| Main | 238.563 | 236.582 | 6.409 |
+| Solver | 210.243 | 208.718 | 6.098 |
+| Startup | 25.825 | 25.383 | 1.288 |
+| Harness | 28.321 | 27.928 | 0.811 |
 
 ## Clean cumulative recovery comparison
 
@@ -593,6 +593,29 @@ The same source revisions then ran one cold pair plus 10 counterbalanced full-su
 | Harness | 32.372 | 31.878 | -0.494 | [-1.219, +0.232] |
 
 The official sample returned `24 / 93`; empty, initially blocked, sealed-source, singleton-rock, huge irrelevant-segment, and huge clipped-segment cases passed. Another 500 deterministic prompt-valid axis-aligned caves matched the exact pre-change answers and separate entry points. Both revisions also verified all 50 repository answers and all 25 combined solves with checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`.
+
+## Day 21 exact shared monkey graph
+
+The default combined path previously copied the whole input into two new `Scanner`s, parsed every monkey twice with repeated regex splits, and evaluated constant subgraphs repeatedly while solving the human equation. Literal-versus-expression parsing depended on total line length, and `Long.MIN_VALUE` doubled as both a valid literal and an internal sentinel. Day 21 now builds one immutable graph with direct token parsing, uses separate memo tables for normal and symbolic evaluation, represents all intermediate values with `BigInteger`, and substitutes the solved human value back into both root branches as a final equality check.
+
+An isolated runner constructed the solver and input `Scanner` before timing the exact `fullSolve` call. One excluded cold pair was followed by 10 counterbalanced pairs of separate JVM processes:
+
+| Pair | Order | Duplicate graph (ms) | Shared exact graph (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 16.095 | 11.499 | -4.596 |
+| 2 | C-B | 16.034 | 12.166 | -3.868 |
+| 3 | B-C | 16.121 | 11.923 | -4.198 |
+| 4 | C-B | 16.968 | 11.787 | -5.181 |
+| 5 | B-C | 16.356 | 11.828 | -4.528 |
+| 6 | C-B | 15.906 | 11.545 | -4.362 |
+| 7 | B-C | 16.864 | 11.506 | -5.358 |
+| 8 | C-B | 16.027 | 11.760 | -4.266 |
+| 9 | B-C | 16.359 | 12.013 | -4.346 |
+| 10 | C-B | 16.568 | 12.035 | -4.534 |
+
+The excluded cold values were 15.632ms baseline and 11.890ms candidate. The measured means were **16.330ms baseline** and **11.806ms candidate**, a **4.524ms (27.7%) reduction**. The paired-delta sample standard deviation was 0.446ms and the t(9) 95% confidence interval was **[-4.843ms, -4.204ms]**. The current-source cold-plus-10 run and its complete wall/main/solver/startup/harness split are recorded at the top of this document.
+
+All 50 independent answers and 25 combined solves retain checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`. The official sample returned `152 / 301`; targeted cases covered both noncommutative inverse directions, exact division, negative values, the former `Long.MIN_VALUE` sentinel collision, and values/products beyond `long` range. Separate and combined entry points agreed throughout.
 
 ## Historical warm measurements
 
