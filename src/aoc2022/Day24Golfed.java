@@ -8,12 +8,12 @@ int a=g[0].indexOf(46),b=R*C-C+g[R-1].indexOf(46),t=f(a,b,0);
 return""+(p?t:f(a,b,f(b,a,t)));
 }
 int f(int a,int b,int t){
-Set<Integer>q=$.s();q.add(a);
+var q=$.s();q.add(a);
 int[]d={0,1,-1,C,-C};
 for(;;){
-Set<Integer>n=$.s();t++;
-for(int p:q)for(int x:d){
-int c=p+x;
+var n=$.s();t++;
+for(var p:q)for(int x:d){
+int c=(int)p+x;
 if(c==b)return t;
 if(c>=0&c<R*C&&w(c,t))n.add(c);
 }
