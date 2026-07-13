@@ -24,7 +24,7 @@ boolean o(int[]p,int x,int y,List<Integer>c){
 if(x<0|y<0)return 0>1;
 for(int r=0;r<p.length;r++){
 int w=p[r]<<x;
-if((w&-128)>0||y+r<c.size()&&(w&c.get(y+r))>0)return 0>1;
+if(w>127||y+r<c.size()&&(w&c.get(y+r))>0)return 0>1;
 }
 return 1>0;
 }
