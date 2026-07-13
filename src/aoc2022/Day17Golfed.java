@@ -36,9 +36,9 @@ for(int i=0;i<7;i++)if((w&1<<i)>0)h[i]=$.x(h[i],y+1);
 }
 }
 String k(long r,int q,List<Integer>c,int[]h){
-int f=c.size();var s=r%5+","+q;
-for(int x:h){f=$.n(f,x);s+=","+(c.size()-x);}
-for(int y=f;y<c.size();y++)s+=","+c.get(y);
+int f=c.size(),z=f;var s=r%5+","+q;
+for(int x:h){f=$.n(f,x);s+=","+(z-x);}
+for(int y=f;y<z;y++)s+=","+c.get(y);
 return s;
 }
 }
