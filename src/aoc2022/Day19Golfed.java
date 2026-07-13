@@ -30,5 +30,5 @@ if(i==3)return;
 }
 d(t-1,a,e,f,h,o+a,c+e,b+f,g+h);
 }
-int m(int h,int b,int m,int t){return $.n(h,m*t-b*(t-1));}
+int m(int h,int b,int m,int t){return $.n(h,m*t-b*t+b);}
 }
