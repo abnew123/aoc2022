@@ -1,8 +1,8 @@
-package aoc2022;
+package aoc2022;import java.util.*;
 
 
 class S{
-int[]O,C,B,M;int z;java.util.Map S;
+int[]O,C,B,M;int z;Map S;
 String s(boolean p,String[]I){
 int r=p?0:1,j=0;
 for(var l:I)if(j++<3|p){
@@ -19,9 +19,9 @@ d(t,1,0,0,0,0,0,0,0);return z;
 }
 void d(int t,int a,int e,int f,int h,int o,int c,int b,int g){
 z=$.x(z,g+h*t);
-if(t<1|g+h*t+t*(t-1)/2<=z)return;
+if(g+h*t+t*(t-1)/2<=z)return;
 o=m(o,a,M[0],t);c=m(c,e,M[1],t);b=m(b,f,M[2],t);
-var k=java.util.List.of(t,a,e,f,h,o,c,b);
+var k=List.of(t,a,e,f,h,o,c,b);
 if((int)S.getOrDefault(k,-1)>=g)return;S.put(k,g);
 int[]r={a,e,f,h};
 for(int i=4;i-->0;)if(r[i]<M[i]&o>=O[i]&c>=C[i]&b>=B[i]){
