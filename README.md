@@ -14,6 +14,8 @@ To see a given day's solution, go to DayX.java, where X is the day in question.
 
 [`FreshJvmBenchmark`](src/aoc2022/FreshJvmBenchmark.java) is the reproducible answer-consistency and fresh-process benchmark runner. On a 2024 MacBook Pro using OpenJDK 23.0.1, the latest clean current-source 10-process means are 273.059 ms wall time, 239.715 ms in child `main`, and 211.585 ms in the 25 `fullSolve` calls. See [performance notes](PERFORMANCE.md) for every sample, metric definitions, recovery details, and the paired optimization comparisons.
 
+A clean counterbalanced cumulative comparison against pristine commit `a107970` measured the 25-day solver mean falling from 226.621ms to 210.329ms (-7.19%), with a paired 95% confidence interval of [-20.596ms, -11.988ms]. The paired process-wall interval also excluded zero.
+
 From the repository root, compile for the project's Java 16 target, verify all answers, and run one cold process plus 10 measured fresh JVM processes with:
 
 ```sh

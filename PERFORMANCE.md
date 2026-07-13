@@ -32,7 +32,7 @@ The input directory defaults to `data`. To use another location, add `-Daoc.data
 
 That checksum is unchanged from the pristine known-good `a107970` pre-change snapshot, and all 50 captured before/after answer records were byte-identical. The Day 18 official sample (64/58), a negative-coordinate translation, and a greater-than-23 translation provide additional problem-level regression evidence.
 
-Recovery note (2026-07-12): two leaked AoC JVMs invalidated speed measurements collected from 2026-07-11 22:08 EDT until their removal around 2026-07-12 11:30 EDT. The original Day 3, Day 1, and Day 4 measurements have been withdrawn and replaced with clean process-isolated data below. The current-source table has likewise been replaced by the clean Day 4 candidate standard run.
+Recovery note (2026-07-12): two leaked AoC JVMs invalidated speed measurements collected from 2026-07-11 22:08 EDT until their removal around 2026-07-12 11:30 EDT. The original Day 3, Day 1, and Day 4 measurements have been withdrawn and replaced with clean process-isolated data below. The current-source table and cumulative pristine-versus-current comparison have likewise been rerun cleanly.
 
 ## Metric definitions
 
@@ -75,43 +75,43 @@ The following 10 fresh JVM processes form the summary sample:
 | Startup | 25.000 | 25.009 | 1.300 |
 | Harness | 28.130 | 27.882 | 0.715 |
 
-## Alternating baseline comparison
+## Clean cumulative recovery comparison
 
-The final branch was also compared with pristine commit `a107970` using the same Java `ProcessBuilder` child protocol, inputs, JVM, answer checksum, and runner source in separately compiled pristine and candidate classpaths. The orchestrator ran a cold base child and then a cold candidate child. It then ran 10 counterbalanced pairs: odd pairs base then candidate, even pairs candidate then base. Every child ran serially; base and candidate were never benchmarked concurrently.
+After the leaked background JVMs were removed, pristine commit `a107970` and current source commit `b670c3b` were compiled with the identical current `FreshJvmBenchmark` and `SolverFactory`; `DayTemplate` is byte-identical at both revisions. The OS process table was checked immediately before measurement, all Java/Javac commands ran in tracked process groups with hard deadlines, and no other AoC JVM ran concurrently. A Java-only orchestrator ran one excluded cold pair followed by 10 counterbalanced pairs: odd pairs base then current, even pairs current then base.
 
 The raw paired measurements were:
 
 | Pair | Order | Base wall (ms) | Candidate wall (ms) | Base solver (ms) | Candidate solver (ms) |
 | ---: | :---: | ---: | ---: | ---: | ---: |
-| 1 | B-C | 318.353 | 301.753 | 243.198 | 221.031 |
-| 2 | C-B | 297.679 | 293.028 | 224.653 | 217.361 |
-| 3 | B-C | 288.877 | 295.968 | 230.607 | 222.700 |
-| 4 | C-B | 283.920 | 277.804 | 223.509 | 217.558 |
-| 5 | B-C | 285.308 | 292.296 | 226.690 | 215.337 |
-| 6 | C-B | 306.040 | 296.157 | 231.765 | 221.365 |
-| 7 | B-C | 279.456 | 292.386 | 221.147 | 218.368 |
-| 8 | C-B | 300.489 | 295.026 | 225.733 | 219.382 |
-| 9 | B-C | 303.779 | 294.062 | 232.550 | 220.090 |
-| 10 | C-B | 298.691 | 292.273 | 223.036 | 221.019 |
+| 1 | B-C | 297.393 | 283.756 | 222.029 | 211.574 |
+| 2 | C-B | 302.472 | 279.892 | 229.875 | 207.566 |
+| 3 | B-C | 303.930 | 267.423 | 225.551 | 209.992 |
+| 4 | C-B | 293.303 | 268.125 | 222.976 | 210.515 |
+| 5 | B-C | 285.344 | 264.358 | 227.719 | 209.666 |
+| 6 | C-B | 302.662 | 264.174 | 231.564 | 205.621 |
+| 7 | B-C | 300.285 | 270.667 | 226.239 | 214.298 |
+| 8 | C-B | 276.871 | 269.214 | 219.518 | 209.801 |
+| 9 | B-C | 302.569 | 267.315 | 233.206 | 208.868 |
+| 10 | C-B | 285.278 | 273.542 | 227.532 | 215.389 |
 
 The preceding cold base/candidate runs were:
 
-| Revision | Wall (ms) | Solver (ms) |
-| --- | ---: | ---: |
-| Pristine `a107970` | 294.579 | 229.116 |
-| Current branch | 281.492 | 219.640 |
+| Revision | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Pristine `a107970` | 313.709 | 268.006 | 239.509 | 26.655 | 28.497 |
+| Current `b670c3b` | 260.284 | 230.628 | 202.824 | 25.494 | 27.804 |
 
 The 10-pair means were:
 
-| Metric | Base mean (ms) | Candidate mean (ms) | Candidate - base (ms) | Relative change | Paired-delta standard deviation (ms) |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Wall | 296.259 | 293.075 | -3.184 | -1.07% | 9.205 |
-| Main | 258.515 | 249.832 | -8.683 | -3.36% | 5.747 |
-| Solver | 228.289 | 219.421 | -8.868 | -3.88% | 5.779 |
-| Startup | 24.962 | 25.642 | +0.680 | — | — |
-| Harness | 30.226 | 30.411 | +0.185 | — | — |
+| Metric | Pristine mean (ms) | Current mean (ms) | Current - pristine (ms) | Relative change | Paired SD (ms) | Paired 95% CI (ms) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Wall | 295.011 | 270.846 | -24.164 | -8.19% | 10.861 | [-31.933, -16.395] |
+| Main | 254.311 | 238.114 | -16.197 | -6.37% | 5.802 | [-20.347, -12.047] |
+| Solver | 226.621 | 210.329 | -16.292 | -7.19% | 6.017 | [-20.596, -11.988] |
+| Startup | 26.200 | 25.560 | -0.640 | -2.44% | 3.197 | [-2.927, +1.647] |
+| Harness | 27.690 | 27.785 | +0.095 | +0.34% | 0.403 | [-0.193, +0.383] |
 
-The paired solver reduction has an approximate 95% confidence interval of **[-13.00, -4.74] ms**, which excludes zero. The main and solver measurements show the useful improvement; the wall delta is small relative to its 9.205 ms paired standard deviation and is not statistically clear. The decision to keep the change is therefore based on the repeatable solver/main win, not the noisier wall measurement.
+The clean paired wall, main, and solver intervals all exclude zero, while startup and harness remain statistically unchanged. Both revisions verified all 50 independent answers and 25 combined solves with checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b` before measurement.
 
 ## Day 18: Boiling Boulders
 
