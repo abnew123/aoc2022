@@ -8,7 +8,7 @@ for(var c:l.toCharArray())v=v*5+"=-012".indexOf(c)-2;
 a+=v;
 }
 var r="";
-for(;a>0;a=a/5+a%5/3)r="012=-".charAt((int)(a%5))+r;
+for(;a>0;a=(a+2)/5)r="012=-".charAt((int)(a%5))+r;
 return r;
 }
 }
