@@ -50,30 +50,30 @@ The separately reported cold run was:
 
 | Run | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Cold | 263.588 | 230.755 | 202.085 | 28.645 | 28.670 |
+| Cold | 310.258 | 264.755 | 234.032 | 27.593 | 30.722 |
 
 The following 10 fresh JVM processes form the summary sample:
 
 | Run | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | 268.853 | 239.535 | 211.446 | 25.141 | 28.089 |
-| 2 | 257.943 | 229.141 | 200.966 | 24.432 | 28.176 |
-| 3 | 257.891 | 227.411 | 199.342 | 26.046 | 28.069 |
-| 4 | 267.545 | 238.241 | 209.839 | 25.006 | 28.401 |
-| 5 | 270.783 | 241.479 | 212.624 | 24.996 | 28.855 |
-| 6 | 269.717 | 240.500 | 212.548 | 24.980 | 27.952 |
-| 7 | 277.568 | 244.039 | 214.841 | 26.101 | 29.198 |
-| 8 | 274.305 | 235.607 | 205.576 | 33.944 | 30.030 |
-| 9 | 273.396 | 239.824 | 209.517 | 29.353 | 30.307 |
-| 10 | 272.494 | 243.162 | 214.291 | 25.125 | 28.870 |
+| 1 | 301.383 | 255.917 | 226.922 | 27.833 | 28.995 |
+| 2 | 294.862 | 249.980 | 219.269 | 27.591 | 30.711 |
+| 3 | 297.804 | 254.285 | 224.374 | 25.732 | 29.911 |
+| 4 | 303.306 | 259.158 | 228.546 | 28.345 | 30.612 |
+| 5 | 300.110 | 258.480 | 229.152 | 24.310 | 29.328 |
+| 6 | 315.240 | 272.769 | 242.926 | 24.805 | 29.843 |
+| 7 | 281.109 | 238.540 | 210.118 | 25.231 | 28.422 |
+| 8 | 303.485 | 259.972 | 230.523 | 25.571 | 29.448 |
+| 9 | 324.085 | 274.677 | 238.551 | 31.793 | 36.126 |
+| 10 | 308.394 | 263.861 | 234.649 | 26.789 | 29.212 |
 
 | Metric | Mean (ms) | Median (ms) | Sample standard deviation (ms) |
 | --- | ---: | ---: | ---: |
-| Wall | 269.050 | 270.250 | 6.537 |
-| Main | 237.894 | 239.680 | 5.612 |
-| Solver | 209.099 | 210.643 | 5.418 |
-| Startup | 26.512 | 25.133 | 2.958 |
-| Harness | 28.795 | 28.628 | 0.834 |
+| Wall | 302.978 | 302.345 | 11.582 |
+| Main | 258.764 | 258.819 | 10.495 |
+| Solver | 228.503 | 228.849 | 9.393 |
+| Startup | 26.800 | 26.261 | 2.219 |
+| Harness | 30.261 | 29.646 | 2.177 |
 
 ## Clean cumulative recovery comparison
 
@@ -641,6 +641,72 @@ The excluded cold values were 5.575ms baseline and 3.219ms candidate. The measur
 The exact current source then ran through the canonical cold-plus-10 fresh-process harness, including the complete wall/main/solver/startup/harness split recorded at the top of this document. Its 10-process solver mean was 209.099ms; aggregate movement across the other 24 days is not used to judge the isolated Day 12 change.
 
 The official sample returned `31 / 29`, a single-row no-final-newline climb returned `27 / 26`, and both cases matched the separate entry points and the pre-change classpath. Another 500 deterministic rectangular maps matched an independent forward-BFS reference for both answers. The personal input remained `528 / 522`. All 50 independent answers and all 25 combined solves retained checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`.
+
+## Day 2 exact one-pass strategy scoring
+
+The previously optimized per-part implementation still inherited the default combined path, which materialized the complete input and scanned all 2,500 rounds twice through two inner `Scanner`s. Day 2 now parses each prompt-format token pair once, validates the three opponent and response codes, and computes both scoring interpretations together. Totals remain on the primitive `long` path for ordinary inputs and promote exactly to `BigInteger` on overflow.
+
+An isolated runner constructed `Day02` and its file-backed `Scanner` before timing the exact `fullSolve` call. One excluded cold pair was followed by 10 counterbalanced pairs of separate fresh JVM processes:
+
+| Pair | Order | Duplicate scan (ms) | Shared exact scan (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 7.921 | 6.535 | -1.387 |
+| 2 | C-B | 7.627 | 6.535 | -1.091 |
+| 3 | B-C | 7.830 | 6.637 | -1.192 |
+| 4 | C-B | 7.750 | 6.531 | -1.220 |
+| 5 | B-C | 7.692 | 6.997 | -0.695 |
+| 6 | C-B | 7.595 | 6.547 | -1.049 |
+| 7 | B-C | 7.721 | 6.803 | -0.918 |
+| 8 | C-B | 7.782 | 6.603 | -1.179 |
+| 9 | B-C | 7.618 | 6.897 | -0.721 |
+| 10 | C-B | 7.524 | 6.446 | -1.078 |
+
+The excluded cold values were 8.939ms baseline and 8.023ms candidate. The measured means were **7.706ms baseline** and **6.653ms candidate**, a **1.053ms (13.7%) reduction**. The paired-delta sample standard deviation was 0.219ms and the t(9) 95% confidence interval was **[-1.210ms, -0.896ms]**.
+
+Day 2 then joined the already verified Day 25 queue. The pushed tip `9671456` and the two-change candidate ran one excluded cold pair plus 10 counterbalanced full-25-day pairs. This is the repository publication gate:
+
+| Metric | Pushed-tip baseline mean (ms) | Two-change candidate mean (ms) | Delta (ms) | Paired 95% CI (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| Solver | 241.767 | 229.680 | -12.086 | **[-19.395, -4.777]** |
+| Main | 271.915 | 260.673 | -11.241 | **[-20.100, -2.382]** |
+| Startup | 28.418 | 29.019 | +0.601 | [-4.101, +5.303] |
+| Harness | 30.148 | 30.993 | +0.845 | [-1.102, +2.791] |
+| Wall | 313.752 | 306.444 | -7.308 | [-21.145, +6.529] |
+
+The summed solver interval clears the predeclared aggregate gate; startup, harness, and process wall remain statistically inconclusive. The official sample returned `15 / 12`; all nine code combinations matched independent score tables; mixed whitespace, CRLF, blank lines, missing final newlines, malformed tokens, and exact overflow promotion passed. All 50 independent answers and all 25 combined solves retained checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`.
+
+## Day 25 exact one-pass SNAFU sum
+
+The inherited combined path copied the complete input and ran the same SNAFU sum twice. It also accumulated in `long`, built the output by repeatedly prepending to a `String`, and represented zero as an empty string. The queued implementation parses and sums with `BigInteger`, formats balanced base five into a single reverse buffer, and overrides `fullSolve` so the identical repository answers share one calculation. This removes the inherited numeric-width assumption while preserving the public `helper` method with an explicit exact-`long` conversion.
+
+An isolated runner constructed `Day25` and its file-backed `Scanner` before timing the exact `fullSolve` call. One excluded cold pair was followed by 10 counterbalanced pairs of separate fresh JVM processes:
+
+| Pair | Order | Duplicate sum (ms) | One-pass exact sum (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 6.880 | 2.086 | -4.794 |
+| 2 | C-B | 7.497 | 2.216 | -5.280 |
+| 3 | B-C | 7.056 | 2.523 | -4.533 |
+| 4 | C-B | 7.261 | 2.226 | -5.035 |
+| 5 | B-C | 7.189 | 2.276 | -4.913 |
+| 6 | C-B | 7.389 | 2.203 | -5.187 |
+| 7 | B-C | 7.188 | 2.033 | -5.155 |
+| 8 | C-B | 7.029 | 2.075 | -4.954 |
+| 9 | B-C | 7.025 | 2.418 | -4.607 |
+| 10 | C-B | 6.556 | 2.203 | -4.354 |
+
+The excluded cold values were 6.434ms baseline and 2.202ms candidate. The measured means were **7.107ms baseline** and **2.226ms candidate**, a **4.881ms (68.7%) reduction**. The paired-delta sample standard deviation was 0.306ms and the t(9) 95% confidence interval was **[-5.100ms, -4.663ms]**.
+
+The initial Day-25-only publication gate used one cold pair plus 10 counterbalanced full-25-day pairs. The queued source was faster in summed solver time on average, but ordinary cross-day noise left its paired interval crossing zero, so it remained uncommitted until Day 2 joined the batch:
+
+| Metric | Pushed-tip baseline mean (ms) | Queued candidate mean (ms) | Delta (ms) | Paired 95% CI (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| Solver | 214.177 | 210.023 | -4.154 | [-9.582, +1.275] |
+| Main | 244.363 | 241.306 | -3.057 | [-9.266, +3.152] |
+| Startup | 28.052 | 28.734 | +0.682 | [-2.697, +4.061] |
+| Harness | 30.186 | 31.283 | +1.097 | [-0.501, +2.695] |
+| Wall | 277.149 | 274.852 | -2.297 | [-10.600, +6.006] |
+
+The official sample returned `2=-1=0` through both answer slots. Independent round trips covered every integer from -2,000 through 2,000, 101-digit positive and negative SNAFU values, cancellation to zero, and agreement between separate and combined entry points. All 50 independent answers and all 25 combined solves retained checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`.
 
 ## Historical warm measurements
 

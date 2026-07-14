@@ -12,9 +12,11 @@ Inputs:
 
 To see a given day's solution, go to DayX.java, where X is the day in question. 
 
-[`FreshJvmBenchmark`](src/aoc2022/FreshJvmBenchmark.java) is the reproducible answer-consistency and fresh-process benchmark runner. On a 2024 MacBook Pro using OpenJDK 23.0.1, the latest clean current-source 10-process means are 269.250 ms wall time, 238.563 ms in child `main`, and 210.243 ms in the 25 `fullSolve` calls. See [performance notes](PERFORMANCE.md) for every sample, metric definitions, recovery details, and the paired optimization comparisons.
+[`FreshJvmBenchmark`](src/aoc2022/FreshJvmBenchmark.java) is the reproducible answer-consistency and fresh-process benchmark runner. On a 2024 MacBook Pro using OpenJDK 23.0.1, the latest clean current-source 10-process means are 302.978 ms wall time, 258.764 ms in child `main`, and 228.503 ms in the 25 `fullSolve` calls. See [performance notes](PERFORMANCE.md) for every sample, metric definitions, recovery details, and the paired optimization comparisons. Absolute totals moved with current machine load; the serial counterbalanced batch comparison below is the attribution evidence.
 
 A clean counterbalanced cumulative comparison against pristine commit `a107970` measured the 25-day solver mean falling from 226.621ms to 210.329ms (-7.19%), with a paired 95% confidence interval of [-20.596ms, -11.988ms]. The paired process-wall interval also excluded zero.
+
+The latest publication batch combines Day 2 and Day 25. Against pushed tip `9671456`, its counterbalanced full-suite solver mean fell from 241.767ms to 229.680ms; the paired 95% confidence interval was [-19.395ms, -4.777ms]. Main time also cleared zero, while startup, harness, and process wall remained inconclusive.
 
 From the repository root, compile for the project's Java 16 target, verify all answers, and run one cold process plus 10 measured fresh JVM processes with:
 
@@ -51,6 +53,10 @@ Day 20 now parses the number list once, allocates exact treap storage, and preco
 Day 14 now parses and builds the cave once, snapshots part 1 during the floor-enabled simulation, and continues the same run for part 2. Its isolated mean fell from 14.214ms to 10.652ms (-25.1%), with a paired 95% confidence interval of [-3.976ms, -3.149ms]. The reachable sand cone also bounds storage and rock drawing, so valid far-away rock segments no longer inflate the dense grid.
 
 Day 21 now parses the monkey graph once, evaluates shared constant subgraphs once per mode, and uses exact `BigInteger` arithmetic without sentinel values or line-length parsing guesses. Its isolated mean fell from 16.330ms to 11.806ms (-27.7%), with a paired 95% confidence interval of [-4.843ms, -4.204ms].
+
+Day 2 now parses each strategy round once, validates flexible-whitespace token pairs, computes both scoring interpretations together, and promotes totals exactly on overflow. Its isolated combined-solve mean fell from 7.706ms to 6.653ms (-13.7%), with a paired 95% confidence interval of [-1.210ms, -0.896ms].
+
+Day 25 now sums and formats balanced-base-five values exactly with `BigInteger` and computes the repository's identical answer slots once. Its isolated mean fell from 7.107ms to 2.226ms (-68.7%), with a paired 95% confidence interval of [-5.100ms, -4.663ms].
 
 The table below is the historical July warm 10-run per-part table from `DayTemplate.timer`. It is retained for solver-level context, but it is not directly comparable to the fresh-JVM numbers above.
 
