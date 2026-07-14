@@ -50,30 +50,30 @@ The separately reported cold run was:
 
 | Run | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Cold | 310.258 | 264.755 | 234.032 | 27.593 | 30.722 |
+| Cold | 257.858 | 225.689 | 196.058 | 27.493 | 29.631 |
 
 The following 10 fresh JVM processes form the summary sample:
 
 | Run | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | 301.383 | 255.917 | 226.922 | 27.833 | 28.995 |
-| 2 | 294.862 | 249.980 | 219.269 | 27.591 | 30.711 |
-| 3 | 297.804 | 254.285 | 224.374 | 25.732 | 29.911 |
-| 4 | 303.306 | 259.158 | 228.546 | 28.345 | 30.612 |
-| 5 | 300.110 | 258.480 | 229.152 | 24.310 | 29.328 |
-| 6 | 315.240 | 272.769 | 242.926 | 24.805 | 29.843 |
-| 7 | 281.109 | 238.540 | 210.118 | 25.231 | 28.422 |
-| 8 | 303.485 | 259.972 | 230.523 | 25.571 | 29.448 |
-| 9 | 324.085 | 274.677 | 238.551 | 31.793 | 36.126 |
-| 10 | 308.394 | 263.861 | 234.649 | 26.789 | 29.212 |
+| 1 | 260.460 | 229.358 | 200.455 | 26.367 | 28.903 |
+| 2 | 255.214 | 224.421 | 195.665 | 25.800 | 28.756 |
+| 3 | 259.751 | 229.095 | 200.452 | 25.693 | 28.643 |
+| 4 | 257.968 | 227.476 | 198.656 | 25.912 | 28.820 |
+| 5 | 256.702 | 225.143 | 196.482 | 26.701 | 28.661 |
+| 6 | 260.645 | 228.517 | 198.434 | 26.900 | 30.083 |
+| 7 | 267.066 | 234.860 | 204.715 | 27.099 | 30.145 |
+| 8 | 255.021 | 223.168 | 193.939 | 27.128 | 29.228 |
+| 9 | 267.660 | 235.335 | 205.485 | 27.400 | 29.850 |
+| 10 | 262.465 | 227.528 | 197.012 | 30.329 | 30.517 |
 
 | Metric | Mean (ms) | Median (ms) | Sample standard deviation (ms) |
 | --- | ---: | ---: | ---: |
-| Wall | 302.978 | 302.345 | 11.582 |
-| Main | 258.764 | 258.819 | 10.495 |
-| Solver | 228.503 | 228.849 | 9.393 |
-| Startup | 26.800 | 26.261 | 2.219 |
-| Harness | 30.261 | 29.646 | 2.177 |
+| Wall | 260.295 | 260.106 | 4.437 |
+| Main | 228.490 | 228.023 | 4.036 |
+| Solver | 199.130 | 198.545 | 3.745 |
+| Startup | 26.933 | 26.800 | 1.336 |
+| Harness | 29.361 | 29.066 | 0.715 |
 
 ## Clean cumulative recovery comparison
 
@@ -707,6 +707,39 @@ The initial Day-25-only publication gate used one cold pair plus 10 counterbalan
 | Wall | 277.149 | 274.852 | -2.297 | [-10.600, +6.006] |
 
 The official sample returned `2=-1=0` through both answer slots. Independent round trips covered every integer from -2,000 through 2,000, 101-digit positive and negative SNAFU values, cancellation to zero, and agreement between separate and combined entry points. All 50 independent answers and all 25 combined solves retained checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`.
+
+## Day 7 shared exact filesystem analysis
+
+Day 7 previously inherited the default combined path, which copied the 979-line transcript, created two inner `Scanner`s, regex-split every line twice, rebuilt the complete filesystem twice, and ran separate traversals. It now parses once and returns both answers from one directory analysis. Directory and file names are keyed within their parents, so a repeated `ls` does not double-count files and `cd` can enter a directory before it has appeared in a listing. Parsing accepts prompt-equivalent whitespace and names containing spaces. Sizes, directory totals, and answers are exact `BigInteger` values rather than `int`; inconsistent duplicate files and file/directory name collisions fail explicitly.
+
+An isolated runner constructed `Day07` and its file-backed `Scanner` before timing the exact `fullSolve` call. One excluded cold pair (11.528ms baseline, 6.452ms candidate) was followed by 10 counterbalanced fresh-JVM pairs:
+
+| Pair | Order | Duplicate analysis (ms) | Shared analysis (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 12.071 | 6.575 | -5.496 |
+| 2 | C-B | 11.488 | 6.553 | -4.935 |
+| 3 | B-C | 11.597 | 6.613 | -4.984 |
+| 4 | C-B | 11.399 | 6.451 | -4.948 |
+| 5 | B-C | 11.874 | 6.492 | -5.382 |
+| 6 | C-B | 11.879 | 6.460 | -5.420 |
+| 7 | B-C | 11.546 | 6.515 | -5.031 |
+| 8 | C-B | 11.574 | 6.531 | -5.043 |
+| 9 | B-C | 11.672 | 6.792 | -4.880 |
+| 10 | C-B | 11.659 | 6.433 | -5.226 |
+
+The measured means were **11.676ms baseline** and **6.541ms candidate**, a **5.134ms (44.0%) reduction**. The paired-delta sample standard deviation was 0.227ms and the t(9) 95% confidence interval was **[-5.297ms, -4.972ms]**.
+
+The pushed `67476ae` tip and candidate then ran one excluded cold pair plus 10 clean, serial, counterbalanced full-25-day pairs. Candidate-minus-baseline results were:
+
+| Metric | Pushed-tip mean (ms) | Candidate mean (ms) | Delta (ms) | Paired 95% CI (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| Solver | 204.498 | 199.130 | -5.368 | **[-9.806, -0.931]** |
+| Main | 233.591 | 228.490 | -5.101 | **[-9.661, -0.540]** |
+| Startup | 26.674 | 26.933 | +0.259 | [-0.902, +1.420] |
+| Harness | 29.093 | 29.361 | +0.267 | [-0.217, +0.751] |
+| Wall | 265.078 | 260.295 | -4.783 | [-9.996, +0.431] |
+
+The summed solver interval clears the publication gate; startup, harness, and wall are explicitly inconclusive. The current cold-plus-10 table at the top is the candidate half of these pairs. The official sample returned `95437 / 24933642`; personal answers remained `1723892 / 8474158`. Targeted cases covered repeated listings, `cd` before listing, CRLF and missing final newline, flexible whitespace, names with spaces, empty directories, duplicate-metadata rejection, and file sizes beyond `long`. All 50 independent answers and all 25 combined solves retained checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`.
 
 ## Historical warm measurements
 
