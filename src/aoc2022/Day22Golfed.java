@@ -9,7 +9,7 @@ for(int i=0,n=0,C=0;i<=l;i++)if(i<l&&(C=q.charAt(i))>47&C<58)n=n*10+C-48;else{
 for(;n-->0;){
 int c=d,u=x+X[d],w=y+Y[d];
 if(p)for(;G(u,w)<1;u+=X[d],w+=Y[d]);
-else if(G(u,w)<1){int[]r=H(x,y,d);c=r[0];u=r[1];w=r[2];}
+else if(G(u,w)<1){var r=H(x,y,d);c=r[0];u=r[1];w=r[2];}
 if(G(u,w)==3)break;
 x=u;y=w;d=c;
 }
