@@ -24,11 +24,8 @@ x=$.f(x,200);y=$.f(y,200);
 return x<R&&y<g[x].length()?g[x].charAt(y)&31:0;
 }
 int[]H(int x,int y,int d){
-if(d<1)return x<50?A(2,149-x,99):x<100?A(3,49,x+50):x<150?A(2,149-x,149):A(3,149,x-100);
-if(d<2)return x<50?A(2,y-50,99):x<150?A(2,y+100,49):A(1,0,x-100);
-if(d<3)return x<50?A(0,149-x,y):x<100?A(1,100,x-50):x<150?A(0,149-x,50):A(1,0,x-100);
-if(x<50)return y<100?A(0,y+100,0):A(3,199,y-100);
-return A(0,y+50,50);
+int i="6789;@BJKLMTUV".indexOf(48+x/50*12+y/50*4+d)*3,a[]={0,49,50,99,100,149,199,x-100,x-50,149-x,x+50,y-100,y-50,y+50,y+100,y};
+var s="09?0>02932<336;31:1480920=22952>1357107107";
+return new int[]{s.charAt(i)-48,a[s.charAt(i+1)-48],a[s.charAt(i+2)-48]};
 }
-int[]A(int...a){return a;}
 }
