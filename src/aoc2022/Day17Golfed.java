@@ -14,8 +14,8 @@ if(o(P[k],X,y,c))x=X;
 if(o(P[k],x,y-1,c))y--;else{u(P[k],x,y,c,h);break;}
 }
 if(e<1){
-var v=m.putIfAbsent(k(r+1,q,c,h),new long[]{r+1,c.size()});
-if(v!=null){long a=r+1-v[0],b=c.size()-v[1],g=(n-r-1)/a;r+=g*a;e+=g*b;}
+var v=m.put(k(r+1,q,c,h),new long[]{r+1,c.size()});
+if(v!=null){long a=r+1-v[0],g=(n-r-1)/a;r+=g*a;e=g*(c.size()-v[1]);}
 }
 }
 return""+(e+c.size());
@@ -32,7 +32,7 @@ void u(int p,int x,int y,List<Integer>c,int[]h){
 for(;p>0;p>>=8,y++){
 for(;c.size()<=y;)c.add(0);
 int w=p%256<<x;c.set(y,c.get(y)|w);
-for(int i=0;i<7;i++)if((w&1<<i)>0)h[i]=$.x(h[i],y+1);
+for(int i=7;i-->0;)if((w&1<<i)>0)h[i]=$.x(h[i],y+1);
 }
 }
 String k(long r,int q,List<Integer>c,int[]h){
