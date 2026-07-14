@@ -1,7 +1,6 @@
 package aoc2022;
-import java.util.*;
 class U{
-Map<String,String>m;
+java.util.Map<String,String>m;
 long N=1L<<63;
 boolean P;
 String s(boolean p,String[]I){
