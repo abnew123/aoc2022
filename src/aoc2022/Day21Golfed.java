@@ -8,8 +8,7 @@ m=$.h();
 for(var l:I)m.put(l.substring(0,4),l.substring(6));
 if(P=p)return""+q("root");
 String r=m.get("root"),a=r.substring(0,4),b=r.substring(7);
-var x=q(a);
-return""+(x==N?n(a,q(b)):n(b,x));
+return""+(q(a)==N?n(a,q(b)):n(b,q(a)));
 }
 long q(String k){
 if(!P&k.equals("humn"))return N;
