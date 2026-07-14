@@ -1,5 +1,4 @@
 package aoc2022;
-import java.util.*;
 class X{
 String[]g;int R,C;
 String s(boolean p,String[]I){
