@@ -7,7 +7,7 @@ var J=j[0];
 List<Integer>c=$.a();Map<String,long[]>m=$.h();
 var h=new int[7];long n=p?2022:1000000000000L,r=0,e=0;int q=0;
 for(;r<n;r++){
-int k=(int)(r%5),x=2,y=c.size()+3;
+int k=$.f(r,5),x=2,y=c.size()+3;
 for(;;){
 int X=x+(J.charAt(q)<61?-1:1);q=++q%J.length();
 if(o(P[k],X,y,c))x=X;
