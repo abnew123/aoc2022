@@ -1,6 +1,6 @@
 package aoc2022;
 class S{
-int[][]q;int[]m;int z;
+int q[][],m[],z;
 String s(boolean p,String[]I){
 int r=p?0:1,j=0;
 for(var l:I)if(j++<3|p){var x=l.split("\\D+");int v=f(x,p?24:32);r=p?r+$.i(x[1])*v:r*v;}
