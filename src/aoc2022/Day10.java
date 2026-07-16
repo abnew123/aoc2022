@@ -7,7 +7,7 @@ import java.util.*;
 public class Day10 extends DayTemplate {
 	private static final Map<String, Character> LETTERS = Map.ofEntries(
 			Map.entry(".##..|#..#.|#..#.|####.|#..#.|#..#.", 'A'),
-			Map.entry("###..|#..#.|#..#.|###..|#..#.|###..", 'B'),
+			Map.entry("###..|#..#.|###..|#..#.|#..#.|###..", 'B'),
 			Map.entry(".##..|#..#.|#....|#....|#..#.|.##..", 'C'),
 			Map.entry("####.|#....|###..|#....|#....|####.", 'E'),
 			Map.entry("####.|#....|###..|#....|#....|#....", 'F'),
