@@ -1,72 +1,36 @@
 # aoc2022
 
-Repo for advent of code 2022 problems. 
+Java solutions for Advent of Code 2022.
 
-To run, go into class MasterSolver.java
+## Running solutions
 
-Inputs:
-* runTimer - if true, will run the timer method to gather information on execution times
-* totalTimer - if true, timer will return just the total execution time. Otherwise, will return every day's execution time
-* exclusionTimer - if true, will skip days where answer cannot be displayed simply. if false, will run all days regardless (not recommended)
-* int[] days  - determines which days to solve
-* boolean[] parts - determines which parts to solve
+Select the `days` and `parts` arrays in `src/aoc2022/MasterSolver.java`, then run `aoc2022.MasterSolver` from the repository root so it can read `data/dayNN.txt`.
 
-To see a given day's solution, go to DayX.java, where X is the day in question. 
+## Performance
 
-Current timings:
+| 25-day total | Mean (ms) |
+| --- | ---: |
+| Wall | 1,831.009 |
+| Main | 1,792.670 |
+| Solver | 1,764.343 |
+| Startup | 26.070 |
+| Harness | 28.327 |
 
-* Day 01 part 1 execution time: 41.2ms (acceptable)
-* Day 01 part 2 execution time: 16.9ms (fast)
-* Day 02 part 1 execution time: 11.0ms (fast)
-* Day 02 part 2 execution time: 8.7ms (fast)
-* Day 03 part 1 execution time: 8.5ms (fast)
-* Day 03 part 2 execution time: 4.8ms (fast)
-* Day 04 part 1 execution time: 11.6ms (fast)
-* Day 04 part 2 execution time: 5.0ms (fast)
-* Day 05 part 1 execution time: 5.5ms (fast)
-* Day 05 part 2 execution time: 4.1ms (fast)
-* Day 06 part 1 execution time: 3.0ms (fast)
-* Day 06 part 2 execution time: 7.9ms (fast)
-* Day 07 part 1 execution time: 16.8ms (fast)
-* Day 07 part 2 execution time: 3.9ms (fast)
-* Day 08 part 1 execution time: 22.0ms (acceptable)
-* Day 08 part 2 execution time: 22.1ms (acceptable)
-* Day 09 part 1 execution time: 12.7ms (fast)
-* Day 09 part 2 execution time: 28.1ms (acceptable)
-* Day 10 part 1 execution time: 0.7ms (fast)
-* Day 10 part 2 execution time: 0.6ms (fast)
-* Day 11 part 1 execution time: 4.8ms (fast)
-* Day 11 part 2 execution time: 52.0ms (slow)
-* Day 12 part 1 execution time: 50.7ms (slow)
-* Day 12 part 2 execution time: 28.2ms (acceptable)
-* Day 13 part 1 execution time: 11.0ms (fast)
-* Day 13 part 2 execution time: 7.0ms (fast)
-* Day 14 part 1 execution time: 9.1ms (fast)
-* Day 14 part 2 execution time: 21.4ms (acceptable)
-* Day 15 part 1 execution time: 624.0ms (slow)
-* Day 15 part 2 execution time: 0.7ms (fast)
-* Day 16 part 1 execution time: 107.8ms (slow)
-* Day 16 part 2 execution time: 473.7ms (slow)
-* Day 17 part 1 execution time: 121.7ms (slow)
-* Day 17 part 2 execution time: 431.8ms (slow)
-* Day 18 part 1 execution time: 12.0ms (fast)
-* Day 18 part 2 execution time: 7.5ms (fast)
-* Day 19 part 1 execution time: 53.1ms (slow)
-* Day 19 part 2 execution time: 159.6ms (slow)
-* Day 20 part 1 execution time: 61.0ms (slow)
-* Day 20 part 2 execution time: 524.9ms (slow)
-* Day 21 part 1 execution time: 315.1ms (slow)
-* Day 21 part 2 execution time: 332.8ms (slow)
-* Day 22 part 1 execution time: 10.9ms (fast)
-* Day 22 part 2 execution time: 9.7ms (fast)
-* Day 23 part 1 execution time: 130.6ms (slow)
-* Day 23 part 2 execution time: 361.4ms (slow)
-* Day 24 part 1 execution time: 500.3ms (slow)
-* Day 24 part 2 execution time: 975.4ms (slow)
-* Day 25 part 1 execution time: 0.3ms (fast)
-* Day 25 part 2 execution time: 0.3ms (fast)
-* Total execution time : 5633.8ms
-* Slow parts: 17. Acceptable parts: 6. Fast parts: 27.
+| Day | Solver (ms) | Day | Solver (ms) |
+| ---: | ---: | ---: | ---: |
+| 01 | 8.823 | 14 | 14.413 |
+| 02 | 6.299 | 15 | 2.024 |
+| 03 | 3.713 | 16 | 17.649 |
+| 04 | 2.388 | 17 | 239.559 |
+| 05 | 2.158 | 18 | 7.889 |
+| 06 | 2.700 | 19 | 125.529 |
+| 07 | 4.429 | 20 | 256.872 |
+| 08 | 12.174 | 21 | 186.947 |
+| 09 | 7.686 | 22 | 11.235 |
+| 10 | 0.660 | 23 | 38.795 |
+| 11 | 21.310 | 24 | 756.835 |
+| 12 | 27.913 | 25 | 2.474 |
+| 13 | 3.870 |  |  |
 
 <!-- CHAR COUNTS BEGIN -->
 
@@ -85,22 +49,22 @@ The table below counts non-whitespace characters in each normal solution file an
 | 7 | [Source](src/aoc2022/Day07.java) | [Golfed](src/aoc2022/Day07Golfed.java) | 1,672 | 399 |
 | 8 | [Source](src/aoc2022/Day08.java) | [Golfed](src/aoc2022/Day08Golfed.java) | 2,248 | 369 |
 | 9 | [Source](src/aoc2022/Day09.java) | [Golfed](src/aoc2022/Day09Golfed.java) | 1,212 | 389 |
-| 10 | [Source](src/aoc2022/Day10.java) | [Golfed](src/aoc2022/Day10Golfed.java) | 1,012 | 557 |
+| 10 | [Source](src/aoc2022/Day10.java) | [Golfed](src/aoc2022/Day10Golfed.java) | 5,487 | 557 |
 | 11 | [Source](src/aoc2022/Day11.java) | [Golfed](src/aoc2022/Day11Golfed.java) | 1,851 | 741 |
 | 12 | [Source](src/aoc2022/Day12.java) | [Golfed](src/aoc2022/Day12Golfed.java) | 1,835 | 526 |
-| 13 | [Source](src/aoc2022/Day13.java) | [Golfed](src/aoc2022/Day13Golfed.java) | 1,780 | 842 |
+| 13 | [Source](src/aoc2022/Day13.java) | [Golfed](src/aoc2022/Day13Golfed.java) | 4,116 | 842 |
 | 14 | [Source](src/aoc2022/Day14.java) | [Golfed](src/aoc2022/Day14Golfed.java) | 1,165 | 716 |
 | 15 | [Source](src/aoc2022/Day15.java) | [Golfed](src/aoc2022/Day15Golfed.java) | 2,759 | 871 |
-| 16 | [Source](src/aoc2022/Day16.java) | [Golfed](src/aoc2022/Day16Golfed.java) | 2,469 | 968 |
+| 16 | [Source](src/aoc2022/Day16.java) | [Golfed](src/aoc2022/Day16Golfed.java) | 4,229 | 968 |
 | 17 | [Source](src/aoc2022/Day17.java) | [Golfed](src/aoc2022/Day17Golfed.java) | 3,549 | 1,164 |
 | 18 | [Source](src/aoc2022/Day18.java) | [Golfed](src/aoc2022/Day18Golfed.java) | 1,377 | 679 |
 | 19 | [Source](src/aoc2022/Day19.java) | [Golfed](src/aoc2022/Day19Golfed.java) | 2,934 | 1,091 |
 | 20 | [Source](src/aoc2022/Day20.java) | [Golfed](src/aoc2022/Day20Golfed.java) | 1,029 | 419 |
 | 21 | [Source](src/aoc2022/Day21.java) | [Golfed](src/aoc2022/Day21Golfed.java) | 3,048 | 785 |
 | 22 | [Source](src/aoc2022/Day22.java) | [Golfed](src/aoc2022/Day22Golfed.java) | 2,720 | 966 |
-| 23 | [Source](src/aoc2022/Day23.java) | [Golfed](src/aoc2022/Day23Golfed.java) | 3,302 | 901 |
+| 23 | [Source](src/aoc2022/Day23.java) | [Golfed](src/aoc2022/Day23Golfed.java) | 8,569 | 901 |
 | 24 | [Source](src/aoc2022/Day24.java) | [Golfed](src/aoc2022/Day24Golfed.java) | 3,963 | 633 |
 | 25 | [Source](src/aoc2022/Day25.java) | [Golfed](src/aoc2022/Day25Golfed.java) | 669 | 239 |
-| Total |  |  | 45,743 | 14,853 |
+| Total |  |  | 59,581 | 14,853 |
 
 <!-- CHAR COUNTS END -->

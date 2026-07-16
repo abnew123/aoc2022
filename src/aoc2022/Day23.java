@@ -5,160 +5,386 @@ import java.util.*;
 
 public class Day23 extends DayTemplate {
 
+	private static final int[] MOVE_ROWS = { -1, 1, 0, 0 };
+	private static final int[] MOVE_COLS = { 0, 0, -1, 1 };
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		int answer = 0;
 		List<String> lines = new ArrayList<>();
-		List<Coord2> elves = new ArrayList<>();
-		while (in.hasNext()) {
-			lines.add(in.nextLine());
-		}
-		for (int i = 0; i < lines.size(); i++) {
-			for (int j = 0; j < lines.get(0).length(); j++) {
-				if (lines.get(i).charAt(j) == '#') {
-					elves.add(new Coord2(i, j));
+		int elfCount = 0;
+		while (in.hasNextLine()) {
+			String line = in.nextLine();
+			lines.add(line);
+			for (int col = 0; col < line.length(); col++) {
+				if (line.charAt(col) == '#') {
+					elfCount++;
 				}
 			}
 		}
+
+		int[] rows = new int[elfCount];
+		int[] cols = new int[elfCount];
+		int index = 0;
+		for (int row = 0; row < lines.size(); row++) {
+			String line = lines.get(row);
+			for (int col = 0; col < line.length(); col++) {
+				if (line.charAt(col) == '#') {
+					rows[index] = row;
+					cols[index] = col;
+					index++;
+				}
+			}
+		}
+
+		Simulation simulation = new Simulation(rows, cols);
 		if (part1) {
-			helper2(elves, 10);
-			int maxx, maxy, minx, miny;
-			maxx = maxy = minx = miny = -1;
-			for (int i = 0; i < elves.size(); i++) {
-				maxx = (maxx == -1) ? elves.get(i).x : Math.max(maxx, elves.get(i).x);
-				maxy = (maxy == -1) ? elves.get(i).y : Math.max(maxy, elves.get(i).y);
-				minx = (minx == -1) ? elves.get(i).x : Math.min(minx, elves.get(i).x);
-				miny = (miny == -1) ? elves.get(i).y : Math.min(miny, elves.get(i).y);
-			}
-			for (int i = minx; i <= maxx; i++) {
-				for (int j = miny; j <= maxy; j++) {
-					if (!elves.contains(new Coord2(i, j))) {
-						answer++;
-					}
-				}
-			}
-		} else {
-			answer = helper2(elves, 2000);
-			int maxx, maxy, minx, miny;
-			maxx = maxy = minx = miny = -1;
-			for (int i = 0; i < elves.size(); i++) {
-				maxx = (maxx == -1) ? elves.get(i).x : Math.max(maxx, elves.get(i).x);
-				maxy = (maxy == -1) ? elves.get(i).y : Math.max(maxy, elves.get(i).y);
-				minx = (minx == -1) ? elves.get(i).x : Math.min(minx, elves.get(i).x);
-				miny = (miny == -1) ? elves.get(i).y : Math.min(miny, elves.get(i).y);
-			}
+			simulation.runRounds(10);
+			return "" + simulation.emptyGroundInBoundingBox();
 		}
-		return "" + answer;
+		return "" + simulation.firstRoundWithoutMovement();
 	}
 
-	public List<Coord2> helper(Coord2 elf, int round, int attempt) {
-		List<Coord2> answer = new ArrayList<>();
-		if ((round + attempt) % 4 == 0) {
-			answer.add(new Coord2(elf.x - 1, elf.y - 1));
-			answer.add(new Coord2(elf.x - 1, elf.y));
-			answer.add(new Coord2(elf.x - 1, elf.y + 1));
+	@Override
+	public String[] fullSolve(Scanner in) throws FileNotFoundException {
+		List<String> lines = new ArrayList<>();
+		int elfCount = 0;
+		while (in.hasNextLine()) {
+			String line = in.nextLine();
+			lines.add(line);
+			for (int col = 0; col < line.length(); col++) {
+				if (line.charAt(col) == '#') {
+					elfCount++;
+				}
+			}
 		}
-		if ((round + attempt) % 4 == 1) {
-			answer.add(new Coord2(elf.x + 1, elf.y - 1));
-			answer.add(new Coord2(elf.x + 1, elf.y));
-			answer.add(new Coord2(elf.x + 1, elf.y + 1));
+
+		int[] rows = new int[elfCount];
+		int[] cols = new int[elfCount];
+		int index = 0;
+		for (int row = 0; row < lines.size(); row++) {
+			String line = lines.get(row);
+			for (int col = 0; col < line.length(); col++) {
+				if (line.charAt(col) == '#') {
+					rows[index] = row;
+					cols[index] = col;
+					index++;
+				}
+			}
 		}
-		if ((round + attempt) % 4 == 2) {
-			answer.add(new Coord2(elf.x + 1, elf.y - 1));
-			answer.add(new Coord2(elf.x, elf.y - 1));
-			answer.add(new Coord2(elf.x - 1, elf.y - 1));
-		}
-		if ((round + attempt) % 4 == 3) {
-			answer.add(new Coord2(elf.x + 1, elf.y + 1));
-			answer.add(new Coord2(elf.x, elf.y + 1));
-			answer.add(new Coord2(elf.x - 1, elf.y + 1));
-		}
-		return answer;
+
+		Simulation simulation = new Simulation(rows, cols);
+		int firstRoundWithoutMovement = simulation.runRoundsFindingStop(10);
+		long part1 = simulation.emptyGroundInBoundingBox();
+		int part2 = firstRoundWithoutMovement == 0
+				? simulation.firstRoundWithoutMovement(10)
+				: firstRoundWithoutMovement;
+		return new String[] { part1 + "", part2 + "" };
 	}
 
-	public int helper2(List<Coord2> elves, int rounds) {
-		int[][] grid = new int[300][300];
-		for (Coord2 elf : elves) {
-			grid[elf.x + 100][elf.y + 100] = 1;
+	private static final class Simulation {
+		private final int[] rows;
+		private final int[] cols;
+		private final int[] positions;
+		private final int[] proposedPositions;
+		private final int[] proposedDirections;
+		private final int[] proposedElves;
+		private final StampedGrid grid;
+
+		Simulation(int[] rows, int[] cols) {
+			this.rows = rows;
+			this.cols = cols;
+			this.positions = new int[rows.length];
+			this.proposedPositions = new int[rows.length];
+			this.proposedDirections = new int[rows.length];
+			this.proposedElves = new int[rows.length];
+			this.grid = new StampedGrid(rows, cols);
+			this.grid.rebuildOccupied(rows, cols, positions);
 		}
-		int[] xneighbors = new int[] { -1, 0, 1, -1, 1, -1, 0, 1 };
-		int[] yneighbors = new int[] { -1, -1, -1, 0, 0, 1, 1, 1 };
-		for (int i = 0; i < rounds; i++) {
-			Map<Coord2, Integer> freq = new HashMap<>();
-			boolean allNull = true;
-			Coord2[] proposed = new Coord2[elves.size()];
-			for (int j = 0; j < elves.size(); j++) {
-				Coord2 elf = elves.get(j);
-				boolean empty = true;
-				for (int k = 0; k < xneighbors.length; k++) {
-					if (grid[elf.x + xneighbors[k] + 100][elf.y + yneighbors[k] + 100] == 1) {
-						empty = false;
-					}
+
+		void runRounds(int rounds) {
+			for (int round = 0; round < rounds; round++) {
+				runRound(round);
+			}
+		}
+
+		int runRoundsFindingStop(int rounds) {
+			int firstRoundWithoutMovement = 0;
+			for (int round = 0; round < rounds; round++) {
+				if (!runRound(round) && firstRoundWithoutMovement == 0) {
+					firstRoundWithoutMovement = round + 1;
 				}
-				if (empty) {
-					proposed[j] = null;
+			}
+			return firstRoundWithoutMovement;
+		}
+
+		int firstRoundWithoutMovement() {
+			return firstRoundWithoutMovement(0);
+		}
+
+		int firstRoundWithoutMovement(int startRound) {
+			for (int round = startRound;; round++) {
+				if (!runRound(round)) {
+					return round + 1;
+				}
+			}
+		}
+
+		long emptyGroundInBoundingBox() {
+			if (rows.length == 0) {
+				return 0;
+			}
+			int minRow = rows[0];
+			int maxRow = rows[0];
+			int minCol = cols[0];
+			int maxCol = cols[0];
+			for (int i = 1; i < rows.length; i++) {
+				minRow = Math.min(minRow, rows[i]);
+				maxRow = Math.max(maxRow, rows[i]);
+				minCol = Math.min(minCol, cols[i]);
+				maxCol = Math.max(maxCol, cols[i]);
+			}
+			long area = (long) (maxRow - minRow + 1) * (maxCol - minCol + 1);
+			return area - rows.length;
+		}
+
+		private boolean runRound(int round) {
+			grid.clearProposals();
+			int proposedElfCount = 0;
+			int firstDirection = round & 3;
+
+			for (int i = 0; i < rows.length; i++) {
+				int position = positions[i];
+
+				if (!grid.hasAnyNeighbor(position)) {
 					continue;
 				}
-				for (int k = 0; k < 4; k++) {
-					List<Coord2> possible = helper(elves.get(j), i, k);
-					boolean empty2 = true;
-					for (Coord2 c : possible) {
-						if (grid[c.x + 100][c.y + 100] == 1) {
-							empty2 = false;
-						}
-					}
-					if (empty2) {
-						proposed[j] = possible.get(1);
-						if (freq.keySet().contains(proposed[j])) {
-							freq.put(proposed[j], freq.get(proposed[j]) + 1);
-						} else {
-							freq.put(proposed[j], 1);
-						}
+
+				int direction = firstDirection;
+				for (int attempt = 0; attempt < 4; attempt++) {
+					if (grid.canMove(position, direction)) {
+						int proposedPosition = grid.move(position, direction);
+						proposedPositions[i] = proposedPosition;
+						proposedDirections[i] = direction;
+						proposedElves[proposedElfCount++] = i;
+						grid.addProposal(proposedPosition);
 						break;
 					}
-				}
-			}
-			for (int j = 0; j < proposed.length; j++) {
-				if (proposed[j] != null && freq.get(proposed[j]) == 1) {
-					elves.set(j, proposed[j]);
-					allNull = false;
+					direction = (direction + 1) & 3;
 				}
 			}
 
-			if (allNull) {
-				return i + 1;
+			boolean moved = false;
+			boolean resize = false;
+			for (int i = 0; i < proposedElfCount; i++) {
+				int elf = proposedElves[i];
+				if (grid.proposalCount(proposedPositions[elf]) == 1) {
+					int direction = proposedDirections[elf];
+					grid.moveOccupied(positions[elf], proposedPositions[elf]);
+					positions[elf] = proposedPositions[elf];
+					rows[elf] += MOVE_ROWS[direction];
+					cols[elf] += MOVE_COLS[direction];
+					moved = true;
+					resize |= grid.needsResize(rows[elf], cols[elf]);
+				}
 			}
-			grid = new int[300][300];
-			for (Coord2 elf : elves) {
-				grid[elf.x + 100][elf.y + 100] = 1;
+			if (resize) {
+				grid.rebuildOccupied(rows, cols, positions);
+			}
+			return moved;
+		}
+	}
+
+	/*
+	 * The grid expands from the current elf bounds, so the simulation is not tied
+	 * to the original fixed 300x300 puzzle-sized array. Stamps avoid clearing the
+	 * full grid each round: a cell is occupied or proposed only when its stored
+	 * stamp matches the current generation.
+	 */
+	private static final class StampedGrid {
+		private static final int NEIGHBOR_MARGIN = 2;
+		private static final int MIN_PADDING = 32;
+
+		private int[] occupiedStamp;
+		private int[] proposalStamp;
+		private int[] proposalCounts;
+		private int occupiedGeneration = 1;
+		private int proposalGeneration = 1;
+		private int baseRow;
+		private int baseCol;
+		private int height;
+		private int width;
+
+		StampedGrid(int[] rows, int[] cols) {
+			resizeToFit(rows, cols, NEIGHBOR_MARGIN);
+		}
+
+		void rebuildOccupied(int[] rows, int[] cols, int[] positions) {
+			ensureCovers(rows, cols, NEIGHBOR_MARGIN);
+			occupiedGeneration = nextGeneration(occupiedGeneration, occupiedStamp);
+			for (int i = 0; i < rows.length; i++) {
+				int rowIndex = rows[i] - baseRow;
+				int colIndex = cols[i] - baseCol;
+				int position = rowIndex * width + colIndex;
+				positions[i] = position;
+				occupiedStamp[position] = occupiedGeneration;
 			}
 		}
-		return -1;
-	}
-}
 
-class Coord2 {
-	int x;
-	int y;
+		boolean needsResize(int row, int col) {
+			return (long) row - NEIGHBOR_MARGIN < baseRow
+					|| (long) row + NEIGHBOR_MARGIN >= (long) baseRow + height
+					|| (long) col - NEIGHBOR_MARGIN < baseCol
+					|| (long) col + NEIGHBOR_MARGIN >= (long) baseCol + width;
+		}
 
-	public Coord2(int x, int y) {
-		this.x = x;
-		this.y = y;
-	}
+		void clearProposals() {
+			proposalGeneration = nextGeneration(proposalGeneration, proposalStamp);
+		}
 
-	@Override
-	public boolean equals(Object other) {
-		if (other == null) {
+		boolean hasAnyNeighbor(int position) {
+			int[] stamps = occupiedStamp;
+			int generation = occupiedGeneration;
+			int rowAbove = position - width;
+			int rowBelow = position + width;
+			return stamps[rowAbove - 1] == generation
+					|| stamps[rowAbove] == generation
+					|| stamps[rowAbove + 1] == generation
+					|| stamps[position - 1] == generation
+					|| stamps[position + 1] == generation
+					|| stamps[rowBelow - 1] == generation
+					|| stamps[rowBelow] == generation
+					|| stamps[rowBelow + 1] == generation;
+		}
+
+		boolean canMove(int position, int direction) {
+			int[] stamps = occupiedStamp;
+			int generation = occupiedGeneration;
+			switch (direction) {
+			case 0:
+				int north = position - width;
+				return stamps[north - 1] != generation
+						&& stamps[north] != generation
+						&& stamps[north + 1] != generation;
+			case 1:
+				int south = position + width;
+				return stamps[south - 1] != generation
+						&& stamps[south] != generation
+						&& stamps[south + 1] != generation;
+			case 2:
+				return stamps[position - width - 1] != generation
+						&& stamps[position - 1] != generation
+						&& stamps[position + width - 1] != generation;
+			default:
+				return stamps[position - width + 1] != generation
+						&& stamps[position + 1] != generation
+						&& stamps[position + width + 1] != generation;
+			}
+		}
+
+		int move(int position, int direction) {
+			switch (direction) {
+			case 0:
+				return position - width;
+			case 1:
+				return position + width;
+			case 2:
+				return position - 1;
+			default:
+				return position + 1;
+			}
+		}
+
+		void addProposal(int position) {
+			if (proposalStamp[position] != proposalGeneration) {
+				proposalStamp[position] = proposalGeneration;
+				proposalCounts[position] = 1;
+			} else {
+				proposalCounts[position]++;
+			}
+		}
+
+		int proposalCount(int position) {
+			if (proposalStamp[position] == proposalGeneration) {
+				return proposalCounts[position];
+			}
+			return 0;
+		}
+
+		void moveOccupied(int oldPosition, int newPosition) {
+			occupiedStamp[oldPosition] = 0;
+			occupiedStamp[newPosition] = occupiedGeneration;
+		}
+
+		private boolean ensureCovers(int[] rows, int[] cols, int margin) {
+			if (rows.length == 0) {
+				return false;
+			}
+			int minRow = rows[0];
+			int maxRow = rows[0];
+			int minCol = cols[0];
+			int maxCol = cols[0];
+			for (int i = 1; i < rows.length; i++) {
+				minRow = Math.min(minRow, rows[i]);
+				maxRow = Math.max(maxRow, rows[i]);
+				minCol = Math.min(minCol, cols[i]);
+				maxCol = Math.max(maxCol, cols[i]);
+			}
+			if (occupiedStamp == null
+					|| (long) minRow - margin < baseRow
+					|| (long) maxRow + margin >= (long) baseRow + height
+					|| (long) minCol - margin < baseCol
+					|| (long) maxCol + margin >= (long) baseCol + width) {
+				resizeToFit(minRow, maxRow, minCol, maxCol, margin);
+				return true;
+			}
 			return false;
 		}
-		if (other.getClass().equals(this.getClass())) {
-			Coord2 o = (Coord2) other;
-			return x == o.x && y == o.y;
-		}
-		return false;
-	}
 
-	@Override
-	public int hashCode() {
-		return 1000 * x + y;
+		private void resizeToFit(int[] rows, int[] cols, int margin) {
+			if (rows.length == 0) {
+				height = 8;
+				width = 8;
+				occupiedStamp = new int[height * width];
+				proposalStamp = new int[height * width];
+				proposalCounts = new int[height * width];
+				baseRow = -4;
+				baseCol = -4;
+				return;
+			}
+
+			int minRow = rows[0];
+			int maxRow = rows[0];
+			int minCol = cols[0];
+			int maxCol = cols[0];
+			for (int i = 1; i < rows.length; i++) {
+				minRow = Math.min(minRow, rows[i]);
+				maxRow = Math.max(maxRow, rows[i]);
+				minCol = Math.min(minCol, cols[i]);
+				maxCol = Math.max(maxCol, cols[i]);
+			}
+			resizeToFit(minRow, maxRow, minCol, maxCol, margin);
+		}
+
+		private void resizeToFit(int minRow, int maxRow, int minCol, int maxCol, int margin) {
+			int rowSpan = maxRow - minRow + 1 + margin * 2;
+			int colSpan = maxCol - minCol + 1 + margin * 2;
+			int padding = Math.max(MIN_PADDING, Math.max(rowSpan, colSpan));
+			height = rowSpan + padding * 2;
+			width = colSpan + padding * 2;
+			baseRow = minRow - margin - padding;
+			baseCol = minCol - margin - padding;
+			occupiedStamp = new int[height * width];
+			proposalStamp = new int[height * width];
+			proposalCounts = new int[height * width];
+			occupiedGeneration = 1;
+			proposalGeneration = 1;
+		}
+
+		private int nextGeneration(int generation, int[] stamps) {
+			if (generation == Integer.MAX_VALUE) {
+				Arrays.fill(stamps, 0);
+				return 1;
+			}
+			return generation + 1;
+		}
 	}
 }
