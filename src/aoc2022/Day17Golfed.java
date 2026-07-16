@@ -29,12 +29,12 @@ return true;
 void u(int p,int x,int y){
 for(;p>0;p>>=8,y++){
 if(y==c.length)c=Arrays.copyOf(c,y*2);
-int w=p%256<<x;c[y]|=w;h=Math.max(h,y+1);
+int w=p%256<<x;c[y]|=w;h=$.x(h,y+1);
 }
 }
 String k(long r,int q){
 int f=h;
-for(int x=7;x-->0;)for(int y=h;y-->0;)if((c[y]&1<<x)>0){f=Math.min(f,y+1);break;}
+for(int x=7;x-->0;)for(int y=h;y-->0;)if((c[y]&1<<x)>0){f=$.n(f,y+1);break;}
 return r%5+","+q+":"+new String(c,0,f,h-f);
 }
 }
