@@ -50,30 +50,30 @@ The separately reported cold run was:
 
 | Run | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Cold | 257.858 | 225.689 | 196.058 | 27.493 | 29.631 |
+| Cold | 260.900 | 228.304 | 196.741 | 27.343 | 31.563 |
 
 The following 10 fresh JVM processes form the summary sample:
 
 | Run | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | 260.460 | 229.358 | 200.455 | 26.367 | 28.903 |
-| 2 | 255.214 | 224.421 | 195.665 | 25.800 | 28.756 |
-| 3 | 259.751 | 229.095 | 200.452 | 25.693 | 28.643 |
-| 4 | 257.968 | 227.476 | 198.656 | 25.912 | 28.820 |
-| 5 | 256.702 | 225.143 | 196.482 | 26.701 | 28.661 |
-| 6 | 260.645 | 228.517 | 198.434 | 26.900 | 30.083 |
-| 7 | 267.066 | 234.860 | 204.715 | 27.099 | 30.145 |
-| 8 | 255.021 | 223.168 | 193.939 | 27.128 | 29.228 |
-| 9 | 267.660 | 235.335 | 205.485 | 27.400 | 29.850 |
-| 10 | 262.465 | 227.528 | 197.012 | 30.329 | 30.517 |
+| 1 | 257.341 | 225.045 | 196.298 | 27.358 | 28.747 |
+| 2 | 254.247 | 220.898 | 191.107 | 28.405 | 29.791 |
+| 3 | 258.363 | 225.705 | 195.013 | 27.708 | 30.693 |
+| 4 | 285.898 | 252.694 | 220.476 | 28.180 | 32.219 |
+| 5 | 259.493 | 227.006 | 196.096 | 27.856 | 30.910 |
+| 6 | 259.237 | 227.674 | 197.176 | 26.652 | 30.497 |
+| 7 | 252.165 | 220.312 | 189.634 | 26.886 | 30.677 |
+| 8 | 261.962 | 230.236 | 199.683 | 26.607 | 30.553 |
+| 9 | 264.686 | 228.232 | 196.462 | 31.459 | 31.770 |
+| 10 | 278.491 | 232.242 | 200.152 | 28.944 | 32.090 |
 
 | Metric | Mean (ms) | Median (ms) | Sample standard deviation (ms) |
 | --- | ---: | ---: | ---: |
-| Wall | 260.295 | 260.106 | 4.437 |
-| Main | 228.490 | 228.023 | 4.036 |
-| Solver | 199.130 | 198.545 | 3.745 |
-| Startup | 26.933 | 26.800 | 1.336 |
-| Harness | 29.361 | 29.066 | 0.715 |
+| Wall | 263.188 | 259.365 | 10.759 |
+| Main | 229.004 | 227.340 | 9.113 |
+| Solver | 198.210 | 196.380 | 8.486 |
+| Startup | 28.005 | 27.782 | 1.436 |
+| Harness | 30.795 | 30.685 | 1.056 |
 
 ## Clean cumulative recovery comparison
 
@@ -740,6 +740,254 @@ The pushed `67476ae` tip and candidate then ran one excluded cold pair plus 10 c
 | Wall | 265.078 | 260.295 | -4.783 | [-9.996, +0.431] |
 
 The summed solver interval clears the publication gate; startup, harness, and wall are explicitly inconclusive. The current cold-plus-10 table at the top is the candidate half of these pairs. The official sample returned `95437 / 24933642`; personal answers remained `1723892 / 8474158`. Targeted cases covered repeated listings, `cd` before listing, CRLF and missing final newline, flexible whitespace, names with spaces, empty directories, duplicate-metadata rejection, and file sizes beyond `long`. All 50 independent answers and all 25 combined solves retained checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`.
+
+## Day 13 shared exact packet analysis
+
+Day 13 previously inherited the generic `fullSolve`, which copied the complete input, constructed two inner `Scanner` instances, and parsed every packet twice. Part 2 then retained and sorted every packet, reversed the result, and identified divider-shaped source strings rather than the two inserted divider objects. The replacement parses each nonblank packet line once, computes Part 1 as each pair arrives, and derives the two stable divider ranks directly without retaining or sorting the full input. Packet comparison now uses conventional ordering and checked primitive values with `BigInteger` fallback, removing subtraction overflow and the old unsigned-`int` restriction.
+
+An isolated runner constructed `Day13` and its file-backed `Scanner` before timing `fullSolve`. The excluded cold pair was 9.309ms baseline and 7.409ms candidate. Ten counterbalanced fresh-JVM pairs followed:
+
+| Pair | Order | Baseline (ms) | Candidate (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 8.727 | 7.300 | -1.426 |
+| 2 | C-B | 9.042 | 7.913 | -1.129 |
+| 3 | B-C | 8.804 | 7.619 | -1.185 |
+| 4 | C-B | 9.346 | 7.347 | -1.999 |
+| 5 | B-C | 8.856 | 7.675 | -1.181 |
+| 6 | C-B | 9.260 | 7.419 | -1.841 |
+| 7 | B-C | 8.811 | 7.542 | -1.269 |
+| 8 | C-B | 8.811 | 7.537 | -1.273 |
+| 9 | B-C | 8.830 | 7.756 | -1.074 |
+| 10 | C-B | 8.991 | 7.722 | -1.269 |
+
+The measured means were **8.948ms baseline** and **7.583ms candidate**, a **1.365ms (15.3%) reduction**. The paired-delta sample standard deviation was 0.310ms and the t(9) 95% confidence interval was **[-1.586ms, -1.143ms]**, so the per-day retention gate passes.
+
+The pushed `7ea2162` tip and queued candidate then ran one excluded cold pair plus 10 clean, serial, counterbalanced full-25-day pairs. The cold baseline/candidate values were respectively 260.754/261.991ms wall, 229.272/230.328ms main, 199.674/200.486ms solver, 26.886/27.387ms startup, and 29.598/29.842ms harness. Measured candidate-minus-baseline results were:
+
+| Metric | Pushed-tip mean (ms) | Queued mean (ms) | Delta (ms) | Paired 95% CI (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| Solver | 199.635 | 199.541 | -0.094 | [-2.467, +2.279] |
+| Main | 229.046 | 229.178 | +0.132 | [-2.333, +2.597] |
+| Startup | 28.091 | 27.971 | -0.120 | [-1.010, +0.771] |
+| Harness | 29.411 | 29.637 | +0.226 | [-0.038, +0.490] |
+| Wall | 261.530 | 261.566 | +0.036 | [-2.731, +2.803] |
+
+The summed solver interval crosses zero, so this verified change remains deliberately uncommitted and unpushed until another independent 2022 per-day win joins the batch. The official sample returned `13 / 140`; personal answers remained `5003 / 20280`. Candidate-only checks covered every official ordering pair, missing final separators, arbitrary blank separators, CRLF, nested empty lists, semantic divider duplicates such as `[2]` and `[[2]]`, signed integers beyond `long`, leading zeros, internal whitespace, malformed packets, and incomplete pairs. Repeated calls on one solver remained independent. All 50 independent answers and all 25 combined solves retained checksum `5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`.
+
+## Day 5 parse-once dual crane simulation
+
+The inherited combined path copied the complete input, constructed two more `Scanner`
+instances, parsed every drawing and move twice, used synchronized `Stack<String>`
+objects, split every instruction with a regex, and built both answers by repeated string
+concatenation. The queued implementation discovers stacks from the numbered drawing row,
+parses the input once with flexible whitespace and line endings, and applies every move
+to both crane states in primitive growing `char` stacks. CrateMover 9000 reverses the
+moved block directly while CrateMover 9001 uses one bulk copy.
+
+An isolated runner constructed `Day05` and its file-backed UTF-8 `Scanner` before timing
+only `fullSolve`. One excluded cold pair was followed by 10 separate, counterbalanced
+fresh-JVM pairs against pushed tip `7ea2162`:
+
+| Pair | Order | Duplicate `Stack` solve (ms) | Parse-once solve (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 8.644 | 2.927 | -5.718 |
+| 2 | C-B | 8.643 | 2.828 | -5.814 |
+| 3 | B-C | 8.571 | 2.850 | -5.721 |
+| 4 | C-B | 8.504 | 2.827 | -5.677 |
+| 5 | B-C | 8.420 | 2.817 | -5.603 |
+| 6 | C-B | 9.141 | 2.732 | -6.409 |
+| 7 | B-C | 8.409 | 2.764 | -5.644 |
+| 8 | C-B | 8.775 | 2.730 | -6.045 |
+| 9 | B-C | 9.003 | 3.075 | -5.928 |
+| 10 | C-B | 9.010 | 3.114 | -5.896 |
+
+The excluded cold values were 8.548ms baseline and 2.736ms candidate. The measured
+means were **8.712ms baseline** and **2.866ms candidate**, a **5.846ms (67.1%)
+reduction**. The paired-delta sample standard deviation was 0.242ms and the t(9) 95%
+confidence interval was **[-6.019ms, -5.672ms]**, so the per-day retention gate passes.
+
+The pushed tip and combined Day 13 plus Day 5 queue then ran one excluded cold pair and
+10 clean, serial, counterbalanced full-25-day pairs. The cold baseline/candidate solver
+values were 203.047/208.843ms. Despite both isolated wins, this full-suite sample moved
+against the queue and therefore rejects publication:
+
+| Metric | Pushed-tip mean (ms) | Queued mean (ms) | Delta (ms) | Paired 95% CI (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| Solver | 207.244 | 210.283 | +3.038 | [+0.290, +5.786] |
+| Main | 238.596 | 241.750 | +3.155 | [+0.326, +5.983] |
+| Startup | 28.311 | 29.005 | +0.694 | [-0.636, +2.023] |
+| Harness | 31.351 | 31.468 | +0.116 | [-0.434, +0.666] |
+| Wall | 274.097 | 275.636 | +1.539 | [-2.944, +6.022] |
+
+The official sample returned `CMZ / MCD`. An independent simulator matched both crane
+answers on 500 deterministic randomized drawings with 2–12 stacks, uneven heights,
+multi-digit stack labels, flexible whitespace, CRLF, missing final newlines, and repeated
+solver reuse. Personal answers remained `CNSZFDVLJ / QNDWLMGNS`; all 50 independent
+answers and all 25 combined solves retained checksum
+`5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`.
+
+## Day 10 single-pass exact CRT analysis
+
+Day 10 previously inherited the generic combined path, which copied the entire input,
+constructed two inner `Scanner` instances, parsed every instruction twice with regular
+expressions, and built two boxed register traces. The queued implementation reads and
+parses the program once, advances both answers through one primitive execution state,
+and only promotes the register or signal total to `BigInteger` when checked `long`
+arithmetic cannot represent it. It also stops inventing register cycles after program
+halt: unsampled checkpoints contribute nothing and undrawn CRT pixels remain dark.
+Known repository glyphs retain their compact OCR answer; an unrecognized display now
+returns the six-row prompt raster instead of failing on an incomplete font table.
+
+An isolated runner constructed `Day10` and its file-backed UTF-8 `Scanner` before timing
+only `fullSolve`. The excluded cold pair was 3.552ms baseline and 1.456ms candidate.
+Ten separate, counterbalanced fresh-JVM pairs against pushed tip `7ea2162` followed:
+
+| Pair | Order | Duplicate trace solve (ms) | Single-pass solve (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 3.592 | 1.502 | -2.091 |
+| 2 | C-B | 3.577 | 1.486 | -2.091 |
+| 3 | B-C | 3.602 | 1.414 | -2.188 |
+| 4 | C-B | 3.580 | 1.413 | -2.167 |
+| 5 | B-C | 3.560 | 1.490 | -2.070 |
+| 6 | C-B | 3.520 | 1.470 | -2.051 |
+| 7 | B-C | 3.594 | 1.519 | -2.075 |
+| 8 | C-B | 3.523 | 1.451 | -2.072 |
+| 9 | B-C | 3.538 | 1.429 | -2.110 |
+| 10 | C-B | 3.781 | 1.560 | -2.221 |
+
+The measured means were **3.587ms baseline** and **1.473ms candidate**, a **2.113ms
+(58.9%) reduction**. The paired-delta sample standard deviation was 0.058ms and the
+t(9) 95% confidence interval was **[-2.155ms, -2.072ms]**, so the per-day retention
+gate passes.
+
+The pushed tip and combined Day 13, Day 5, and Day 10 queue then ran one excluded cold
+pair plus 10 clean, serial, counterbalanced full-25-day pairs. The cold baseline and
+queued solver values were 201.655ms and 200.315ms. Candidate-minus-baseline results
+were:
+
+| Metric | Pushed-tip mean (ms) | Queued mean (ms) | Delta (ms) | Paired 95% CI (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| Solver | 198.423 | 201.871 | +3.447 | **[+0.228, +6.667]** |
+| Main | 227.242 | 231.037 | +3.795 | **[+0.367, +7.223]** |
+| Startup | 26.841 | 26.745 | -0.095 | [-1.176, +0.986] |
+| Harness | 28.818 | 29.166 | +0.348 | [-0.122, +0.818] |
+| Wall | 258.411 | 262.149 | +3.738 | **[+0.041, +7.435]** |
+
+The aggregate solver interval lies entirely above zero, so this sample clearly rejects
+publication and all three verified changes remain deliberately uncommitted and unpushed.
+Personal answers remained `16020 / ECZUZALR`.
+One thousand deterministic programs matched an independent exact-arithmetic trace and
+CRT oracle, including CRLF, surrounding whitespace, signed operands, short programs,
+40-digit register values, malformed instructions, and repeated solver construction.
+Both pushed tip and the full queue passed all 50 independent answers and all 25 combined
+solves with checksum
+`5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`.
+
+## Day 15 parse-once exact sensor analysis
+
+Day 15 now parses immutable sensor records once for `fullSolve`, uses checked `long`
+coordinate arithmetic, handles a target row with no coverage, and includes sensor-line
+intersections with every search-box edge and corner. The edge candidates remove the
+previous assumption that the unique distress beacon cannot lie on the search boundary.
+
+An isolated runner constructed `Day15` and its file-backed `Scanner` before timing
+`fullSolve`. The excluded cold pair was 5.589ms baseline and 4.803ms candidate. Ten
+counterbalanced fresh-JVM pairs followed:
+
+| Pair | Order | Baseline (ms) | Candidate (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 5.603 | 4.738 | -0.865 |
+| 2 | C-B | 5.624 | 4.964 | -0.660 |
+| 3 | B-C | 5.976 | 4.977 | -1.000 |
+| 4 | C-B | 5.624 | 4.654 | -0.971 |
+| 5 | B-C | 6.012 | 4.859 | -1.154 |
+| 6 | C-B | 5.213 | 4.704 | -0.509 |
+| 7 | B-C | 6.138 | 4.851 | -1.287 |
+| 8 | C-B | 5.779 | 4.508 | -1.271 |
+| 9 | B-C | 5.675 | 4.926 | -0.749 |
+| 10 | C-B | 5.841 | 4.931 | -0.911 |
+
+The means were **5.749ms baseline** and **4.811ms candidate**, a **0.938ms (16.3%)
+reduction**. Paired-delta sample standard deviation was 0.255ms and the t(9) 95%
+confidence interval was **[-1.120ms, -0.755ms]**, so the per-day retention gate passes.
+
+The pushed `6682e31` tip and combined Day 13, Day 5, Day 10, and Day 15 queue then ran
+one excluded cold pair plus 10 counterbalanced full-25-day pairs. The cold processes
+were 307.409/258.924/223.808/31.084/35.116ms baseline and
+327.348/279.304/246.176/30.739/33.128ms queue for wall/main/solver/startup/harness.
+The paired solver deltas were `+26.369, -17.345, +32.297, +8.650, +2.032, -10.109,
++4.528, -1.803, +14.315, +4.607` milliseconds.
+
+| Metric | Pushed-tip mean (ms) | Queue mean (ms) | Delta (ms) | Paired 95% CI (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| Solver | 235.518 | 241.872 | +6.354 | [-4.486, +17.194] |
+| Main | 267.538 | 274.014 | +6.475 | [-4.236, +17.187] |
+| Startup | 29.719 | 30.009 | +0.290 | [-1.664, +2.244] |
+| Harness | 32.020 | 32.142 | +0.121 | [-1.698, +1.940] |
+| Wall | 312.084 | 321.433 | +9.349 | [-3.491, +22.188] |
+
+The aggregate solver interval crosses zero, so the four verified changes remain
+uncommitted and unpushed. Day 15 retained personal answers `4793062 / 10826395253551`
+and the official `26 / 56000011` sample. Two hundred deterministic small sensor fields
+with a unique uncovered cell matched a brute-force oracle for both parts, including
+boundary solutions. The final queue retained the established 50-answer checksum.
+
+## Day 24 packed periodic valley traversal
+
+The scalar periodic breadth-first search represented each reachable coordinate as a
+boxed `Integer` in a `HashSet` and repeated that allocation-heavy traversal for all
+three legs. The replacement is a strategy-level rewrite of the timed combined path:
+it precomputes each repeating storm phase as packed bits and advances a packed frontier
+with whole-array wait, north, south, east, and west shifts. A packed `(phase, cell)`
+visited set still preserves exact breadth-first-search semantics, including arbitrary
+valley widths and shifts that cross 64-bit word boundaries. The separate `solve` entry
+points deliberately retain the independent scalar implementation as a correctness
+oracle.
+
+An isolated runner constructed `Day24` and its file-backed `Scanner` before timing only
+`fullSolve`. The excluded cold pair was 21.887ms baseline and 12.536ms candidate. Ten
+counterbalanced fresh-JVM pairs followed against the exact pre-Day-24 queue:
+
+| Pair | Order | Scalar BFS (ms) | Packed BFS (ms) | Delta (ms) |
+| ---: | :---: | ---: | ---: | ---: |
+| 1 | B-C | 21.044 | 12.615 | -8.429 |
+| 2 | C-B | 19.591 | 12.164 | -7.427 |
+| 3 | B-C | 19.100 | 11.938 | -7.162 |
+| 4 | C-B | 19.103 | 11.230 | -7.873 |
+| 5 | B-C | 19.151 | 10.996 | -8.155 |
+| 6 | C-B | 20.660 | 11.115 | -9.545 |
+| 7 | B-C | 19.805 | 11.212 | -8.592 |
+| 8 | C-B | 19.001 | 11.814 | -7.187 |
+| 9 | B-C | 19.125 | 11.019 | -8.106 |
+| 10 | C-B | 19.135 | 11.177 | -7.958 |
+
+The measured means were **19.571ms baseline** and **11.528ms candidate**, an
+**8.043ms (41.1%) reduction**. The paired-delta sample standard deviation was 0.719ms
+and the t(9) 95% confidence interval was **[-8.557ms, -7.529ms]**, so the per-day
+retention gate passes.
+
+The pushed `6682e31` tip and combined Day 5, Day 10, Day 13, Day 15, and Day 24 batch
+then ran one excluded cold pair plus 10 clean, serial, counterbalanced full-25-day
+pairs. Cold baseline/candidate values were 272.112/260.900ms wall,
+236.512/228.304ms main, 206.389/196.741ms solver, 30.875/27.343ms startup, and
+30.123/31.563ms harness. Candidate-minus-baseline results were:
+
+| Metric | Pushed-tip mean (ms) | Five-day batch mean (ms) | Delta (ms) | Paired 95% CI (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| Solver | 205.497 | 198.210 | -7.288 | **[-13.691, -0.884]** |
+| Main | 237.589 | 229.004 | -8.585 | **[-15.342, -1.828]** |
+| Startup | 29.086 | 28.005 | -1.081 | [-3.380, +1.218] |
+| Harness | 32.092 | 30.795 | -1.297 | **[-2.375, -0.219]** |
+| Wall | 271.631 | 263.188 | -8.443 | **[-16.610, -0.276]** |
+
+The summed solver interval clears the aggregate publication gate; main, harness, and
+wall also exclude zero, while startup remains inconclusive. The official sample
+returned `18 / 54`, personal answers remained `292 / 816`, and 204 deterministic
+valleys matched the independent scalar implementation through separate and combined
+entry points. Those cases included widths 63, 64, and 65, multiple storm layouts,
+LF and CRLF input, and repeated solver reuse. Immediately before publication, all 50
+independent answers and all 25 combined solves retained checksum
+`5f79ad374b42c8a37382972ee3158f645c2260d01e08f33e59c12cfb9f60932b`.
 
 ## Historical warm measurements
 

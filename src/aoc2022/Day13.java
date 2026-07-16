@@ -1,121 +1,189 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
+import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
 public class Day13 extends DayTemplate {
 
+	@Override
+	public String[] fullSolve(Scanner in) {
+		Answers answers = analyze(in);
+		return new String[] { answers.orderedPairs(), answers.decoderKey() };
+	}
+
+	@Override
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		int answer = 0;
-		int index = 1;
-		List<Packet> packets = new ArrayList<>();
-		while (in.hasNext()) {
-			Packet packet1 = new Packet(in.nextLine());
-			Packet packet2 = new Packet(in.nextLine());
-			packets.add(packet1);
-			packets.add(packet2);
-			in.nextLine();
-			if (part1) {
-				answer += (packet1.compareTo(packet2) > 0) ? index : 0;
-				index++;
-			}
-		}
-		if (!part1) {
-			answer = 1;
-			packets.add(new Packet("[[2]]"));
-			packets.add(new Packet("[[6]]"));
-			Collections.sort(packets);
-			Collections.reverse(packets);
-			for (int i = 0; i < packets.size(); i++) {
-				if (packets.get(i).str.equals("[[2]]") || packets.get(i).str.equals("[[6]]")) {
-					answer *= (i + 1);
+		Answers answers = analyze(in);
+		return part1 ? answers.orderedPairs() : answers.decoderKey();
+	}
+
+	private Answers analyze(Scanner in) {
+		Packet dividerTwo = Packet.parse("[[2]]");
+		Packet dividerSix = Packet.parse("[[6]]");
+		BigInteger orderedPairs = BigInteger.ZERO;
+		Packet left = null;
+		long pairIndex = 1;
+		long rankTwo = 1;
+		long rankSix = 2;
+		while (in.hasNextLine()) {
+			String line = in.nextLine();
+			if (!line.isBlank()) {
+				Packet packet = Packet.parse(line);
+				// Input packets precede the appended dividers in the puzzle's stable sort.
+				if (packet.compareTo(dividerTwo) <= 0) {
+					rankTwo++;
+				}
+				if (packet.compareTo(dividerSix) <= 0) {
+					rankSix++;
+				}
+				if (left == null) {
+					left = packet;
+				} else {
+					if (left.compareTo(packet) < 0) {
+						orderedPairs = orderedPairs.add(BigInteger.valueOf(pairIndex));
+					}
+					pairIndex++;
+					left = null;
 				}
 			}
 		}
-		return "" + answer;
+		if (left != null) {
+			throw new IllegalArgumentException("Packet input must contain complete pairs");
+		}
+		BigInteger decoderKey = BigInteger.valueOf(rankTwo)
+				.multiply(BigInteger.valueOf(rankSix));
+		return new Answers(orderedPairs.toString(), decoderKey.toString());
 	}
+
+	private record Answers(String orderedPairs, String decoderKey) {}
 }
 
-class Packet implements Comparable<Packet> {
-	List<Packet> children;
-	int val;
-	boolean integer = true;
-	String str;
+final class Packet implements Comparable<Packet> {
+	private final List<Packet> children;
+	private final long smallValue;
+	private final BigInteger bigValue;
 
-	public Packet(String packet) {
-		str = packet;
-		children = new ArrayList<>();
-		parse(packet, 0);
+	private Packet(long smallValue, BigInteger bigValue, List<Packet> children) {
+		this.smallValue = smallValue;
+		this.bigValue = bigValue;
+		this.children = children;
 	}
 
-	public int compareTo(Packet other) {
-		if (integer && other.integer) {
-			return other.val - val;
+	static Packet parse(String text) {
+		Parser parser = new Parser(text);
+		Packet packet = parser.parsePacket();
+		parser.skipWhitespace();
+		if (!parser.atEnd()) {
+			throw parser.error("Unexpected trailing character");
 		}
-		if (!integer && !other.integer) {
-			for (int i = 0; i < Math.min(children.size(), other.children.size()); i++) {
-				int val = children.get(i).compareTo(other.children.get(i));
-				if (val != 0) {
-					return val;
+		return packet;
+	}
+
+	@Override
+	public int compareTo(Packet other) {
+		if (children == null && other.children == null) {
+			if (bigValue == null && other.bigValue == null) {
+				return Long.compare(smallValue, other.smallValue);
+			}
+			BigInteger thisValue = bigValue == null
+					? BigInteger.valueOf(smallValue) : bigValue;
+			BigInteger otherValue = other.bigValue == null
+					? BigInteger.valueOf(other.smallValue) : other.bigValue;
+			return thisValue.compareTo(otherValue);
+		}
+		if (children != null && other.children != null) {
+			int common = Math.min(children.size(), other.children.size());
+			for (int i = 0; i < common; i++) {
+				int comparison = children.get(i).compareTo(other.children.get(i));
+				if (comparison != 0) {
+					return comparison;
 				}
 			}
-			return other.children.size() - children.size();
+			return Integer.compare(children.size(), other.children.size());
 		}
-		return integer ? compareIntegerToList(val, other) : compareListToInteger(this, other.val);
+		return children == null
+				? compareValueToList(this, other)
+				: -compareValueToList(other, this);
 	}
 
-	private int parse(String packet, int index) {
-		if (packet.charAt(index) != '[') {
-			int value = 0;
-			while (index < packet.length() && Character.isDigit(packet.charAt(index))) {
-				value = 10 * value + packet.charAt(index) - '0';
-				index++;
-			}
-			val = value;
-			integer = true;
-			return index;
-		}
-		integer = false;
-		index++;
-		while (packet.charAt(index) != ']') {
-			Packet child = new Packet();
-			index = child.parse(packet, index);
-			children.add(child);
-			if (packet.charAt(index) == ',') {
-				index++;
-			}
-		}
-		return index + 1;
-	}
-
-	private Packet() {
-		children = new ArrayList<>();
-	}
-
-	private int compareIntegerToList(int value, Packet list) {
-		if (list.children.isEmpty()) {
-			return -1;
-		}
-		int firstComparison = compareIntegerToPacket(value, list.children.get(0));
-		return firstComparison != 0 ? firstComparison : list.children.size() - 1;
-	}
-
-	private int compareListToInteger(Packet list, int value) {
+	private static int compareValueToList(Packet scalar, Packet list) {
 		if (list.children.isEmpty()) {
 			return 1;
 		}
-		int firstComparison = comparePacketToInteger(list.children.get(0), value);
-		return firstComparison != 0 ? firstComparison : 1 - list.children.size();
+		int first = scalar.compareTo(list.children.get(0));
+		return first != 0 ? first : Integer.compare(1, list.children.size());
 	}
 
-	private int compareIntegerToPacket(int value, Packet other) {
-		return other.integer ? other.val - value : compareIntegerToList(value, other);
-	}
+	private static final class Parser {
+		private final String text;
+		private int index;
 
-	private int comparePacketToInteger(Packet packet, int value) {
-		return packet.integer ? value - packet.val : compareListToInteger(packet, value);
+		private Parser(String text) {
+			this.text = text;
+		}
+
+		private Packet parsePacket() {
+			skipWhitespace();
+			if (atEnd()) {
+				throw error("Expected packet");
+			}
+			if (text.charAt(index) == '[') {
+				index++;
+				List<Packet> children = new ArrayList<>();
+				skipWhitespace();
+				if (!atEnd() && text.charAt(index) == ']') {
+					index++;
+					return new Packet(0, null, children);
+				}
+				while (true) {
+					children.add(parsePacket());
+					skipWhitespace();
+					if (atEnd()) {
+						throw error("Missing closing bracket");
+					}
+					char separator = text.charAt(index++);
+					if (separator == ']') {
+						return new Packet(0, null, children);
+					}
+					if (separator != ',') {
+						throw error("Expected comma or closing bracket");
+					}
+				}
+			}
+
+			int start = index;
+			if (text.charAt(index) == '+' || text.charAt(index) == '-') {
+				index++;
+			}
+			int digits = index;
+			while (!atEnd() && text.charAt(index) >= '0' && text.charAt(index) <= '9') {
+				index++;
+			}
+			if (index == digits) {
+				throw error("Expected integer");
+			}
+			try {
+				return new Packet(Long.parseLong(text, start, index, 10), null, null);
+			} catch (NumberFormatException e) {
+				return new Packet(0, new BigInteger(text.substring(start, index)), null);
+			}
+		}
+
+		private void skipWhitespace() {
+			while (!atEnd() && Character.isWhitespace(text.charAt(index))) {
+				index++;
+			}
+		}
+
+		private boolean atEnd() {
+			return index == text.length();
+		}
+
+		private IllegalArgumentException error(String message) {
+			return new IllegalArgumentException(message + " at character " + index);
+		}
 	}
 }

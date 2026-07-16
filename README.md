@@ -12,11 +12,11 @@ Inputs:
 
 To see a given day's solution, go to DayX.java, where X is the day in question. 
 
-[`FreshJvmBenchmark`](src/aoc2022/FreshJvmBenchmark.java) is the reproducible answer-consistency and fresh-process benchmark runner. On a 2024 MacBook Pro using OpenJDK 23.0.1, the latest clean current-source 10-process means are 302.978 ms wall time, 258.764 ms in child `main`, and 228.503 ms in the 25 `fullSolve` calls. See [performance notes](PERFORMANCE.md) for every sample, metric definitions, recovery details, and the paired optimization comparisons. Absolute totals moved with current machine load; the serial counterbalanced batch comparison below is the attribution evidence.
+[`FreshJvmBenchmark`](src/aoc2022/FreshJvmBenchmark.java) is the reproducible answer-consistency and fresh-process benchmark runner. On a 2024 MacBook Pro using OpenJDK 23.0.1, the latest clean current-source 10-process means are 263.188 ms wall time, 229.004 ms in child `main`, and 198.210 ms in the 25 `fullSolve` calls. See [performance notes](PERFORMANCE.md) for every sample, metric definitions, recovery details, and the paired optimization comparisons. Absolute totals moved with current machine load; the serial counterbalanced batch comparison below is the attribution evidence.
 
 A clean counterbalanced cumulative comparison against pristine commit `a107970` measured the 25-day solver mean falling from 226.621ms to 210.329ms (-7.19%), with a paired 95% confidence interval of [-20.596ms, -11.988ms]. The paired process-wall interval also excluded zero.
 
-The latest publication batch combines Day 2 and Day 25. Against pushed tip `9671456`, its counterbalanced full-suite solver mean fell from 241.767ms to 229.680ms; the paired 95% confidence interval was [-19.395ms, -4.777ms]. Main time also cleared zero, while startup, harness, and process wall remained inconclusive.
+The latest publication batch combines Days 5, 10, 13, 15, and 24. Against pushed tip `6682e31`, its counterbalanced full-suite solver mean fell from 205.497ms to 198.210ms; the paired 95% confidence interval was [-13.691ms, -0.884ms]. Main, harness, and process wall also cleared zero, while startup remained inconclusive.
 
 From the repository root, compile for the project's Java 16 target, verify all answers, and run one cold process plus 10 measured fresh JVM processes with:
 

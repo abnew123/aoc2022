@@ -2,6 +2,7 @@ package aoc2022;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -98,14 +99,118 @@ public class Day24 extends DayTemplate {
 				}
 			}
 		}
-		Valley valley = buildBlockedStates(rows, cols, walls, blizzardX, blizzardY, blizzardDirections, blizzardCount);
+		PackedValley valley = buildPackedStates(rows, cols, walls, blizzardX, blizzardY, blizzardDirections,
+				blizzardCount);
 		int start = startX * cols + startY;
 		int end = endX * cols + endY;
-		byte[] seen = new byte[valley.blocked().length];
-		int trip1 = travel(start, end, 0, valley, seen, (byte) 1);
-		int trip2 = travel(end, start, trip1, valley, seen, (byte) 2);
-		int trip3 = travel(start, end, trip2, valley, seen, (byte) 3);
+		long[] seen = new long[valley.blocked().length];
+		int trip1 = packedTravel(start, end, 0, valley, seen);
+		int trip2 = packedTravel(end, start, trip1, valley, seen);
+		int trip3 = packedTravel(start, end, trip2, valley, seen);
 		return new String[] { trip1 + "", trip3 + "" };
+	}
+
+	private PackedValley buildPackedStates(int rows, int cols, boolean[] walls, int[] blizzardX,
+			int[] blizzardY, byte[] blizzardDirections, int blizzardCount) {
+		int cells = rows * cols;
+		int period = lcm(rows - 2, cols - 2);
+		int words = (cells + 63) >>> 6;
+		long[] wallBits = new long[words];
+		for (int cell = 0; cell < cells; cell++) {
+			if (walls[cell]) {
+				wallBits[cell >>> 6] |= 1L << cell;
+			}
+		}
+		long[] blocked = new long[Math.multiplyExact(period, words)];
+		for (int time = 0; time < period; time++) {
+			int offset = time * words;
+			System.arraycopy(wallBits, 0, blocked, offset, words);
+			for (int i = 0; i < blizzardCount; i++) {
+				int x = blizzardX[i];
+				int y = blizzardY[i];
+				int cell = x * cols + y;
+				blocked[offset + (cell >>> 6)] |= 1L << cell;
+				if (blizzardDirections[i] == 0) {
+					x--;
+					if (x == 0) x = rows - 2;
+				} else if (blizzardDirections[i] == 1) {
+					y++;
+					if (y == cols - 1) y = 1;
+				} else if (blizzardDirections[i] == 2) {
+					x++;
+					if (x == rows - 1) x = 1;
+				} else {
+					y--;
+					if (y == 0) y = cols - 2;
+				}
+				blizzardX[i] = x;
+				blizzardY[i] = y;
+			}
+		}
+		return new PackedValley(cols, cells, period, words, blocked);
+	}
+
+	private int packedTravel(int start, int end, int startTime, PackedValley valley, long[] seen) {
+		int words = valley.words();
+		long[] frontier = new long[words];
+		long[] next = new long[words];
+		Arrays.fill(seen, 0);
+		frontier[start >>> 6] = 1L << start;
+		seen[(startTime % valley.period()) * words + (start >>> 6)] |= 1L << start;
+		int endWord = end >>> 6;
+		long endBit = 1L << end;
+		int tailBits = valley.cells() & 63;
+		long tailMask = tailBits == 0 ? -1L : (1L << tailBits) - 1;
+		int nextTime = startTime + 1;
+		while (true) {
+			Arrays.fill(next, 0);
+			System.arraycopy(frontier, 0, next, 0, words);
+			orShiftHigher(frontier, next, 1);
+			orShiftLower(frontier, next, 1);
+			orShiftHigher(frontier, next, valley.cols());
+			orShiftLower(frontier, next, valley.cols());
+			next[words - 1] &= tailMask;
+			int offset = (nextTime % valley.period()) * words;
+			boolean any = false;
+			for (int word = 0; word < words; word++) {
+				long reachable = next[word] & ~valley.blocked()[offset + word] & ~seen[offset + word];
+				next[word] = reachable;
+				seen[offset + word] |= reachable;
+				any |= reachable != 0;
+			}
+			if ((next[endWord] & endBit) != 0) return nextTime;
+			if (!any) return -1;
+			long[] swap = frontier;
+			frontier = next;
+			next = swap;
+			nextTime++;
+		}
+	}
+
+	private void orShiftHigher(long[] source, long[] target, int distance) {
+		int wordShift = distance >>> 6;
+		int bitShift = distance & 63;
+		for (int sourceWord = 0; sourceWord < source.length; sourceWord++) {
+			long value = source[sourceWord];
+			int targetWord = sourceWord + wordShift;
+			if (targetWord < target.length) target[targetWord] |= value << bitShift;
+			if (bitShift != 0 && targetWord + 1 < target.length) {
+				target[targetWord + 1] |= value >>> (64 - bitShift);
+			}
+		}
+	}
+
+	private void orShiftLower(long[] source, long[] target, int distance) {
+		int wordShift = distance >>> 6;
+		int bitShift = distance & 63;
+		for (int sourceWord = 0; sourceWord < source.length; sourceWord++) {
+			long value = source[sourceWord];
+			int targetWord = sourceWord - wordShift;
+			if (targetWord >= 0) target[targetWord] |= value >>> bitShift;
+			if (bitShift != 0 && targetWord - 1 >= 0) {
+				target[targetWord - 1] |= value << (64 - bitShift);
+			}
+		}
 	}
 
 	private Valley buildBlockedStates(int rows, int cols, boolean[] walls, int[] blizzardX, int[] blizzardY,
@@ -257,5 +362,8 @@ public class Day24 extends DayTemplate {
 	}
 
 	private record Valley(int cols, int cells, int period, boolean[] blocked) {
+	}
+
+	private record PackedValley(int cols, int cells, int period, int words, long[] blocked) {
 	}
 }
