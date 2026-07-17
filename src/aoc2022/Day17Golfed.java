@@ -1,7 +1,7 @@
 package aoc2022;
 import java.util.*;
 class Q{
-int[]P={15,132866,263175,16843009,771};byte[]c;int h;
+int P[]={15,132866,263175,16843009,771},h;byte c[];
 String s(boolean p,String[]j){
 c=new byte[1<<16];h=0;var J=j[0];var m=$.h();long n=p?2022:0xe8d4a51000L,r=0,e=0;int q=0;
 for(;r<n;r++){
