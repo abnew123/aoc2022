@@ -13,60 +13,21 @@ Inputs:
 
 To see a given day's solution, go to DayX.java, where X is the day in question. 
 
-Current timings:
+## Performance
 
-* Day 01 part 1 execution time: 41.2ms (acceptable)
-* Day 01 part 2 execution time: 16.9ms (fast)
-* Day 02 part 1 execution time: 11.0ms (fast)
-* Day 02 part 2 execution time: 8.7ms (fast)
-* Day 03 part 1 execution time: 8.5ms (fast)
-* Day 03 part 2 execution time: 4.8ms (fast)
-* Day 04 part 1 execution time: 11.6ms (fast)
-* Day 04 part 2 execution time: 5.0ms (fast)
-* Day 05 part 1 execution time: 5.5ms (fast)
-* Day 05 part 2 execution time: 4.1ms (fast)
-* Day 06 part 1 execution time: 3.0ms (fast)
-* Day 06 part 2 execution time: 7.9ms (fast)
-* Day 07 part 1 execution time: 16.8ms (fast)
-* Day 07 part 2 execution time: 3.9ms (fast)
-* Day 08 part 1 execution time: 22.0ms (acceptable)
-* Day 08 part 2 execution time: 22.1ms (acceptable)
-* Day 09 part 1 execution time: 12.7ms (fast)
-* Day 09 part 2 execution time: 28.1ms (acceptable)
-* Day 10 part 1 execution time: 0.7ms (fast)
-* Day 10 part 2 execution time: 0.6ms (fast)
-* Day 11 part 1 execution time: 4.8ms (fast)
-* Day 11 part 2 execution time: 52.0ms (slow)
-* Day 12 part 1 execution time: 50.7ms (slow)
-* Day 12 part 2 execution time: 28.2ms (acceptable)
-* Day 13 part 1 execution time: 11.0ms (fast)
-* Day 13 part 2 execution time: 7.0ms (fast)
-* Day 14 part 1 execution time: 9.1ms (fast)
-* Day 14 part 2 execution time: 21.4ms (acceptable)
-* Day 15 part 1 execution time: 624.0ms (slow)
-* Day 15 part 2 execution time: 0.7ms (fast)
-* Day 16 part 1 execution time: 107.8ms (slow)
-* Day 16 part 2 execution time: 473.7ms (slow)
-* Day 17 part 1 execution time: 121.7ms (slow)
-* Day 17 part 2 execution time: 431.8ms (slow)
-* Day 18 part 1 execution time: 12.0ms (fast)
-* Day 18 part 2 execution time: 7.5ms (fast)
-* Day 19 part 1 execution time: 53.1ms (slow)
-* Day 19 part 2 execution time: 159.6ms (slow)
-* Day 20 part 1 execution time: 61.0ms (slow)
-* Day 20 part 2 execution time: 524.9ms (slow)
-* Day 21 part 1 execution time: 315.1ms (slow)
-* Day 21 part 2 execution time: 332.8ms (slow)
-* Day 22 part 1 execution time: 10.9ms (fast)
-* Day 22 part 2 execution time: 9.7ms (fast)
-* Day 23 part 1 execution time: 130.6ms (slow)
-* Day 23 part 2 execution time: 361.4ms (slow)
-* Day 24 part 1 execution time: 500.3ms (slow)
-* Day 24 part 2 execution time: 975.4ms (slow)
-* Day 25 part 1 execution time: 0.3ms (fast)
-* Day 25 part 2 execution time: 0.3ms (fast)
-* Total execution time : 5633.8ms
-* Slow parts: 17. Acceptable parts: 6. Fast parts: 27.
+Current 25-day timing from 10 separate fresh JVMs; values are arithmetic means in milliseconds.
+
+| Wall | Main | Solver | Startup | Harness |
+|---:|---:|---:|---:|---:|
+| 1514.094688 | 1470.163313 | 1438.374618 | 28.534617 | 31.788694 |
+
+| Days | 01 | 02 | 03 | 04 | 05 |
+|---|---:|---:|---:|---:|---:|
+| 01–05 | 9.513184 | 6.321688 | 4.099034 | 2.770904 | 2.333683 |
+| 06–10 | 3.787675 | 5.084925 | 11.711096 | 8.301842 | 0.407617 |
+| 11–15 | 20.864904 | 29.595642 | 16.617425 | 14.598604 | 1.926396 |
+| 16–20 | 195.234875 | 245.516458 | 7.631542 | 121.416004 | 261.910046 |
+| 21–25 | 237.783204 | 8.174721 | 210.278967 | 9.913908 | 2.580275 |
 
 <!-- CHAR COUNTS BEGIN -->
 
