@@ -7,8 +7,7 @@ for(var l:I)if(j++<3|p){var x=l.split("\\D+");int v=f(x,p?24:32);r=p?r+$.i(x[1])
 return""+r;
 }
 int f(String[]x,int t){
-int a=$.i(x[2]),e=$.i(x[3]),f=$.i(x[4]),h=$.i(x[5]),o=$.i(x[6]),c=$.i(x[7]);
-q=new int[]{a,0,0,e,0,0,f,h,0,o,0,c};m=new int[]{$.x($.x(a,e),$.x(f,o)),h,c,t};z=0;
+q=new int[]{$.i(x[2]),0,0,$.i(x[3]),0,0,$.i(x[4]),$.i(x[5]),0,$.i(x[6]),0,$.i(x[7])};m=new int[]{$.x($.x(q[0],q[3]),$.x(q[6],q[9])),q[7],q[11],t};z=0;
 d(t,1,0,0,0,0,0,0,0);return z;
 }
 void d(int t,int a,int e,int f,int h,int o,int c,int b,int g){
@@ -17,7 +16,7 @@ int[]r={a,e,f,h},v={o,c,b};
 for(int i=4;i-->0;)if(r[i]<m[i]){
 int w=0;
 for(int j=3;j-->0;)if(v[j]<q[i*3+j])w=$.x(w,r[j]<1?t:(q[i*3+j]-v[j]+r[j]-1)/r[j]);
-if(w++<t)d(t-w,a+(i<1?1:0),e+(i==1?1:0),f+(i==2?1:0),h+(i>2?1:0),o+a*w-q[i*3],c+e*w-q[i*3+1],b+f*w-q[i*3+2],g+h*w);
+r[i]++;if(w++<t)d(t-w,r[0],r[1],r[2],r[3],o+a*w-q[i*3],c+e*w-q[i*3+1],b+f*w-q[i*3+2],g+h*w);r[i]--;
 }
 }
 }
