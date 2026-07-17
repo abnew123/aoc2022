@@ -10,97 +10,102 @@ Current 25-day means:
 
 | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 |---:|---:|---:|---:|---:|
-| 1355.041500 | 1306.904021 | 1273.913183 | 29.120979 | 32.990838 |
+| 1179.468633 | 1126.006833 | 1093.983895 | 30.372229 | 32.022938 |
 
 Latest publication gate versus the preceding replay tip:
 
 | Metric | Previous mean (ms) | Current mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|---:|
-| wall | 1634.394342 | 1355.041500 | -279.352842 | [-355.353662, -203.352022] |
-| main | 1580.014304 | 1306.904021 | -273.110283 | [-347.738845, -198.481722] |
-| solver | 1546.139729 | 1273.913183 | -272.226546 | [-346.640815, -197.812277] |
-| startup | 31.854629 | 29.120979 | -2.733650 | [-6.745360, 1.278060] |
-| harness | 33.874575 | 32.990838 | -0.883737 | [-1.979565, 0.212091] |
+| wall | 1376.406812 | 1179.468633 | -196.938179 | [-236.836984, -157.039374] |
+| main | 1320.853546 | 1126.006833 | -194.846713 | [-236.198988, -153.494437] |
+| solver | 1287.590891 | 1093.983895 | -193.606996 | [-234.816237, -152.397756] |
+| startup | 32.759888 | 30.372229 | -2.387658 | [-5.927647, 1.152330] |
+| harness | 33.262655 | 32.022938 | -1.239716 | [-2.359833, -0.119599] |
 
 ## Day 01
 
-Unchanged from the pre-PR implementation. Current solver mean: 9.598588 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 9.555137 ms.
 
 ## Day 02
 
-Unchanged from the pre-PR implementation. Current solver mean: 6.300758 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 6.367683 ms.
 
 ## Day 03
 
-Unchanged from the pre-PR implementation. Current solver mean: 3.641533 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 3.582037 ms.
 
 ## Day 04
 
-Unchanged from the pre-PR implementation. Current solver mean: 2.817225 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 2.712042 ms.
 
 ## Day 05
 
-Unchanged from the pre-PR implementation. Current solver mean: 2.368396 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 2.292425 ms.
 
 ## Day 06
 
-Unchanged from the pre-PR implementation. Current solver mean: 3.756887 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 3.804916 ms.
 
 ## Day 07
 
-Unchanged from the pre-PR implementation. Current solver mean: 5.187812 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 4.881979 ms.
 
 ## Day 08
 
-Unchanged from the pre-PR implementation. Current solver mean: 12.730280 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 12.308471 ms.
 
 ## Day 09
 
-Unchanged from the pre-PR implementation. Current solver mean: 11.180600 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 8.380363 ms.
 
 ## Day 10
 
-Unchanged from the pre-PR implementation. Current solver mean: 0.462833 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 0.437512 ms.
 
 ## Day 11
 
-Unchanged from the pre-PR implementation. Current solver mean: 21.178971 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 21.933867 ms.
 
 ## Day 12
 
-Unchanged from the pre-PR implementation. Current solver mean: 28.577146 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 29.428562 ms.
 
 ## Day 13
 
-Unchanged from the pre-PR implementation. Current solver mean: 15.571071 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 15.509642 ms.
 
 ## Day 14
 
-Unchanged from the pre-PR implementation. Current solver mean: 13.785929 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 14.016734 ms.
 
 ## Day 15
 
-Unchanged from the pre-PR implementation. Current solver mean: 1.835929 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 1.931700 ms.
 
 ## Day 16
 
-Unchanged from the pre-PR implementation. Current solver mean: 224.739642 ms.
+Useful valves are compressed into a bitmask search with memoized pressure states and direct disjoint-mask pairing for the elephant.
+
+| Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
+|---|---:|---:|---:|
+| Pre-PR | 231.947104 | — | — |
+| Current | 16.801325 | -215.145780 | [-250.301082, -179.990477] |
 
 ## Day 17
 
-Unchanged from the pre-PR implementation. Current solver mean: 254.272837 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 279.672671 ms.
 
 ## Day 18
 
-Unchanged from the pre-PR implementation. Current solver mean: 8.209921 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 8.679600 ms.
 
 ## Day 19
 
-Unchanged from the pre-PR implementation. Current solver mean: 131.419229 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 128.740508 ms.
 
 ## Day 20
 
-Unchanged from the pre-PR implementation. Current solver mean: 268.968371 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 262.538729 ms.
 
 ## Day 21
 
@@ -113,11 +118,11 @@ One exact expression graph supports numeric evaluation and inverse symbolic solv
 
 ## Day 22
 
-Unchanged from the pre-PR implementation. Current solver mean: 8.968121 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 8.687913 ms.
 
 ## Day 23
 
-Unchanged from the pre-PR implementation. Current solver mean: 218.904367 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 233.317396 ms.
 
 ## Day 24
 
@@ -130,4 +135,4 @@ Periodic blizzard occupancy and packed frontier traversal replace repeated hazar
 
 ## Day 25
 
-Unchanged from the pre-PR implementation. Current solver mean: 2.481067 ms.
+Unchanged from the pre-PR implementation. Current solver mean: 2.425312 ms.
