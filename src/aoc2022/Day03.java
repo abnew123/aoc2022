@@ -1,69 +1,102 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
-import java.util.HashSet;
 import java.util.Scanner;
-import java.util.Set;
 
 public class Day03 extends DayTemplate {
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		int answer = 0;
+		long answer = 0;
 		if (part1) {
-			while (in.hasNext()) {
+			while (in.hasNextLine()) {
 				answer += helper1(in.nextLine());
 			}
 		} else {
-			while (in.hasNext()) {
-				answer += helper2(in.nextLine(), in.nextLine(), in.nextLine());
+			while (in.hasNextLine()) {
+				String first = in.nextLine();
+				if (!in.hasNextLine()) {
+					throw new IllegalArgumentException("Rucksacks must form groups of three");
+				}
+				String second = in.nextLine();
+				if (!in.hasNextLine()) {
+					throw new IllegalArgumentException("Rucksacks must form groups of three");
+				}
+				answer += helper2(first, second, in.nextLine());
 			}
 		}
 		return "" + answer;
 	}
 
-	public int helper1(String rucksack) {
-		char[] letters = rucksack.toCharArray();
-		Set<Character> half1 = new HashSet<>();
-		Set<Character> half2 = new HashSet<>();
-		for (int i = 0; i < letters.length; i++) {
-			if (i < letters.length / 2) {
-				half1.add(letters[i]);
-			} else {
-				half2.add(letters[i]);
+	@Override
+	public String[] fullSolve(Scanner in) throws FileNotFoundException {
+		long part1 = 0;
+		long part2 = 0;
+		long group = 0;
+		int groupIndex = 0;
+		while (in.hasNextLine()) {
+			String rucksack = in.nextLine();
+			if ((rucksack.length() & 1) != 0) {
+				throw new IllegalArgumentException("Rucksack compartments must be equal-sized");
+			}
+			long left = 0;
+			long right = 0;
+			for (int i = 0; i < rucksack.length(); i++) {
+				long bit = itemBit(rucksack.charAt(i));
+				if (i < rucksack.length() / 2) {
+					left |= bit;
+				} else {
+					right |= bit;
+				}
+			}
+			part1 += priority(left & right);
+			long all = left | right;
+			group = groupIndex == 0 ? all : group & all;
+			if (++groupIndex == 3) {
+				part2 += priority(group);
+				groupIndex = 0;
 			}
 		}
-		half1.retainAll(half2);
-		char dupe = half1.iterator().next();
-		if (dupe == Character.toUpperCase(dupe)) {
-			return 27 + (dupe - 'A');
-		} else {
-			return 1 + (dupe - 'a');
+		if (groupIndex != 0) {
+			throw new IllegalArgumentException("Rucksacks must form groups of three");
 		}
+		return new String[] { part1 + "", part2 + "" };
 	}
 
-	public int helper2(String rucksack1, String rucksack2, String rucksack3) {
-		char[] letters1 = rucksack1.toCharArray();
-		char[] letters2 = rucksack2.toCharArray();
-		char[] letters3 = rucksack3.toCharArray();
-		Set<Character> elf1 = new HashSet<>();
-		Set<Character> elf2 = new HashSet<>();
-		Set<Character> elf3 = new HashSet<>();
-		for (int i = 0; i < letters1.length; i++) {
-			elf1.add(letters1[i]);
+	public int helper1(String rucksack) {
+		if ((rucksack.length() & 1) != 0) {
+			throw new IllegalArgumentException("Rucksack compartments must be equal-sized");
 		}
-		for (int i = 0; i < letters2.length; i++) {
-			elf2.add(letters2[i]);
+		int middle = rucksack.length() / 2;
+		return priority(mask(rucksack, 0, middle) & mask(rucksack, middle, rucksack.length()));
+	}
+
+	public int helper2(String first, String second, String third) {
+		return priority(mask(first, 0, first.length()) & mask(second, 0, second.length())
+				& mask(third, 0, third.length()));
+	}
+
+	private long mask(String items, int start, int end) {
+		long mask = 0;
+		for (int i = start; i < end; i++) {
+			mask |= itemBit(items.charAt(i));
 		}
-		for (int i = 0; i < letters3.length; i++) {
-			elf3.add(letters3[i]);
+		return mask;
+	}
+
+	private long itemBit(char item) {
+		if (item >= 'a' && item <= 'z') {
+			return 1L << (item - 'a');
 		}
-		elf1.retainAll(elf2);
-		elf1.retainAll(elf3);
-		char dupe = elf1.iterator().next();
-		if (dupe == Character.toUpperCase(dupe)) {
-			return 27 + (dupe - 'A');
-		} else {
-			return 1 + (dupe - 'a');
+		if (item >= 'A' && item <= 'Z') {
+			return 1L << (26 + item - 'A');
 		}
+		throw new IllegalArgumentException("Rucksack items must be letters");
+	}
+
+	private int priority(long items) {
+		if (Long.bitCount(items) != 1) {
+			throw new IllegalArgumentException("Expected exactly one shared item");
+		}
+		return Long.numberOfTrailingZeros(items) + 1;
 	}
 }
