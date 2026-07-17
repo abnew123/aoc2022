@@ -25,8 +25,7 @@ return x<R&&y<g[x].length()?g[x].charAt(y)&31:0;
 }
 int[]H(int x,int y,int d){
 int k=d%2>0?y%50:x%50,z="!!!!!!P*d9!H!!!!A!1!!!!!!!J%_>!!!!!!F,,!".charAt(4*(x/50*3+y/50)+d)-33,c=z/10%4,b=z%10;
-if(z>39)k=49-k;
-if(z==11&d<2)k=49;
+k=z==11&d<2?49:z>39?49-k:k;
 return A(c,50*(b/3)+(c%2>0?(c<2?0:49):k),50*(b%3)+(c%2<1?(c<1?0:49):k));
 }
 int[]A(int...a){return a;}
