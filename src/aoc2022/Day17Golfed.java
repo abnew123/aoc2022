@@ -1,9 +1,8 @@
 package aoc2022;
-import java.util.*;
 class Q{
 int P[]={15,132866,263175,16843009,771},h;byte c[];
 String s(boolean p,String[]j){
-c=new byte[1<<16];h=0;var J=j[0];var m=$.h();long n=p?2022:0xe8d4a51000L,r=0,e=0;int q=0;
+c=new byte[1];h=0;var J=j[0];var m=$.h();long n=p?2022:0xe8d4a51000L,r=0,e=0;int q=0;
 for(;r<n;r++){
 int k=$.f(r,5),x=2,y=h+3;
 for(;;){
@@ -28,7 +27,7 @@ return true;
 }
 void u(int p,int x,int y){
 for(;p>0;p>>=8,y++){
-if(y==c.length)c=Arrays.copyOf(c,y*2);
+if(y==c.length)c=java.util.Arrays.copyOf(c,y*2);
 int w=p%256<<x;c[y]|=w;h=$.x(h,y+1);
 }
 }
