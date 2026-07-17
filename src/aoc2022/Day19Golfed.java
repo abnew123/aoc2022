@@ -12,7 +12,7 @@ q=new int[]{a,0,0,e,0,0,f,h,0,o,0,c};m=new int[]{$.x($.x(a,e),$.x(f,o)),h,c,t};z
 d(t,1,0,0,0,0,0,0,0);return z;
 }
 void d(int t,int a,int e,int f,int h,int o,int c,int b,int g){
-z=$.x(z,g+h*t);if(g+h*t+t*(t-1)/2<=z)return;
+z=$.x(z,g+h*t);if(g+h*t+t*~-t/2<=z)return;
 int[]r={a,e,f,h},v={o,c,b};
 for(int i=4;i-->0;)if(r[i]<m[i]){
 int w=0;
