@@ -7,7 +7,7 @@ c=new byte[1<<16];h=0;var J=j[0];var m=$.h();long n=p?2022:0xe8d4a51000L,r=0,e=0
 for(;r<n;r++){
 int k=$.f(r,5),x=2,y=h+3;
 for(;;){
-int X=x+(J.charAt(q)<61?-1:1);q=++q%J.length();
+int X=x+J.charAt(q)-61;q=++q%J.length();
 if(o(P[k],X,y))x=X;
 if(o(P[k],x,y-1))y--;else{u(P[k],x,y);break;}
 }
