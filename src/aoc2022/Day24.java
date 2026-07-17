@@ -2,160 +2,368 @@ package aoc2022;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Queue;
 import java.util.Scanner;
 
 public class Day24 extends DayTemplate {
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		List<String> lines = new ArrayList<>();
-		Map<Integer, List<CoordTime>> blizzards = new HashMap<>();
-		while (in.hasNext()) {
+		while (in.hasNextLine()) {
 			lines.add(in.nextLine());
 		}
-		int width = lines.size();
-		int height = lines.get(0).length();
-		List<CoordTime> initBlizzards = new ArrayList<>();
-		CoordTime start = null;
+		int rows = lines.size();
+		int cols = lines.get(0).length();
+		int cells = rows * cols;
+		boolean[] walls = new boolean[cells];
+		int[] blizzardX = new int[cells];
+		int[] blizzardY = new int[cells];
+		byte[] blizzardDirections = new byte[cells];
+		int blizzardCount = 0;
+		int startX = -1;
+		int startY = -1;
 		boolean first = true;
-		CoordTime end = null;
+		int endX = -1;
+		int endY = -1;
 		for (int i = 0; i < lines.size(); i++) {
-			for (int j = 0; j < lines.get(0).length(); j++) {
-				if (lines.get(i).charAt(j) == '.') {
+			for (int j = 0; j < cols; j++) {
+				char c = lines.get(i).charAt(j);
+				if (c == '.') {
 					if (first) {
-						start = new CoordTime(i, j, 0, -1);
+						startX = i;
+						startY = j;
 						first = false;
 					}
-					end = new CoordTime(i, j, 0, -1);
-				}
-				if (lines.get(i).charAt(j) == '#') {
-					initBlizzards.add(new CoordTime(i, j, 0, -1));
-				}
-				if (lines.get(i).charAt(j) == '^') {
-					initBlizzards.add(new CoordTime(i, j, 0, 1));
-				}
-				if (lines.get(i).charAt(j) == '>') {
-					initBlizzards.add(new CoordTime(i, j, 0, 2));
-				}
-				if (lines.get(i).charAt(j) == 'v') {
-					initBlizzards.add(new CoordTime(i, j, 0, 3));
-				}
-				if (lines.get(i).charAt(j) == '<') {
-					initBlizzards.add(new CoordTime(i, j, 0, 4));
+					endX = i;
+					endY = j;
+				} else if (c == '^' || c == '>' || c == 'v' || c == '<') {
+					blizzardX[blizzardCount] = i;
+					blizzardY[blizzardCount] = j;
+					blizzardDirections[blizzardCount] = direction(c);
+					blizzardCount++;
+				} else if (c == '#') {
+					walls[i * cols + j] = true;
 				}
 			}
 		}
-		blizzards.put(0, initBlizzards);
-		for (int i = 1; i < 1000; i++) {
-			blizzards.put(i, advance(blizzards.get(i - 1), width, height));
-		}
-		int trip1 = helper(start, end, width, height, blizzards, 0);
+		Valley valley = buildBlockedStates(rows, cols, walls, blizzardX, blizzardY, blizzardDirections, blizzardCount);
+		int start = startX * cols + startY;
+		int end = endX * cols + endY;
+		byte[] seen = new byte[valley.blocked().length];
+		int trip1 = travel(start, end, 0, valley, seen, (byte) 1);
 		if (part1) {
 			return "" + trip1;
 		}
-		int trip2 = helper(end, start, width, height, blizzards, trip1);
-		int trip3 = helper(start, end, width, height, blizzards, trip2);
+		int trip2 = travel(end, start, trip1, valley, seen, (byte) 2);
+		int trip3 = travel(start, end, trip2, valley, seen, (byte) 3);
 		return "" + trip3;
 	}
 
-	public boolean inBounds(CoordTime candidate, int width, int height) {
-		if (candidate.direction == -1) {
-			return (candidate.x >= 0 && candidate.y >= 0 && candidate.x < width && candidate.y < height);
+	@Override
+	public String[] fullSolve(Scanner in) throws FileNotFoundException {
+		List<String> lines = new ArrayList<>();
+		while (in.hasNextLine()) {
+			lines.add(in.nextLine());
 		}
-		return (candidate.x >= 1 && candidate.y >= 1 && candidate.x < width - 1 && candidate.y < height - 1);
+		int rows = lines.size();
+		int cols = lines.get(0).length();
+		int cells = rows * cols;
+		boolean[] walls = new boolean[cells];
+		int[] blizzardX = new int[cells];
+		int[] blizzardY = new int[cells];
+		byte[] blizzardDirections = new byte[cells];
+		int blizzardCount = 0;
+		int startX = -1;
+		int startY = -1;
+		boolean first = true;
+		int endX = -1;
+		int endY = -1;
+		for (int i = 0; i < lines.size(); i++) {
+			for (int j = 0; j < cols; j++) {
+				char c = lines.get(i).charAt(j);
+				if (c == '.') {
+					if (first) {
+						startX = i;
+						startY = j;
+						first = false;
+					}
+					endX = i;
+					endY = j;
+				} else if (c == '^' || c == '>' || c == 'v' || c == '<') {
+					blizzardX[blizzardCount] = i;
+					blizzardY[blizzardCount] = j;
+					blizzardDirections[blizzardCount] = direction(c);
+					blizzardCount++;
+				} else if (c == '#') {
+					walls[i * cols + j] = true;
+				}
+			}
+		}
+		PackedValley valley = buildPackedStates(rows, cols, walls, blizzardX, blizzardY, blizzardDirections,
+				blizzardCount);
+		int start = startX * cols + startY;
+		int end = endX * cols + endY;
+		long[] seen = new long[valley.blocked().length];
+		int trip1 = packedTravel(start, end, 0, valley, seen);
+		int trip2 = packedTravel(end, start, trip1, valley, seen);
+		int trip3 = packedTravel(start, end, trip2, valley, seen);
+		return new String[] { trip1 + "", trip3 + "" };
 	}
 
-	public List<CoordTime> advance(List<CoordTime> current, int width, int height) {
-		List<CoordTime> next = new ArrayList<>();
-		for (CoordTime blizzard : current) {
-			int deltax = (blizzard.direction == 1) ? -1 : (blizzard.direction == 3) ? 1 : 0;
-			int deltay = (blizzard.direction == 4) ? -1 : (blizzard.direction == 2) ? 1 : 0;
-			CoordTime candidate = new CoordTime(blizzard.x + deltax, blizzard.y + deltay, blizzard.time + 1,
-					blizzard.direction);
-			if (inBounds(candidate, width, height)) {
-				next.add(candidate);
-			} else {
-				if (candidate.x == 0) {
-					next.add(new CoordTime(width - 2, candidate.y, candidate.time, candidate.direction));
-				}
-				if (candidate.x == width - 1) {
-					next.add(new CoordTime(1, candidate.y, candidate.time, candidate.direction));
-				}
-				if (candidate.y == 0) {
-					next.add(new CoordTime(candidate.x, height - 2, candidate.time, candidate.direction));
-				}
-				if (candidate.y == height - 1) {
-					next.add(new CoordTime(candidate.x, 1, candidate.time, candidate.direction));
-				}
+	private PackedValley buildPackedStates(int rows, int cols, boolean[] walls, int[] blizzardX,
+			int[] blizzardY, byte[] blizzardDirections, int blizzardCount) {
+		int cells = rows * cols;
+		int period = lcm(rows - 2, cols - 2);
+		int words = (cells + 63) >>> 6;
+		long[] wallBits = new long[words];
+		for (int cell = 0; cell < cells; cell++) {
+			if (walls[cell]) {
+				wallBits[cell >>> 6] |= 1L << cell;
 			}
 		}
-		return next;
+		long[] blocked = new long[Math.multiplyExact(period, words)];
+		for (int time = 0; time < period; time++) {
+			int offset = time * words;
+			System.arraycopy(wallBits, 0, blocked, offset, words);
+			for (int i = 0; i < blizzardCount; i++) {
+				int x = blizzardX[i];
+				int y = blizzardY[i];
+				int cell = x * cols + y;
+				blocked[offset + (cell >>> 6)] |= 1L << cell;
+				if (blizzardDirections[i] == 0) {
+					x--;
+					if (x == 0) x = rows - 2;
+				} else if (blizzardDirections[i] == 1) {
+					y++;
+					if (y == cols - 1) y = 1;
+				} else if (blizzardDirections[i] == 2) {
+					x++;
+					if (x == rows - 1) x = 1;
+				} else {
+					y--;
+					if (y == 0) y = cols - 2;
+				}
+				blizzardX[i] = x;
+				blizzardY[i] = y;
+			}
+		}
+		return new PackedValley(cols, cells, period, words, blocked);
 	}
 
-	public int helper(CoordTime start, CoordTime end, int width, int height, Map<Integer, List<CoordTime>> blizzards,
-			int startTime) {
-		Queue<CoordTime> bfs = new LinkedList<>();
-		Queue<CoordTime> bfs2 = new LinkedList<>();
-		int[][] blizz = new int[width][height];
-		int[] deltax = new int[] { -1, 0, 1, 0, 0 };
-		int[] deltay = new int[] { 0, -1, 0, 1, 0 };
-		int timestamp = startTime;
-		bfs.add(new CoordTime(start.x, start.y, startTime, -1));
-		while (!bfs.isEmpty() || !bfs2.isEmpty()) {
-			if(bfs.isEmpty()) {
-				timestamp++;
-				bfs.addAll(bfs2);
-				bfs2 = new LinkedList<>();
-				blizz = new int[width][height];
-				List<CoordTime> nextBlizzards = blizzards.get(timestamp + 1);
-				for (CoordTime c : nextBlizzards) {
-					blizz[c.x][c.y] += 1;
+	private int packedTravel(int start, int end, int startTime, PackedValley valley, long[] seen) {
+		int words = valley.words();
+		long[] frontier = new long[words];
+		long[] next = new long[words];
+		Arrays.fill(seen, 0);
+		frontier[start >>> 6] = 1L << start;
+		seen[(startTime % valley.period()) * words + (start >>> 6)] |= 1L << start;
+		int endWord = end >>> 6;
+		long endBit = 1L << end;
+		int tailBits = valley.cells() & 63;
+		long tailMask = tailBits == 0 ? -1L : (1L << tailBits) - 1;
+		int nextTime = startTime + 1;
+		while (true) {
+			Arrays.fill(next, 0);
+			System.arraycopy(frontier, 0, next, 0, words);
+			orShiftHigher(frontier, next, 1);
+			orShiftLower(frontier, next, 1);
+			orShiftHigher(frontier, next, valley.cols());
+			orShiftLower(frontier, next, valley.cols());
+			next[words - 1] &= tailMask;
+			int offset = (nextTime % valley.period()) * words;
+			boolean any = false;
+			for (int word = 0; word < words; word++) {
+				long reachable = next[word] & ~valley.blocked()[offset + word] & ~seen[offset + word];
+				next[word] = reachable;
+				seen[offset + word] |= reachable;
+				any |= reachable != 0;
+			}
+			if ((next[endWord] & endBit) != 0) return nextTime;
+			if (!any) return -1;
+			long[] swap = frontier;
+			frontier = next;
+			next = swap;
+			nextTime++;
+		}
+	}
+
+	private void orShiftHigher(long[] source, long[] target, int distance) {
+		int wordShift = distance >>> 6;
+		int bitShift = distance & 63;
+		for (int sourceWord = 0; sourceWord < source.length; sourceWord++) {
+			long value = source[sourceWord];
+			int targetWord = sourceWord + wordShift;
+			if (targetWord < target.length) target[targetWord] |= value << bitShift;
+			if (bitShift != 0 && targetWord + 1 < target.length) {
+				target[targetWord + 1] |= value >>> (64 - bitShift);
+			}
+		}
+	}
+
+	private void orShiftLower(long[] source, long[] target, int distance) {
+		int wordShift = distance >>> 6;
+		int bitShift = distance & 63;
+		for (int sourceWord = 0; sourceWord < source.length; sourceWord++) {
+			long value = source[sourceWord];
+			int targetWord = sourceWord - wordShift;
+			if (targetWord >= 0) target[targetWord] |= value >>> bitShift;
+			if (bitShift != 0 && targetWord - 1 >= 0) {
+				target[targetWord - 1] |= value << (64 - bitShift);
+			}
+		}
+	}
+
+	private Valley buildBlockedStates(int rows, int cols, boolean[] walls, int[] blizzardX, int[] blizzardY,
+			byte[] blizzardDirections, int blizzardCount) {
+		int cells = rows * cols;
+		int period = lcm(rows - 2, cols - 2);
+		boolean[] blocked = new boolean[period * cells];
+		for (int time = 0; time < period; time++) {
+			int offset = time * cells;
+			System.arraycopy(walls, 0, blocked, offset, cells);
+			for (int i = 0; i < blizzardCount; i++) {
+				int x = blizzardX[i];
+				int y = blizzardY[i];
+				blocked[offset + x * cols + y] = true;
+				if (blizzardDirections[i] == 0) {
+					x--;
+					if (x == 0) {
+						x = rows - 2;
+					}
+				} else if (blizzardDirections[i] == 1) {
+					y++;
+					if (y == cols - 1) {
+						y = 1;
+					}
+				} else if (blizzardDirections[i] == 2) {
+					x++;
+					if (x == rows - 1) {
+						x = 1;
+					}
+				} else {
+					y--;
+					if (y == 0) {
+						y = cols - 2;
+					}
+				}
+				blizzardX[i] = x;
+				blizzardY[i] = y;
+			}
+		}
+		return new Valley(cols, cells, period, blocked);
+	}
+
+	private int travel(int start, int end, int startTime, Valley valley, byte[] seen, byte seenMark) {
+		int cols = valley.cols();
+		int cells = valley.cells();
+		int period = valley.period();
+		boolean[] blocked = valley.blocked();
+		int[] frontier = new int[cells];
+		int[] next = new int[cells];
+		int frontierSize = 1;
+		int nextTime = startTime + 1;
+		int offset = (nextTime % period) * cells;
+		frontier[0] = start;
+		seen[(startTime % period) * cells + start] = seenMark;
+		while (frontierSize > 0) {
+			int nextSize = 0;
+			for (int i = 0; i < frontierSize; i++) {
+				int position = frontier[i];
+				int col = position % cols;
+				int candidate;
+				int seenIndex;
+				if (position >= cols) {
+					candidate = position - cols;
+					if (candidate == end) {
+						return nextTime;
+					}
+					seenIndex = offset + candidate;
+					if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
+						seen[seenIndex] = seenMark;
+						next[nextSize++] = candidate;
+					}
+				}
+				if (col > 0) {
+					candidate = position - 1;
+					if (candidate == end) {
+						return nextTime;
+					}
+					seenIndex = offset + candidate;
+					if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
+						seen[seenIndex] = seenMark;
+						next[nextSize++] = candidate;
+					}
+				}
+				if (position + cols < cells) {
+					candidate = position + cols;
+					if (candidate == end) {
+						return nextTime;
+					}
+					seenIndex = offset + candidate;
+					if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
+						seen[seenIndex] = seenMark;
+						next[nextSize++] = candidate;
+					}
+				}
+				if (col + 1 < cols) {
+					candidate = position + 1;
+					if (candidate == end) {
+						return nextTime;
+					}
+					seenIndex = offset + candidate;
+					if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
+						seen[seenIndex] = seenMark;
+						next[nextSize++] = candidate;
+					}
+				}
+				seenIndex = offset + position;
+				if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
+					seen[seenIndex] = seenMark;
+					next[nextSize++] = position;
 				}
 			}
-			CoordTime next = bfs.poll();
-			if (next.x == end.x && next.y == end.y) {
-				return next.time;
-			}
-			for (int i = 0; i < deltax.length; i++) {
-				CoordTime candidate = new CoordTime(next.x + deltax[i], next.y + deltay[i], next.time + 1,
-						next.direction);
-				if (inBounds(candidate, width, height) && blizz[candidate.x][candidate.y] == 0 
-						&& !bfs2.contains(candidate)) {
-					bfs2.add(candidate);
-				}
+			int[] tmp = frontier;
+			frontier = next;
+			next = tmp;
+			frontierSize = nextSize;
+			nextTime++;
+			offset += cells;
+			if (offset == blocked.length) {
+				offset = 0;
 			}
 		}
 		return -1;
 	}
-}
 
-class CoordTime {
-	int x;
-	int y;
-	int time;
-	int direction;
-
-	public CoordTime(int x, int y, int time, int direction) {
-		this.x = x;
-		this.y = y;
-		this.time = time;
-		this.direction = direction; // 1 = N, 2 = E, 3 = S, 4 = W, -1 = not a blizzard
-	}
-
-	@Override
-	public boolean equals(Object other) {
-		if (other == null || !other.getClass().equals(this.getClass())) {
-			return false;
+	private byte direction(char c) {
+		if (c == '^') {
+			return 0;
 		}
-		CoordTime o = (CoordTime) other;
-		return o.x == x && o.y == y && o.time == time;
+		if (c == '>') {
+			return 1;
+		}
+		if (c == 'v') {
+			return 2;
+		}
+		return 3;
 	}
 
-	@Override
-	public String toString() {
-		return x + " " + y + " " + time + " " + direction;
+	private int lcm(int a, int b) {
+		return a / gcd(a, b) * b;
+	}
+
+	private int gcd(int a, int b) {
+		while (b != 0) {
+			int tmp = a % b;
+			a = b;
+			b = tmp;
+		}
+		return a;
+	}
+
+	private record Valley(int cols, int cells, int period, boolean[] blocked) {
+	}
+
+	private record PackedValley(int cols, int cells, int period, int words, long[] blocked) {
 	}
 }
