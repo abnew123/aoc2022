@@ -14,13 +14,9 @@ var n=$.s();t++;
 for(var p:q)for(int x:d){
 int c=(int)p+x;
 if(c==b)return t;
-if(c>=0&c<R*C&&w(c,t))n.add(c);
+if(c>=0&c<R*C){int r=c/C,z=c%C;var h=g[r];if(h.charAt(z)>35&(r<1|r>R-2|g[1+$.f(r-1+t,R-2)].charAt(z)!=94&g[1+$.f(r-1-t,R-2)].charAt(z)<118&h.charAt(1+$.f(z-1+t,C-2))!=60&h.charAt(1+$.f(z-1-t,C-2))!=62))n.add(c);}
 }
 q=n;
 }
-}
-boolean w(int p,int t){
-int r=p/C,c=p%C;var h=g[r];
-return h.charAt(c)>35&(r<1|r>R-2|g[1+$.f(r-1+t,R-2)].charAt(c)!=94&g[1+$.f(r-1-t,R-2)].charAt(c)<118&h.charAt(1+$.f(c-1+t,C-2))!=60&h.charAt(1+$.f(c-1-t,C-2))!=62);
 }
 }
