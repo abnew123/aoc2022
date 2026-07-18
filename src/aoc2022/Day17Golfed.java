@@ -11,7 +11,9 @@ if(o(P[k],X,y)>0)x=X;
 if(o(P[k],x,y-1)>0)y--;else{for(int d=P[k];d>0;d>>=8,y++){if(y==c.length)c=java.util.Arrays.copyOf(c,y*2);int w=d%256<<x;c[y]|=w;h=$.x(h,y+1);}break;}
 }
 if(e<1){
-var v=(long[])m.put(k(r+1,q),new long[]{r+1,h});
+int f=h;
+for(int i=7;i-->0;)for(int z=h;z-->0;)if((c[z]&1<<i)>0){f=$.n(f,z+1);break;}
+var v=(long[])m.put((r+1)%5+","+q+":"+new String(c,0,f,h-f),new long[]{r+1,h});
 if(v!=null){long a=r+1-v[0],g=(n-r-1)/a;r+=g*a;e=g*(h-v[1]);}
 }
 }
@@ -24,10 +26,5 @@ int w=p%256<<x;
 if(w>127||y<c.length&&(w&c[y])>0)return 0;
 }
 return 1;
-}
-String k(long r,int q){
-int f=h;
-for(int x=7;x-->0;)for(int y=h;y-->0;)if((c[y]&1<<x)>0){f=$.n(f,y+1);break;}
-return r%5+","+q+":"+new String(c,0,f,h-f);
 }
 }
