@@ -2,25 +2,25 @@
 
 ## Methodology and current full suite
 
-All timings use the original personal input corpus with OpenJDK 23.0.1 on Apple silicon. The harness compiles the fixed pre-speed source and current source into separate empty classpaths, excludes one true-cold launch per side, then runs separate JVM pairs in counterbalanced A/B order. Normal publication gates use 10 pairs; the current tail batch pools two independent 10-pair sets (n=20). Solver is the sum of the 25 `fullSolve` calls; main includes solver plus in-process harness work; startup is process launch through the child start marker; harness is main minus solver; wall is the complete child process.
+All timings use the original personal input corpus with OpenJDK 23.0.1 on Apple silicon. The harness compiles the fixed pre-speed source and current source into separate empty classpaths, excludes one true-cold launch per side, then runs 10 separate JVM pairs in counterbalanced A/B order. Solver is the sum of the 25 `fullSolve` calls; main includes solver plus in-process harness work; startup is process launch through the child start marker; harness is main minus solver; wall is the complete child process.
 
 Reproduce after compiling both trees with `java -Daoc.data.dir=<data-dir> -cp <current-cp> aoc2022.FreshJvmBenchmark --compare <previous-cp> <current-cp>`. Every published state passes all 50 independent solves, all 25 combined solves, and independent/`fullSolve` equivalence.
 
-Current 25-day means (n=20):
+Current 25-day means (n=10):
 
 | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 |---:|---:|---:|---:|---:|
-| 321.654107 | 270.558577 | 236.137946 | 34.948881 | 34.420631 |
+| 260.321825 | 218.544000 | 184.569366 | 30.660492 | 33.974634 |
 
-Latest publication gate versus the preceding replay tip (n=20):
+Latest publication gate versus the preceding replay tip (n=10):
 
 | Metric | Previous mean (ms) | Current mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|---:|
-| wall | 334.333396 | 321.654107 | -12.679289 | [-22.181439, -3.177140] |
-| main | 281.881737 | 270.558577 | -11.323161 | [-20.250788, -2.395533] |
-| solver | 246.771951 | 236.137946 | -10.634005 | [-19.396803, -1.871207] |
-| startup | 35.553387 | 34.948881 | -0.604506 | [-2.080446, 0.871433] |
-| harness | 35.109786 | 34.420631 | -0.689156 | [-1.245046, -0.133265] |
+| wall | 275.818117 | 257.142346 | -18.675771 | [-34.685966, -2.665576] |
+| main | 234.623358 | 211.268567 | -23.354792 | [-28.485481, -18.224102] |
+| solver | 202.271246 | 178.734321 | -23.536926 | [-28.585316, -18.488535] |
+| startup | 28.713712 | 38.143450 | 9.429737 | [-12.025944, 30.885419] |
+| harness | 32.352112 | 32.534246 | 0.182134 | [-0.965303, 1.329571] |
 
 ## Day 01
 
@@ -195,12 +195,12 @@ A resource-capped memoized search uses admissible geode bounds and dominance pru
 
 ## Day 20
 
-Numbers are parsed once and mixed through indexed treap storage for both decryption keys instead of repeated linear list movement.
+Numbers are parsed once and mixed through linked unrolled blocks for both decryption keys. Stable ID-to-block locations make removal and reinsertion local while block traversal supplies sequence indexes, replacing the pre-PR linear list movement.
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 267.824579 | — | — |
-| Current | 44.321871 | -223.502709 | [-226.001735, -221.003682] |
+| Pre-PR | 270.777979 | — | — |
+| Current | 23.647137 | -247.130842 | [-249.966862, -244.294822] |
 
 ## Day 21
 
