@@ -5,18 +5,14 @@ import java.math.BigInteger;
 import java.util.Scanner;
 
 public class Day20 extends DayTemplate {
-	// Implicit treap stored in parallel arrays: in-order traversal is the mixed
-	// list, and parent pointers keep each mover's current index cheap to find.
-	private BigInteger[] values;
-	private int[] left;
-	private int[] right;
-	private int[] parent;
-	private int[] size;
-	private int[] priority;
+	private static final int BLOCK_CAPACITY = 128;
+	private static final int INITIAL_BLOCK_SIZE = 64;
+	private static final int MERGE_THRESHOLD = 32;
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		BigInteger[] input = parse(in);
-		return mix(input, part1 ? BigInteger.ONE : BigInteger.valueOf(811589153L), part1 ? 1 : 10).toString();
+		return mix(input, part1 ? BigInteger.ONE : BigInteger.valueOf(811589153L),
+				part1 ? 1 : 10).toString();
 	}
 
 	@Override
@@ -49,29 +45,16 @@ public class Day20 extends DayTemplate {
 		if (count == 0) {
 			throw new IllegalArgumentException("No values to mix");
 		}
-		values = new BigInteger[count];
-		left = new int[count];
-		right = new int[count];
-		parent = new int[count];
-		size = new int[count];
-		priority = new int[count];
-		int root = -1;
+		BigInteger[] values = new BigInteger[count];
 		int zero = -1;
 		for (int i = 0; i < count; i++) {
-			BigInteger val = input[i];
-			values[i] = val.multiply(key);
-			left[i] = -1;
-			right[i] = -1;
-			parent[i] = -1;
-			size[i] = 1;
-			priority[i] = priority(i);
-			if (val.signum() == 0) {
+			values[i] = input[i].multiply(key);
+			if (input[i].signum() == 0) {
 				if (zero >= 0) {
 					throw new IllegalArgumentException("Multiple zero values");
 				}
 				zero = i;
 			}
-			root = merge(root, i);
 		}
 		if (zero < 0) {
 			throw new IllegalArgumentException("Missing zero value");
@@ -79,148 +62,198 @@ public class Day20 extends DayTemplate {
 		if (count == 1) {
 			return values[zero].multiply(BigInteger.valueOf(3));
 		}
+
 		int[] rotations = new int[count];
 		BigInteger modulus = BigInteger.valueOf(count - 1L);
 		for (int i = 0; i < count; i++) {
 			rotations[i] = values[i].remainder(modulus).intValue();
 		}
-		for (int k = 0; k < rounds; k++) {
-			for (int i = 0; i < count; i++) {
-				int loc = indexOf(i);
-				root = remove(root, loc);
 
-				int sizeAfterRemoval = count - 1;
-				int nextLoc = (int) Math.floorMod((long) loc + rotations[i], sizeAfterRemoval);
-				root = insert(root, nextLoc, i);
+		BlockSequence sequence = new BlockSequence(count);
+		for (int round = 0; round < rounds; round++) {
+			for (int mover = 0; mover < count; mover++) {
+				int index = sequence.indexOf(mover);
+				sequence.remove(mover);
+				int destination = (int) Math.floorMod(
+						(long) index + rotations[mover], count - 1);
+				sequence.insert(destination, mover);
 			}
 		}
-		int offset = indexOf(zero);
-		return values[get(root, (int) (((long) offset + 1000) % count))]
-				.add(values[get(root, (int) (((long) offset + 2000) % count))])
-				.add(values[get(root, (int) (((long) offset + 3000) % count))]);
+		int zeroIndex = sequence.indexOf(zero);
+		return values[sequence.get((zeroIndex + 1000) % count)]
+				.add(values[sequence.get((zeroIndex + 2000) % count)])
+				.add(values[sequence.get((zeroIndex + 3000) % count)]);
 	}
 
-	private int insert(int root, int index, int mover) {
-		long split = split(root, index);
-		return merge(merge(splitLeft(split), mover), splitRight(split));
-	}
+	private static final class BlockSequence {
+		private final Block[] location;
+		private final int[] slot;
+		private Block head;
+		private Block tail;
+		private int count;
 
-	private int remove(int root, int index) {
-		long beforeMover = split(root, index);
-		long afterMover = split(splitRight(beforeMover), 1);
-		int mover = splitLeft(afterMover);
-		left[mover] = -1;
-		right[mover] = -1;
-		parent[mover] = -1;
-		size[mover] = 1;
-		return merge(splitLeft(beforeMover), splitRight(afterMover));
-	}
+		BlockSequence(int size) {
+			location = new Block[size];
+			slot = new int[size];
+			for (int id = 0; id < size; id++) {
+				append(id);
+			}
+		}
 
-	private int get(int root, int index) {
-		while (true) {
-			int leftSize = size(left[root]);
-			if (index < leftSize) {
-				root = left[root];
-			} else if (index == leftSize) {
-				return root;
+		int indexOf(int id) {
+			Block target = location[id];
+			int index = slot[id];
+			for (Block block = head; block != target; block = block.next) {
+				index += block.size;
+			}
+			return index;
+		}
+
+		int get(int index) {
+			Block block = head;
+			while (index >= block.size) {
+				index -= block.size;
+				block = block.next;
+			}
+			return block.ids[index];
+		}
+
+		void remove(int id) {
+			Block block = location[id];
+			int index = slot[id];
+			int moved = block.size - index - 1;
+			if (moved > 0) {
+				System.arraycopy(block.ids, index + 1, block.ids, index, moved);
+				for (int i = index; i < block.size - 1; i++) {
+					slot[block.ids[i]] = i;
+				}
+			}
+			block.size--;
+			count--;
+			location[id] = null;
+			if (block.size == 0) {
+				unlink(block);
+			} else if (block.size < MERGE_THRESHOLD) {
+				mergeSmall(block);
+			}
+		}
+
+		void insert(int index, int id) {
+			if (count == 0) {
+				Block block = new Block();
+				head = block;
+				tail = block;
+				block.ids[0] = id;
+				block.size = 1;
+				location[id] = block;
+				slot[id] = 0;
+				count = 1;
+				return;
+			}
+			Block block = head;
+			while (index >= block.size) {
+				index -= block.size;
+				block = block.next;
+			}
+			if (block.size == BLOCK_CAPACITY) {
+				Block right = split(block);
+				if (index > block.size) {
+					index -= block.size;
+					block = right;
+				}
+			}
+			System.arraycopy(block.ids, index, block.ids, index + 1,
+					block.size - index);
+			for (int i = index + 1; i <= block.size; i++) {
+				slot[block.ids[i]] = i;
+			}
+			block.ids[index] = id;
+			block.size++;
+			location[id] = block;
+			slot[id] = index;
+			count++;
+		}
+
+		private void append(int id) {
+			if (tail == null || tail.size == INITIAL_BLOCK_SIZE) {
+				Block block = new Block();
+				if (tail == null) {
+					head = block;
+				} else {
+					tail.next = block;
+					block.previous = tail;
+				}
+				tail = block;
+			}
+			tail.ids[tail.size] = id;
+			location[id] = tail;
+			slot[id] = tail.size;
+			tail.size++;
+			count++;
+		}
+
+		private Block split(Block block) {
+			Block right = new Block();
+			int leftSize = BLOCK_CAPACITY / 2;
+			int rightSize = block.size - leftSize;
+			System.arraycopy(block.ids, leftSize, right.ids, 0, rightSize);
+			block.size = leftSize;
+			right.size = rightSize;
+			for (int i = 0; i < rightSize; i++) {
+				location[right.ids[i]] = right;
+				slot[right.ids[i]] = i;
+			}
+			right.next = block.next;
+			right.previous = block;
+			if (block.next == null) {
+				tail = right;
 			} else {
-				index -= leftSize + 1;
-				root = right[root];
+				block.next.previous = right;
+			}
+			block.next = right;
+			return right;
+		}
+
+		private void mergeSmall(Block block) {
+			if (block.next != null
+					&& block.size + block.next.size <= BLOCK_CAPACITY) {
+				merge(block, block.next);
+			} else if (block.previous != null
+					&& block.previous.size + block.size <= BLOCK_CAPACITY) {
+				merge(block.previous, block);
+			}
+		}
+
+		private void merge(Block left, Block right) {
+			int offset = left.size;
+			System.arraycopy(right.ids, 0, left.ids, offset, right.size);
+			for (int i = 0; i < right.size; i++) {
+				int id = right.ids[i];
+				location[id] = left;
+				slot[id] = offset + i;
+			}
+			left.size += right.size;
+			unlink(right);
+		}
+
+		private void unlink(Block block) {
+			if (block.previous == null) {
+				head = block.next;
+			} else {
+				block.previous.next = block.next;
+			}
+			if (block.next == null) {
+				tail = block.previous;
+			} else {
+				block.next.previous = block.previous;
 			}
 		}
 	}
 
-	private int indexOf(int mover) {
-		int index = size(left[mover]);
-		while (parent[mover] != -1) {
-			int moverParent = parent[mover];
-			if (mover == right[moverParent]) {
-				index += size(left[moverParent]) + 1;
-			}
-			mover = moverParent;
-		}
-		return index;
-	}
-
-	private long split(int root, int leftCount) {
-		if (root == -1) {
-			return pack(-1, -1);
-		}
-		if (size(left[root]) >= leftCount) {
-			long split = split(left[root], leftCount);
-			left[root] = splitRight(split);
-			setParent(left[root], root);
-			refresh(root);
-			setParent(splitLeft(split), -1);
-			parent[root] = -1;
-			return pack(splitLeft(split), root);
-		}
-		long split = split(right[root], leftCount - size(left[root]) - 1);
-		right[root] = splitLeft(split);
-		setParent(right[root], root);
-		refresh(root);
-		parent[root] = -1;
-		setParent(splitRight(split), -1);
-		return pack(root, splitRight(split));
-	}
-
-	private int merge(int leftRoot, int rightRoot) {
-		if (leftRoot == -1) {
-			setParent(rightRoot, -1);
-			return rightRoot;
-		}
-		if (rightRoot == -1) {
-			setParent(leftRoot, -1);
-			return leftRoot;
-		}
-		if (priority[leftRoot] < priority[rightRoot]) {
-			right[leftRoot] = merge(right[leftRoot], rightRoot);
-			setParent(right[leftRoot], leftRoot);
-			refresh(leftRoot);
-			parent[leftRoot] = -1;
-			return leftRoot;
-		}
-		left[rightRoot] = merge(leftRoot, left[rightRoot]);
-		setParent(left[rightRoot], rightRoot);
-		refresh(rightRoot);
-		parent[rightRoot] = -1;
-		return rightRoot;
-	}
-
-	private int size(int mover) {
-		return mover == -1 ? 0 : size[mover];
-	}
-
-	private void refresh(int mover) {
-		size[mover] = size(left[mover]) + 1 + size(right[mover]);
-	}
-
-	private void setParent(int mover, int moverParent) {
-		if (mover != -1) {
-			parent[mover] = moverParent;
-		}
-	}
-
-	private long pack(int leftRoot, int rightRoot) {
-		return ((long) (leftRoot + 1) << 32) | (rightRoot + 1L);
-	}
-
-	private int splitLeft(long split) {
-		return (int) (split >>> 32) - 1;
-	}
-
-	private int splitRight(long split) {
-		return (int) split - 1;
-	}
-
-	private int priority(int uuid) {
-		// Deterministic hash priorities keep the treap balanced without randomness.
-		int hash = uuid + 0x9e3779b9;
-		hash ^= hash >>> 16;
-		hash *= 0x85ebca6b;
-		hash ^= hash >>> 13;
-		hash *= 0xc2b2ae35;
-		hash ^= hash >>> 16;
-		return hash;
+	private static final class Block {
+		final int[] ids = new int[BLOCK_CAPACITY];
+		Block previous;
+		Block next;
+		int size;
 	}
 }
