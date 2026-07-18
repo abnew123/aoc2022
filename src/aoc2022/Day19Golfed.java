@@ -2,13 +2,9 @@ package aoc2022;
 class S{
 int q[],m[],z;
 String s(boolean p,String[]I){
-int r=p?0:1,j=0;
-for(var l:I)if(j++<3|p){var x=l.split("\\D+");int v=f(x,p?24:32);r=p?r+$.i(x[1])*v:r*v;}
+int r=p?0:1,j=0,t=p?24:32;
+for(var l:I)if(j++<3|p){var x=l.split("\\D+");q=new int[]{$.i(x[2]),0,0,$.i(x[3]),0,0,$.i(x[4]),$.i(x[5]),0,$.i(x[6]),0,$.i(x[7])};m=new int[]{$.x($.x(q[0],q[3]),$.x(q[6],q[9])),q[7],q[11],t};z=0;d(t,1,0,0,0,0,0,0,0);r=p?r+$.i(x[1])*z:r*z;}
 return""+r;
-}
-int f(String[]x,int t){
-q=new int[]{$.i(x[2]),0,0,$.i(x[3]),0,0,$.i(x[4]),$.i(x[5]),0,$.i(x[6]),0,$.i(x[7])};m=new int[]{$.x($.x(q[0],q[3]),$.x(q[6],q[9])),q[7],q[11],t};z=0;
-d(t,1,0,0,0,0,0,0,0);return z;
 }
 void d(int t,int a,int e,int f,int h,int o,int c,int b,int g){
 z=$.x(z,g+h*t);if(g+h*t+t*~-t/2<=z)return;
