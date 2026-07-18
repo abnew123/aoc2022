@@ -7,8 +7,8 @@ for(;r<n;r++){
 int k=$.f(r,5),x=2,y=h+3;
 for(;;){
 int X=x+J.charAt(q)-61;q=++q%J.length();
-if(o(P[k],X,y))x=X;
-if(o(P[k],x,y-1))y--;else{u(P[k],x,y);break;}
+if(o(P[k],X,y)>0)x=X;
+if(o(P[k],x,y-1)>0)y--;else{u(P[k],x,y);break;}
 }
 if(e<1){
 var v=(long[])m.put(k(r+1,q),new long[]{r+1,h});
@@ -17,13 +17,13 @@ if(v!=null){long a=r+1-v[0],g=(n-r-1)/a;r+=g*a;e=g*(h-v[1]);}
 }
 return e+h+"";
 }
-boolean o(int p,int x,int y){
-if((x|y)<0)return false;
+int o(int p,int x,int y){
+if((x|y)<0)return 0;
 for(;p>0;p>>=8,y++){
 int w=p%256<<x;
-if(w>127||y<c.length&&(w&c[y])>0)return false;
+if(w>127||y<c.length&&(w&c[y])>0)return 0;
 }
-return true;
+return 1;
 }
 void u(int p,int x,int y){
 for(;p>0;p>>=8,y++){

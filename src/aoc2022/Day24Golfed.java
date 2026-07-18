@@ -21,6 +21,6 @@ q=n;
 }
 boolean w(int p,int t){
 int r=p/C,c=p%C;var h=g[r];
-return h.charAt(c)>35&(r<1|r>R-2|g[1+$.f(r-1+t,R-2)].charAt(c)!=94&g[1+$.f(r-1-t,R-2)].charAt(c)!=118&h.charAt(1+$.f(c-1+t,C-2))!=60&h.charAt(1+$.f(c-1-t,C-2))!=62);
+return h.charAt(c)>35&(r<1|r>R-2|g[1+$.f(r-1+t,R-2)].charAt(c)!=94&g[1+$.f(r-1-t,R-2)].charAt(c)<118&h.charAt(1+$.f(c-1+t,C-2))!=60&h.charAt(1+$.f(c-1-t,C-2))!=62);
 }
 }
