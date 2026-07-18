@@ -8,7 +8,7 @@ int k=$.f(r,5),x=2,y=h+3;
 for(;;){
 int X=x+J.charAt(q)-61;q=++q%J.length();
 if(o(P[k],X,y)>0)x=X;
-if(o(P[k],x,y-1)>0)y--;else{u(P[k],x,y);break;}
+if(o(P[k],x,y-1)>0)y--;else{for(int d=P[k];d>0;d>>=8,y++){if(y==c.length)c=java.util.Arrays.copyOf(c,y*2);int w=d%256<<x;c[y]|=w;h=$.x(h,y+1);}break;}
 }
 if(e<1){
 var v=(long[])m.put(k(r+1,q),new long[]{r+1,h});
@@ -24,12 +24,6 @@ int w=p%256<<x;
 if(w>127||y<c.length&&(w&c[y])>0)return 0;
 }
 return 1;
-}
-void u(int p,int x,int y){
-for(;p>0;p>>=8,y++){
-if(y==c.length)c=java.util.Arrays.copyOf(c,y*2);
-int w=p%256<<x;c[y]|=w;h=$.x(h,y+1);
-}
 }
 String k(long r,int q){
 int f=h;
