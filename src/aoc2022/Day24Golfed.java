@@ -12,9 +12,9 @@ int[]d={0,1,-1,C,-C};
 for(;;){
 var n=$.s();t++;
 for(var p:q)for(int x:d){
-int c=(int)p+x;
-if(c==b)return t;
-if(c>=0&c<R*C){int r=c/C,z=c%C;var h=g[r];if(h.charAt(z)>35&(r<1|r>R-2|g[1+$.f(r-1+t,R-2)].charAt(z)!=94&g[1+$.f(r-1-t,R-2)].charAt(z)<118&h.charAt(1+$.f(z-1+t,C-2))!=60&h.charAt(1+$.f(z-1-t,C-2))!=62))n.add(c);}
+x+=(int)p;
+if(x==b)return t;
+if(x>=0&x<R*C){int r=x/C,z=x%C;var h=g[r];if(h.charAt(z)>35&(r<1|r>R-2|g[1+$.f(r-1+t,R-2)].charAt(z)!=94&g[1+$.f(r-1-t,R-2)].charAt(z)<118&h.charAt(1+$.f(z-1+t,C-2))!=60&h.charAt(1+$.f(z-1-t,C-2))!=62))n.add(x);}
 }
 q=n;
 }
