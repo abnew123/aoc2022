@@ -8,7 +8,7 @@ int k=$.f(r,5),x=2,y=h+3,X;
 for(;;){
 X=x+J.charAt(q)-61;q=++q%J.length();
 if(o(P[k],X,y)>0)x=X;
-if(o(P[k],x,y-1)>0)y--;else{for(int d=P[k],w;d>0;d>>=8,y++){if(y==c.length)c=java.util.Arrays.copyOf(c,y*2);w=d%256<<x;c[y]|=w;h=$.x(h,y+1);}break;}
+if(o(P[k],x,y-1)>0)y--;else{for(int d=P[k],w;d>0;d>>=8,y++){if(y==c.length)c=java.util.Arrays.copyOf(c,y*2);w=d%256<<x;c[y]|=w;}h=$.x(h,y);break;}
 }
 r++;if(e<1){
 int f=h,i=7,z;
