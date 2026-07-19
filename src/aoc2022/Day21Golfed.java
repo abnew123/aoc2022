@@ -6,22 +6,16 @@ boolean P;
 int h(String s,int i){return s.substring(i,i+4).hashCode();}
 String s(boolean p,String[]I){
 for(var l:I)m[h(l,0)]=l.substring(6);
-if(P=p)return""+q(3506402);
+if(P=p)return""+q(3506402,N);
 var r=m[3506402];int a=h(r,0),b=h(r,7);
-return""+(q(a)==N?n(a,q(b)):n(b,q(a)));
+return""+(q(a,N)==N?q(a,q(b,N)):q(b,q(a,N)));
 }
-long q(int k){
-if(!P&k==3214190)return N;
+long q(int k,long t){
+if(!P&k==3214190)return t;
 var x=m[k];
 if(x.charAt(0)<58)return $.l(x);
-long a=q(h(x,0)),b=q(h(x,7));
-var o=x.charAt(5);return a==N|b==N?N:o<43?a*b:o<44?a+b:o<46?a-b:a/b;
-}
-long n(int k,long t){
-if(k==3214190)return t;
-var x=m[k];int l=h(x,0),r=h(x,7);
-long a=q(l),b=q(r);
+int l=h(x,0),r=h(x,7);long a=q(l,N),b=q(r,N);
 var o=x.charAt(5);
-return a==N?n(l,o<43?t/b:o<44?t-b:o<46?t+b:t*b):n(r,o<43?t/a:o<44?t-a:o<46?a-t:a/t);
+return t==N?a==N|b==N?N:o<43?a*b:o<44?a+b:o<46?a-b:a/b:a==N?q(l,o<43?t/b:o<44?t-b:o<46?t+b:t*b):q(r,o<43?t/a:o<44?t-a:o<46?a-t:a/t);
 }
 }
