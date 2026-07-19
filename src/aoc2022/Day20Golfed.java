@@ -11,8 +11,8 @@ int i=a.indexOf(n);
 a.remove(i);
 a.add($.f(i+n[0],a.size()),n);
 }
-int z=0;
+int z=0,i=4;
 for(;a.get(z)[0]!=0;z++);
-long r=0;for(int i=4;--i>0;)r+=a.get((z+i*1000)%a.size())[0];return""+r;
+long r=0;for(;--i>0;)r+=a.get((z+i*1000)%a.size())[0];return""+r;
 }
 }
