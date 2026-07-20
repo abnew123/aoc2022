@@ -7,8 +7,8 @@ for(;r<n;){
 k=$.f(r,5);int x=2,y=h+3,X;
 for(;;){
 X=x+J.charAt(q)-61;q=++q%J.length();
-if(o(X,y)>0)x=X;
-if(o(x,y-1)>0)y--;else{c=c.or(c.valueOf(P[k]).shiftLeft(x+7*y));h=$.x(h,y+H[k]);break;}
+if(o(X,y))x=X;
+if(o(x,y-1))y--;else{c=c.or(c.valueOf(P[k]).shiftLeft(x+7*y));h=$.x(h,y+H[k]);break;}
 }
 r++;if(e<1){
 int f=h,i=7,z;
@@ -19,7 +19,7 @@ if(v!=null){long a=r-v[0],g=(n-r)/a;r+=g*a;e=g*(h-v[1]);}
 }
 return e+h+"";
 }
-int o(int x,int y){
-return x<0||y<0||x+W[k]>7||c.and(c.valueOf(P[k]).shiftLeft(x+7*y)).signum()>0?0:1;
+boolean o(int x,int y){
+return x>=0&y>=0&x+W[k]<8&c.and(c.valueOf(P[k]).shiftLeft(x+7*y)).signum()<1;
 }
 }
