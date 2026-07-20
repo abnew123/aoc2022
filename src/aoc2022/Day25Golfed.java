@@ -8,7 +8,7 @@ for(var c:l.toCharArray())v=v*5+"=-012".indexOf(c)-2;
 a+=v;
 }
 var r="";
-for(;a>0;a=(a+2)/5)r="012=-".charAt($.f(a,5))+r;
+for(;a>0;a/=5)r="=-012".charAt($.f(a+=2,5))+r;
 return r;
 }
 }

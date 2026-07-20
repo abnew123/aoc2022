@@ -7,8 +7,7 @@ int a=g[0].indexOf(46),b=R*C-C+g[R-1].indexOf(46),t=f(a,b,0);
 return""+(p?t:f(a,b,f(b,a,t)));
 }
 int f(int a,int b,int t){
-var q=$.s();q.add(a);
-for(;;){
+var q=$.s();for(q.add(a);;){
 var n=$.s();t++;
 for(var p:q)for(int x:new int[]{0,1,-1,C,-C}){
 x+=(int)p;
