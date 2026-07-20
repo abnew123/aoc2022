@@ -4,8 +4,8 @@ String[]g;int R,x,y,d;
 String s(boolean p,String[]I){
 for(g=I;!I[R].isEmpty();R++);
 y=g[0].indexOf(46);
-var q=I[R+1];
-for(int i=0,n=0,C=0,l=q.length();i<=l;i++)if(i<l&&(C=q.charAt(i))<58)n=n*10+C-48;else{
+var q=I[R+1]+"LLLL";
+for(int i=0,n=0,C=0;i<q.length();i++)if((C=q.charAt(i))<58)n=n*10+C-48;else{
 for(;n-->0;){
 int c=d,X=d%2*(2-d),Y=(1-d%2)*(1-d),u=x+X,w=y+Y;
 if(p)for(;G(u,w)<1;u+=X,w+=Y);
@@ -18,7 +18,7 @@ if(G(u,w)<4)break;
 x=u;y=w;d=c;
 }
 x=$.f(x,200);y=$.f(y,200);
-if(i<l)d=d+C%5*2+1&3;
+d=d+C%5*2+1&3;
 n=0;
 }
 return 1000*++x+4*++y+d+"";

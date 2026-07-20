@@ -13,7 +13,7 @@ if(o(x,y-1))y--;else{c=c.or(c.valueOf(P[k]).shiftLeft(x+7*y));h=$.x(h,y+H[k]);br
 r++;if(e<1){
 int f=h,i=7,z;
 for(;i-->0;)for(z=h;z-->0;)if(c.testBit(7*z+i)){f=$.n(f,z+1);break;}
-var v=(long[])m.put(r%5+","+q+":"+c.shiftRight(7*f),new long[]{r,h});
+var v=(long[])m.put(r%5+""+q+":"+c.shiftRight(7*f),new long[]{r,h});
 if(v!=null){long a=r-v[0],g=(n-r)/a;r+=g*a;e=g*(h-v[1]);}
 }
 }
