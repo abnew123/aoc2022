@@ -13,7 +13,7 @@ return""+(q(a,N)==N?q(a,q(b,N)):q(b,q(a,N)));
 long q(int k,long t){
 if(!P&k==3214190)return t;
 var x=m[k];
-if(x.charAt(0)<58)return $.l(x);
+if(x.charAt(0)<58)return (new Long(x));
 int l=h(x,0),r=h(x,7);long a=q(l,N),b=q(r,N);var c=a==N?b:a;
 var o=x.charAt(5);
 return t==N?a==N|b==N?N:o<43?a*b:o<44?a+b:o<46?a-b:a/b:q(a==N?l:r,o<43?t/c:o<44?t-c:o<46?a==N?t+b:a-t:a==N?t*b:a/t);
