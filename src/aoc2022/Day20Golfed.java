@@ -3,7 +3,7 @@ class T{
 String s(boolean p,String[]I){
 java.util.List<long[]>a=$.a(),o=$.a();
 for(var x:I){
-long[]n={$.l(x)*(p?1:811589153L)};
+long[]n={$.l(x)*(p?1:811589153)};
 a.add(n);o.add(n);
 }
 for(int r=p?1:10;r-->0;)for(var n:o){
