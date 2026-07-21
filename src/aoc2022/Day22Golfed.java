@@ -17,13 +17,13 @@ u=50*(b/3)+(c%2>0?(c<2?0:49):k);w=50*(b%3)+(c%2<1?(c<1?0:49):k);
 if(G(u,w)<4)break;
 x=u;y=w;d=c;
 }
-x=$.f(x,200);y=$.f(y,200);
+x=(Math.floorMod(x,200));y=(Math.floorMod(y,200));
 d=d-C/3&3;
 n=0;
 }
 return 1000*++x+4*++y+d+"";
 }
 int G(int x,int y){
-return(x=$.f(x,200))<R&&(y=$.f(y,200))<g[x].length()?g[x].charAt(y)&31:0;
+return(x=(Math.floorMod(x,200)))<R&&(y=(Math.floorMod(y,200)))<g[x].length()?g[x].charAt(y)&31:0;
 }
 }
