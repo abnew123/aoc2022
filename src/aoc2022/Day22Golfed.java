@@ -4,7 +4,7 @@ String[]g;int R,x,y,d,n;
 String s(boolean p,String[]I){
 for(g=I;!I[R++].isEmpty(););
 y=g[0].indexOf(46);
-for(int C:(I[R]+"LLLL").toCharArray())if(C<58)n=n*10+C-48;else{
+for(int C:(I[R]+"<").toCharArray())if(C<58)n=n*10+C-48;else{
 for(;n>0;n--){
 int c=d,X=(2-d)%2,Y=(1-d)%2,u=x+X,w=y+Y;
 for(;G(u,w)<1;u+=X,w+=Y)if(!p){
