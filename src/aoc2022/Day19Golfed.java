@@ -1,8 +1,8 @@
 package aoc2022;
-class S{int q[]=new int[12],z;
+class S{int q[]=new int[14],z;
 String s(boolean p,String[]I){
-int r=p?0:1,j=0,t=p?24:32;
-for(var l:I)if(j++<3|p){var x=l.split("\\D+");for(int y=6;y-->0;)q[y<3?y*3:y*2+1]=new Integer(x[y+2]);d(t,1,0,0,0,0,0,0,z=0);r=p?r+new Integer(x[1])*z:r*z;}
+int j=0,t=p?24:32,r=t>>5;
+for(var l:I)if(j++<3|p){for(int y=8;y-->1;)q[y<5?y*3-6&15:y*2-3]=new Integer(l.split("\\D+")[y]);d(t,1,0,0,0,0,0,0,z=0);r=p?r+q[13]*z:r*z;}
 return""+r;
 }
 void d(int t,int...s){
