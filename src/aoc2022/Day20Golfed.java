@@ -1,15 +1,12 @@
 package aoc2022;
 class T{
 String s(boolean p,String[]I){
-java.util.List<long[]>a=(new java.util.ArrayList()),o=(new java.util.ArrayList());
-for(var x:I){
-long[]n={(new Long(x))*(p?1:811589153)};
-a.add(n);o.add(n);
-}
+var a=new java.util.Stack<long[]>();
+for(var x:I)a.add(new long[]{new Long(x)*(p?1:811589153)});
+var o=a.toArray(new long[0][]);
 for(int r=p?1:10;r-->0;)for(var n:o){
 int i=a.indexOf(n);
-a.remove(i);
-a.add((Math.floorMod(i+n[0],a.size())),n);
+a.add(Math.floorMod(i+n[0],a.size()-1),a.remove(i));
 }
 int z=0,i=4;
 for(;a.get(z)[0]!=0;z++);
