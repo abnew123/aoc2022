@@ -7,10 +7,10 @@ int a=g[0].indexOf(46)+C,b=R*C+g[R-1].indexOf(46);
 return""+f(a,b,p?0:f(b,a,f(a,b,0)));
 }
 int f(int a,int b,int t){
-var q=new boolean[2*R*C];
-for(q[a]=0<1;!q[b];){
-var n=new boolean[2*R*C];t++;
-for(x=R*C;x-->0;)if((q[x]|q[x+C]|q[x+C+C]|q[x+C-1]|q[x+C+1])&g[x/C].charAt(x%C)>35&(x/C%~-R<1|h(t,0)!=94&h(-t,0)<118&h(0,t)!=60&h(0,-t)!=62))n[x+C]=0<1;
+var q=new int[2*R*C];
+for(q[a]=1;q[b]<1;){
+var n=new int[2*R*C];t++;
+for(x=R*C;x-->0;)n[x+C]=g[x/C].charAt(x%C)>35&(x/C%~-R<1|h(t,0)!=94&h(-t,0)<118&h(0,t)!=60&h(0,-t)!=62)?q[x]|q[x+C]|q[x+C+C]|q[x+C-1]|q[x+C+1]:0;
 q=n;
 }
 return t;
