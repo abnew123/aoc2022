@@ -1,30 +1,17 @@
 package aoc2022;
-import java.util.*;
 class U{
-Map<String,String>m;
-long N=1L<<63;
-boolean P;
-String s(boolean p,String in){
-m=$.h();
-for(String l:in.split("\n"))m.put(l.substring(0,4),l.substring(6));
-if(P=p)return""+q("root");
-String r=m.get("root"),a=r.substring(0,4),b=r.substring(7);
-long x=q(a);
-return""+(x==N?n(a,q(b)):n(b,x));
+String[]m=new String[1<<22];
+long N=1L<<63,P;
+int h(String s,int i){return s.substring(i,i+4).hashCode();}
+String s(boolean p,String[]I){
+for(var l:I)m[h(l,0)]=l.substring(6);
+return""+q(3506402,P=p?N:3214190);
 }
-long q(String k){
-if(!P&k.equals("humn"))return N;
-String x=m.get(k);
-if(x.charAt(0)<58)return $.l(x);
-long a=q(x.substring(0,4)),b=q(x.substring(7));
-return a==N|b==N?N:c(x.charAt(5),a,b);
+long q(int k,long t){
+if(k==P)return t;
+var x=m[k];
+if(x.charAt(0)<58)return new Long(x);
+long a=q(h(x,0),N),b=q(h(x,7),N),c=a^b^N,o=x.charAt(5)&7;
+return t==N?a>N&b>N?o<3?a*b:o<4?a+b:o<6?a-b:a/b:N:q(h(x,a<b?0:7),k==3506402?c:o<3?t/c:o<4?t-c:o<6?a<b?t+c:c-t:a<b?t*c:c/t);
 }
-long n(String k,long t){
-if(k.equals("humn"))return t;
-String x=m.get(k),l=x.substring(0,4),r=x.substring(7);
-long a=q(l),b=q(r);
-char o=x.charAt(5);
-return a==N?n(l,o==43?t-b:o==45?t+b:o==42?t/b:t*b):n(r,o==43?t-a:o==45?a-t:o==42?t/a:a/t);
-}
-long c(char o,long a,long b){return o==43?a+b:o==45?a-b:o==42?a*b:a/b;}
 }
