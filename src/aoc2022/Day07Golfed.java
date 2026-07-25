@@ -1,1 +1,0 @@
-package aoc2022;class G{String s(boolean p,String[]x){int s[]=new int[x.length],q[]=s.clone(),c,n=1,d=0,r=0;for(var l:x)if((c=l.charAt(0))<58)if(c>36)for(int i=0;i<=d;)s[q[i++]]+=Long.valueOf(l.split(" ")[0]);else if((c=(l+"  ").charAt(5))<48)d-=c<40?0:c<47?1:d;else q[++d]=n++;for(int v:s)if(p?v<=1e5:v>=s[0]-4e7&&r<1|v<r)r=p?r+v:v;return""+r;}}
