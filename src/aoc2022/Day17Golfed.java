@@ -3,7 +3,7 @@ class Q{
 int P[]={15,33666,66055,2113665,387},h,k,q,y;java.math.BigInteger c,B;
 String s(boolean p,String[]j){
 var m=new java.util.HashMap();long n=p?2022:(long)1e12,r=0,e=0,a;
-for(c=c.ZERO,k=q=~(h=0);r++<n;){
+for(c=c.ZERO,k=q=-1;r++<n;){
 B=c.valueOf(P[k=++k%5]);int x=2,X;y=h+3;
 do x=o(X=x+j[0].charAt(q=++q%j[0].length())-61)?X:x;while(o(x+--y-y));
 X=h=((c=c.or(B.shiftLeft(x+7*++y))).bitLength()+6)/7;
