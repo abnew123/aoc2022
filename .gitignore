@@ -1,3 +1,10 @@
+.idea/
 bin/
 data/
-src/aoc2022/MasterSolver.java
+out/
+
+# for https://github.com/LiquidFun/aoc_tiles
+.aoc_tiles/*
+!.aoc_tiles/tiles/
+session.cookie
+.DS_Store
