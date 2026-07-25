@@ -3,11 +3,29 @@ package src.solutions;
 import src.meta.DayTemplate;
 
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
 public class Day03 extends DayTemplate {
+
+	public String[] fullSolve(Scanner in) {
+		int answer1 = 0;
+		int answer2 = 0;
+		List<String> lines = new ArrayList<>();
+		while (in.hasNext()) {
+			lines.add(in.nextLine());
+		}
+		for (String line : lines) {
+			answer1 += helper1(line);
+		}
+		for (int i = 0; i + 2 < lines.size(); i += 3) {
+			answer2 += helper2(lines.get(i), lines.get(i + 1), lines.get(i + 2));
+		}
+		return new String[] { "" + answer1, "" + answer2 };
+	}
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		int answer = 0;

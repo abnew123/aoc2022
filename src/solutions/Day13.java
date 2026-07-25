@@ -10,6 +10,35 @@ import java.util.Scanner;
 
 public class Day13 extends DayTemplate {
 
+	public String[] fullSolve(Scanner in) {
+		int answer1 = 0;
+		int index = 1;
+		List<Packet> packets = new ArrayList<>();
+		while (in.hasNext()) {
+			Packet packet1 = new Packet(in.nextLine());
+			Packet packet2 = new Packet(in.nextLine());
+			packets.add(packet1);
+			packets.add(packet2);
+			in.nextLine();
+			answer1 += (packet1.compareTo(packet2) > 0) ? index : 0;
+			index++;
+		}
+		int answer2 = 1;
+		// Sorting reorders the list, so part 2 works on a copy (the Packet objects
+		// themselves are never mutated, only compared).
+		List<Packet> sorted = new ArrayList<>(packets);
+		sorted.add(new Packet("[[2]]"));
+		sorted.add(new Packet("[[6]]"));
+		Collections.sort(sorted);
+		Collections.reverse(sorted);
+		for (int i = 0; i < sorted.size(); i++) {
+			if (sorted.get(i).str.equals("[[2]]") || sorted.get(i).str.equals("[[6]]")) {
+				answer2 *= (i + 1);
+			}
+		}
+		return new String[] { "" + answer1, "" + answer2 };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		int answer = 0;
 		int index = 1;

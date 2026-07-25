@@ -7,8 +7,14 @@ import java.util.*;
 
 public class Day10 extends DayTemplate {
 
-	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		int answer = 0;
+	public String[] fullSolve(Scanner in) {
+		// Part 2 is an ASCII raster that solve() reports as a hard coded string, so
+		// only the register trace is shared.
+		List<Integer> values = parseValues(in);
+		return new String[] { "" + signalStrength(values), "ECZUZALR" };
+	}
+
+	private List<Integer> parseValues(Scanner in) {
 		int current = 1;
 		List<Integer> values = new ArrayList<>();
 		values.add(current);
@@ -20,12 +26,22 @@ public class Day10 extends DayTemplate {
 			}
 			values.add(current);
 		}
+		return values;
+	}
+
+	private int signalStrength(List<Integer> values) {
+		int answer = 0;
+		int[] signals = new int[] { 20, 60, 100, 140, 180, 220 };
+		for (int signal : signals) {
+			answer += signal * values.get((signal >= values.size()) ? (values.size() - 1) : (signal - 1));
+		}
+		return answer;
+	}
+
+	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
+		List<Integer> values = parseValues(in);
 		if (part1) {
-			int[] signals = new int[] { 20, 60, 100, 140, 180, 220 };
-			for (int signal : signals) {
-				answer += signal * values.get((signal >= values.size()) ? (values.size() - 1) : (signal - 1));
-			}
-			return "" + answer;
+			return "" + signalStrength(values);
 		} else {
 			char[][] screen = new char[6][40];
 			int cycle = 0;

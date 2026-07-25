@@ -9,6 +9,24 @@ import java.util.Scanner;
 
 public class Day17 extends DayTemplate {
 
+	public String[] fullSolve(Scanner in) {
+		String[] pushes = in.nextLine().split("");
+		boolean[] left = new boolean[pushes.length];
+		for (int i = 0; i < left.length; i++) {
+			left[i] = pushes[i].equals("<");
+		}
+		// helper() allocates its own chamber and only reads left[], so the two parts
+		// cannot disturb each other.
+		long answer1 = helper(2022, left)[0];
+		long goal = 1000000000000L;
+		long[] vals = helper(10000, left);
+		long cycle = vals[1];
+		long increment = vals[2];
+		long cycles = goal / cycle - 1;
+		long answer2 = cycles * increment + helper(goal - (cycles * cycle), left)[0];
+		return new String[] { "" + answer1, "" + answer2 };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		long answer = 0;
 		String[] pushes = in.nextLine().split("");

@@ -9,8 +9,24 @@ import java.util.Scanner;
 
 public class Day07 extends DayTemplate {
 
+	public String[] fullSolve(Scanner in) {
+		Node root = buildTree(in);
+		getSizes(root);
+		// traverse and traverse2 only read the tree, so both parts share the same one.
+		String answer1 = "" + traverse(root, 100000);
+		String answer2 = "" + traverse2(root, root.size - 40000000, root.size);
+		return new String[] { answer1, answer2 };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		int answer = 0;
+		Node root = buildTree(in);
+		getSizes(root);
+		answer = part1 ? traverse(root, 100000) : traverse2(root, root.size - 40000000, root.size);
+		return "" + answer;
+	}
+
+	private Node buildTree(Scanner in) {
 		Node root = new Node("/", null);
 		Node current = root;
 		while (in.hasNext()) {
@@ -47,9 +63,7 @@ public class Day07 extends DayTemplate {
 				current.children.add(temp);
 			}
 		}
-		getSizes(root);
-		answer = part1 ? traverse(root, 100000) : traverse2(root, root.size - 40000000, root.size);
-		return "" + answer;
+		return root;
 	}
 
 	public void getSizes(Node root) {

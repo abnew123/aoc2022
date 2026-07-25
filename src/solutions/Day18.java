@@ -7,6 +7,25 @@ import java.util.Scanner;
 
 public class Day18 extends DayTemplate {
 
+	public String[] fullSolve(Scanner in) {
+		int[][][] space = new int[25][25][25];
+		while (in.hasNext()) {
+			String[] line = in.nextLine().split(",");
+			int x = Integer.parseInt(line[0]) + 1;
+			int y = Integer.parseInt(line[1]) + 1;
+			int z = Integer.parseInt(line[2]) + 1;
+			space[x][y][z] = 1;
+		}
+		space[0][0][0] = 2;
+		while (iterate(space, 2, 0, true, false)[0] > 0) {
+		}
+		int[] checkSides = iterate(space, 1, 1, false, true);
+		int answer1 = checkSides[0] + checkSides[1];
+		// This call passes change = false, so it does not mutate space.
+		int answer2 = answer1 + iterate(space, 0, 1, false, true)[0];
+		return new String[] { "" + answer1, "" + answer2 };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		int answer = 0;
 		int[][][] space = new int[25][25][25];

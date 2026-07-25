@@ -9,11 +9,28 @@ import java.util.Scanner;
 
 public class Day20 extends DayTemplate {
 
+	public String[] fullSolve(Scanner in) {
+		List<Long> vals = parse(in);
+		// The mix mutates its list of Movers, so each part gets a freshly built one.
+		return new String[] { mix(vals, true), mix(vals, false) };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
+		return mix(parse(in), part1);
+	}
+
+	private List<Long> parse(Scanner in) {
+		List<Long> vals = new ArrayList<>();
+		while (in.hasNext()) {
+			vals.add((long) Integer.parseInt(in.nextLine()));
+		}
+		return vals;
+	}
+
+	private String mix(List<Long> vals, boolean part1) {
 		List<Mover> movers = new ArrayList<>();
 		int counter = 0;
-		while (in.hasNext()) {
-			long val = Integer.parseInt(in.nextLine());
+		for (long val : vals) {
 			movers.add(new Mover(counter, part1 ? val : val * 811589153));
 			counter++;
 		}

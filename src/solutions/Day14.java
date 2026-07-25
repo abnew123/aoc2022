@@ -7,6 +7,31 @@ import java.util.Scanner;
 
 public class Day14 extends DayTemplate {
 
+	public String[] fullSolve(Scanner in) {
+		boolean grid[][] = new boolean[1000][1000];
+		int maxy = 0;
+		while (in.hasNext()) {
+			String line = in.nextLine();
+			maxy = Math.max(addPath(line, grid), maxy);
+		}
+		// Part 1 fills the grid with sand, so take an independent copy for part 2
+		// before any of that mutation happens.
+		boolean grid2[][] = new boolean[1000][1000];
+		for (int i = 0; i < grid.length; i++) {
+			grid2[i] = grid[i].clone();
+		}
+		int answer1 = 0;
+		while (sand(grid, maxy)) {
+			answer1++;
+		}
+		addPath("0," + (maxy + 2) + " -> 999," + (maxy + 2), grid2);
+		int answer2 = 0;
+		while (sand(grid2, maxy)) {
+			answer2++;
+		}
+		return new String[] { "" + answer1, "" + answer2 };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		int answer = 0;
 		boolean grid[][] = new boolean[1000][1000];

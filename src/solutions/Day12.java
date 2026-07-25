@@ -9,11 +9,19 @@ import java.util.Scanner;
 
 public class Day12 extends DayTemplate {
 
+	public String[] fullSolve(Scanner in) {
+		// The parsed grid is read only; each part needs its own distance array because
+		// part 2 seeds every lowest square as a start, so search() rebuilds those.
+		List<List<Integer>> grid = parseGrid(in);
+		return new String[] { "" + search(grid, true), "" + search(grid, false) };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		int answer = 0;
+		return "" + search(parseGrid(in), part1);
+	}
+
+	private List<List<Integer>> parseGrid(Scanner in) {
 		List<List<Integer>> grid = new ArrayList<>();
-		int x = 0;
-		int y = 0;
 		while (in.hasNext()) {
 			char[] line = in.nextLine().toCharArray();
 			List<Integer> intLine = new ArrayList<>();
@@ -30,6 +38,13 @@ public class Day12 extends DayTemplate {
 			}
 			grid.add(intLine);
 		}
+		return grid;
+	}
+
+	private int search(List<List<Integer>> grid, boolean part1) {
+		int answer = 0;
+		int x = 0;
+		int y = 0;
 		int[][] realGrid = new int[grid.size()][grid.get(0).size()];
 		int[][] distances = new int[grid.size()][grid.get(0).size()];
 		for (int i = 0; i < grid.size(); i++) {
@@ -84,7 +99,7 @@ public class Day12 extends DayTemplate {
 			cycles++;
 		}
 		answer = distances[x][y];
-		return "" + answer;
+		return answer;
 	}
 
 	public boolean inBounds(int x, int y, int[][] grid) {

@@ -11,8 +11,58 @@ public class Day16 extends DayTemplate {
 	List<Valve> usefulValves = new ArrayList<>();
 	Map<Integer, Integer> cache = new HashMap<>();
 
+	public String[] fullSolve(Scanner in) {
+		prepare(in);
+		// helper() only ever writes to the cache, so the parse / distance matrix is
+		// safe to share; the cache itself must be reset between the two searches.
+		cache = new HashMap<>();
+		helper(30, 0, 0, 0, 0);
+		int answer1 = 0;
+		for (Integer key : cache.keySet()) {
+			if (cache.get(key) > answer1) {
+				answer1 = cache.get(key);
+			}
+		}
+		cache = new HashMap<>();
+		helper(26, 0, 0, 0, 0);
+		int answer2 = 0;
+		for (Integer key1 : cache.keySet()) {
+			for (Integer key2 : cache.keySet()) {
+				if ((key1 & key2) == 0) {
+					if (cache.get(key1) + cache.get(key2) > answer2) {
+						answer2 = cache.get(key1) + cache.get(key2);
+					}
+				}
+			}
+		}
+		return new String[] { "" + answer1, "" + answer2 };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		int answer = 0;
+		prepare(in);
+		helper(part1 ? 30 : 26, 0, 0, 0, 0);
+		if (part1) {
+			for (Integer key : cache.keySet()) {
+				if (cache.get(key) > answer) {
+					answer = cache.get(key);
+				}
+			}
+		} else {
+			for (Integer key1 : cache.keySet()) {
+				for (Integer key2 : cache.keySet()) {
+					if ((key1 & key2) == 0) {
+						if (cache.get(key1) + cache.get(key2) > answer) {
+							answer = cache.get(key1) + cache.get(key2);
+						}
+					}
+				}
+			}
+		}
+		return "" + answer;
+	}
+
+	private void prepare(Scanner in) {
 		List<Valve> valves = new ArrayList<>();
 		while (in.hasNext()) {
 			String[] line = in.nextLine().split(" ");
@@ -67,25 +117,6 @@ public class Day16 extends DayTemplate {
 				}
 			}
 		}
-		helper(part1 ? 30 : 26, 0, 0, 0, 0);
-		if (part1) {
-			for (Integer key : cache.keySet()) {
-				if (cache.get(key) > answer) {
-					answer = cache.get(key);
-				}
-			}
-		} else {
-			for (Integer key1 : cache.keySet()) {
-				for (Integer key2 : cache.keySet()) {
-					if ((key1 & key2) == 0) {
-						if (cache.get(key1) + cache.get(key2) > answer) {
-							answer = cache.get(key1) + cache.get(key2);
-						}
-					}
-				}
-			}
-		}
-		return "" + answer;
 	}
 
 	public void helper(int minLeft, int current, int index, int currentFlow, int open) {
