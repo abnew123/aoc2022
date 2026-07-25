@@ -79,7 +79,7 @@ public class MasterSolver {
 	}
 
 	private static String className(int day, String zeroFilledDay) {
-		return useGolfed ? "aoc2022." + GOLFED_DAYS[day - 1] : "aoc2022.Day" + zeroFilledDay;
+		return useGolfed ? GOLFED_DAYS[day - 1] : "aoc2022.Day" + zeroFilledDay;
 	}
 
 	private static String solve(Class<?> cls, boolean part1, File file) throws Exception {
