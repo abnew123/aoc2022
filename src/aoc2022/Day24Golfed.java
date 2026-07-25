@@ -1,27 +1,15 @@
 package aoc2022;
-import java.util.*;
-class X{
-String[]g;int R,C;
-String s(boolean p,String in){
-g=in.split("\n");R=g.length;C=g[0].length();
-int a=g[0].indexOf(46),b=(R-1)*C+g[R-1].indexOf(46),t=f(a,b,0);
-return""+(p?t:f(a,b,f(b,a,t)));
+class X{String[]g;int R,C,x;
+int h(int u,int v){int m=R-2,k=C-2;return g[1+(x/C+u%m+m-2)%m].charAt(1+(x%C+v%k+k-1)%k);}
+String s(boolean p,String[]I){
+g=I;R=g.length;C=g[0].length();
+int a=g[0].indexOf(46)+C,b=R*C+g[R-1].indexOf(46);
+return""+f(a,b,p?0:f(b,a,f(a,b,0)));
 }
 int f(int a,int b,int t){
-HashSet<Integer>q=$.s();q.add(a);
-int[]d={0,1,-1,C,-C};
-for(;;){
-HashSet<Integer>n=$.s();t++;
-for(int p:q)for(int x:d){
-int c=p+x;
-if(c==b)return t;
-if(c>=0&&c<R*C&&w(c,t))n.add(c);
-}
-q=n;
-}
-}
-boolean w(int p,int t){
-int r=p/C,c=p%C;
-return g[r].charAt(c)>35&(r<1||r==R-1||g[1+$.f(r-1+t,R-2)].charAt(c)!=94&g[1+$.f(r-1-t,R-2)].charAt(c)!=118&g[r].charAt(1+$.f(c-1+t,C-2))!=60&g[r].charAt(1+$.f(c-1-t,C-2))!=62);
+var q=new int[2*R*C];
+for(q[a]=1;q[b]<1;)
+for(t++,x=R*C+C;x-->C;)q[x]=q[x]*2|(g[x/C-1].charAt(x%C)>35&(x==a|x==b|h(t,0)!=94&h(-t,0)<95&h(0,t)!=60&h(0,-t)!=62)?(q[x+1]|q[x+C])>>1|q[x]|q[x-1]|q[x-C]:0)&1;
+return t;
 }
 }
