@@ -10,13 +10,32 @@ import java.util.Scanner;
 
 public class Day11 extends DayTemplate {
 
+	public String[] fullSolve(Scanner in) {
+		// The Monkey objects are mutated by the simulation (items are handed around and
+		// counter is incremented), so each part gets a freshly built set; only the raw
+		// input lines are shared.
+		List<String> lines = readLines(in);
+		return new String[] { run(lines, true), run(lines, false) };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
+		return run(readLines(in), part1);
+	}
+
+	private List<String> readLines(Scanner in) {
+		List<String> lines = new ArrayList<>();
+		while (in.hasNext()) {
+			lines.add(in.nextLine());
+		}
+		return lines;
+	}
+
+	private String run(List<String> lines, boolean part1) {
 		List<Monkey> monkeys = new ArrayList<>();
 		List<Long> items = new ArrayList<>();
 		int[] consts = new int[5];
 		int modulo = 1;
-		while (in.hasNext()) {
-			String line = in.nextLine();
+		for (String line : lines) {
 			if (line.startsWith("Monkey") || line.equals("")) {
 				continue;
 			}

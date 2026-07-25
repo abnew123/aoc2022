@@ -12,6 +12,57 @@ import java.util.Queue;
 import java.util.Scanner;
 
 public class Day24 extends DayTemplate {
+
+	public String[] fullSolve(Scanner in) {
+		List<String> lines = new ArrayList<>();
+		Map<Integer, List<CoordTime>> blizzards = new HashMap<>();
+		while (in.hasNext()) {
+			lines.add(in.nextLine());
+		}
+		int width = lines.size();
+		int height = lines.get(0).length();
+		List<CoordTime> initBlizzards = new ArrayList<>();
+		CoordTime start = null;
+		boolean first = true;
+		CoordTime end = null;
+		for (int i = 0; i < lines.size(); i++) {
+			for (int j = 0; j < lines.get(0).length(); j++) {
+				if (lines.get(i).charAt(j) == '.') {
+					if (first) {
+						start = new CoordTime(i, j, 0, -1);
+						first = false;
+					}
+					end = new CoordTime(i, j, 0, -1);
+				}
+				if (lines.get(i).charAt(j) == '#') {
+					initBlizzards.add(new CoordTime(i, j, 0, -1));
+				}
+				if (lines.get(i).charAt(j) == '^') {
+					initBlizzards.add(new CoordTime(i, j, 0, 1));
+				}
+				if (lines.get(i).charAt(j) == '>') {
+					initBlizzards.add(new CoordTime(i, j, 0, 2));
+				}
+				if (lines.get(i).charAt(j) == 'v') {
+					initBlizzards.add(new CoordTime(i, j, 0, 3));
+				}
+				if (lines.get(i).charAt(j) == '<') {
+					initBlizzards.add(new CoordTime(i, j, 0, 4));
+				}
+			}
+		}
+		blizzards.put(0, initBlizzards);
+		for (int i = 1; i < 1000; i++) {
+			blizzards.put(i, advance(blizzards.get(i - 1), width, height));
+		}
+		// The precomputed blizzard timeline is read-only inside helper(), so all three
+		// trips share it.
+		int trip1 = helper(start, end, width, height, blizzards, 0);
+		int trip2 = helper(end, start, width, height, blizzards, trip1);
+		int trip3 = helper(start, end, width, height, blizzards, trip2);
+		return new String[] { "" + trip1, "" + trip3 };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		List<String> lines = new ArrayList<>();
 		Map<Integer, List<CoordTime>> blizzards = new HashMap<>();

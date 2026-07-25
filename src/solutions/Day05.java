@@ -11,12 +11,28 @@ import java.util.Stack;
 
 public class Day05 extends DayTemplate {
 
+	public String[] fullSolve(Scanner in) {
+		List<String> lines = readLines(in);
+		return new String[] { simulate(lines, true), simulate(lines, false) };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
+		return simulate(readLines(in), part1);
+	}
+
+	private List<String> readLines(Scanner in) {
+		List<String> lines = new ArrayList<>();
+		while (in.hasNext()) {
+			lines.add(in.nextLine());
+		}
+		return lines;
+	}
+
+	private String simulate(List<String> lines, boolean part1) {
 		String answer = "";
 		List<Stack<String>> stacks = new ArrayList<>();
 		boolean phase1 = true;
-		while (in.hasNext()) {
-			String line = in.nextLine();
+		for (String line : lines) {
 			if (phase1) {
 				if (line.equals("")) {
 					phase1 = false;

@@ -9,9 +9,22 @@ import java.util.Scanner;
 
 public class Day08 extends DayTemplate {
 
-	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
+	public String[] fullSolve(Scanner in) {
 		int visibleTrees = 0;
 		int bestScore = 0;
+		List<List<Integer>> grid = parseGrid(in);
+		for (int i = 0; i < grid.size(); i++) {
+			for (int j = 0; j < grid.get(0).size(); j++) {
+				if (checkVisibility(grid, i, j)) {
+					visibleTrees++;
+				}
+				bestScore = Math.max(bestScore, calculateScore(grid, i, j));
+			}
+		}
+		return new String[] { "" + visibleTrees, "" + bestScore };
+	}
+
+	private List<List<Integer>> parseGrid(Scanner in) {
 		List<List<Integer>> grid = new ArrayList<>();
 		while (in.hasNext()) {
 			List<Integer> temp = new ArrayList<>();
@@ -20,6 +33,13 @@ public class Day08 extends DayTemplate {
 			}
 			grid.add(temp);
 		}
+		return grid;
+	}
+
+	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
+		int visibleTrees = 0;
+		int bestScore = 0;
+		List<List<Integer>> grid = parseGrid(in);
 		for (int i = 0; i < grid.size(); i++) {
 			for (int j = 0; j < grid.get(0).size(); j++) {
 				if (checkVisibility(grid, i, j)) {

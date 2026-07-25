@@ -9,6 +9,33 @@ import java.util.Scanner;
 
 public class Day19 extends DayTemplate {
 
+	public String[] fullSolve(Scanner in) {
+		List<BluePrint> blueprints = new ArrayList<>();
+		while (in.hasNext()) {
+			String[] line = in.nextLine().split(" ");
+			int o1 = Integer.parseInt(line[6]);
+			int o2 = Integer.parseInt(line[12]);
+			int o3 = Integer.parseInt(line[18]);
+			int o4 = Integer.parseInt(line[27]);
+			int c3 = Integer.parseInt(line[21]);
+			int ob4 = Integer.parseInt(line[30]);
+			blueprints.add(new BluePrint(o1, o2, o3, o4, c3, ob4));
+		}
+		// result() only mutates the static best-so-far m, which is reset per blueprint
+		// exactly as solve() does, so the parsed blueprints are safe to reuse.
+		int answer1 = 0;
+		for (int i = 0; i < blueprints.size(); i++) {
+			BluePrint.m = 0;
+			answer1 += (i + 1) * blueprints.get(i).result(24, new int[] { 1, 0, 0, 0 }, new int[4]);
+		}
+		int answer2 = 1;
+		for (int i = 0; i < 3; i++) {
+			BluePrint.m = 0;
+			answer2 *= blueprints.get(i).result(32, new int[] { 1, 0, 0, 0 }, new int[4]);
+		}
+		return new String[] { "" + answer1, "" + answer2 };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		int answer = part1 ? 0 : 1;
 		List<BluePrint> blueprints = new ArrayList<>();

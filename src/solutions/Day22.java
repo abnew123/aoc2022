@@ -7,13 +7,23 @@ import java.util.*;
 
 public class Day22 extends DayTemplate {
 
-	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		int answer = 0;
+	public String[] fullSolve(Scanner in) {
 		int[][] grid = new int[1000][1000];
-		int xloc = 0;
-		int yloc = 0;
-		int dir = 0; // right = 0, down = 1, left = 2, up = 3
 		List<String> instructions = new ArrayList<>();
+		parse(in, grid, instructions);
+		// traverse() only reads the grid and the instruction list, so the shared parse
+		// survives part 1 untouched; the wrapping rule is the only difference.
+		return new String[] { traverse(grid, instructions, true), traverse(grid, instructions, false) };
+	}
+
+	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
+		int[][] grid = new int[1000][1000];
+		List<String> instructions = new ArrayList<>();
+		parse(in, grid, instructions);
+		return traverse(grid, instructions, part1);
+	}
+
+	private void parse(Scanner in, int[][] grid, List<String> instructions) {
 		int counter = 0;
 		while (in.hasNext()) {
 			String line = in.nextLine();
@@ -41,6 +51,13 @@ public class Day22 extends DayTemplate {
 			}
 			counter++;
 		}
+	}
+
+	private String traverse(int[][] grid, List<String> instructions, boolean part1) {
+		int answer = 0;
+		int xloc = 0;
+		int yloc = 0;
+		int dir = 0; // right = 0, down = 1, left = 2, up = 3
 		for (int i = 0; i < grid[0].length; i++) {
 			if (grid[xloc][i] == 1) {
 				yloc = i;

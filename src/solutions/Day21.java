@@ -9,6 +9,34 @@ import java.util.Scanner;
 
 public class Day21 extends DayTemplate {
 
+	public String[] fullSolve(Scanner in) {
+		List<String> lines = new ArrayList<>();
+		while (in.hasNext()) {
+			lines.add(in.nextLine());
+		}
+		// The Monkey2 objects are rewritten in place by helper() and are built
+		// differently per part (root's operator, humn's value), so each part needs its
+		// own freshly constructed list; only the raw lines are shared.
+		List<Monkey2> all1 = new ArrayList<>();
+		for (String orig : lines) {
+			all1.add(new Monkey2(orig, true));
+		}
+		long answer1 = helper(all1, new ArrayList<>(), true);
+		List<Monkey2> all2 = new ArrayList<>();
+		for (String line : lines) {
+			String orig = line;
+			if (orig.contains("root")) {
+				orig = orig.replace('+', '=');
+				orig = orig.replace('-', '=');
+				orig = orig.replace('/', '=');
+				orig = orig.replace('*', '=');
+			}
+			all2.add(new Monkey2(orig, false));
+		}
+		long answer2 = helper(all2, new ArrayList<>(), false);
+		return new String[] { answer1 + "", answer2 + "" };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		List<Monkey2> all = new ArrayList<>();
 		List<Monkey2> yelled = new ArrayList<>();

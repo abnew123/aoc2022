@@ -9,10 +9,19 @@ import java.util.Set;
 
 public class Day06 extends DayTemplate {
 
+	public String[] fullSolve(Scanner in) {
+		String input = in.nextLine();
+		return new String[] { "" + findMarker(input, 4), "" + findMarker(input, 14) };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		int answer = 0;
 		String input = in.nextLine();
 		int codesize = part1 ? 4 : 14;
+		return "" + findMarker(input, codesize);
+	}
+
+	private int findMarker(String input, int codesize) {
+		int answer = 0;
 		for (int i = 0; i < input.length() - codesize + 1; i++) {
 			Set<Character> code = new HashSet<>();
 			for (int j = 0; j < codesize; j++) {
@@ -23,6 +32,6 @@ public class Day06 extends DayTemplate {
 				break;
 			}
 		}
-		return "" + answer;
+		return answer;
 	}
 }

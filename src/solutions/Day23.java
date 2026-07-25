@@ -7,6 +7,45 @@ import java.util.*;
 
 public class Day23 extends DayTemplate {
 
+	public String[] fullSolve(Scanner in) {
+		List<String> lines = new ArrayList<>();
+		List<Coord2> elves = new ArrayList<>();
+		while (in.hasNext()) {
+			lines.add(in.nextLine());
+		}
+		for (int i = 0; i < lines.size(); i++) {
+			for (int j = 0; j < lines.get(0).length(); j++) {
+				if (lines.get(i).charAt(j) == '#') {
+					elves.add(new Coord2(i, j));
+				}
+			}
+		}
+		// helper2 rewrites the list it is given (and its round counter drives the
+		// direction rotation, so part 2 cannot resume from part 1's 10 rounds); give
+		// each part its own list. Coord2 instances are never mutated in place, so a
+		// shallow copy is enough.
+		List<Coord2> elves2 = new ArrayList<>(elves);
+		int answer1 = 0;
+		helper2(elves, 10);
+		int maxx, maxy, minx, miny;
+		maxx = maxy = minx = miny = -1;
+		for (int i = 0; i < elves.size(); i++) {
+			maxx = (maxx == -1) ? elves.get(i).x : Math.max(maxx, elves.get(i).x);
+			maxy = (maxy == -1) ? elves.get(i).y : Math.max(maxy, elves.get(i).y);
+			minx = (minx == -1) ? elves.get(i).x : Math.min(minx, elves.get(i).x);
+			miny = (miny == -1) ? elves.get(i).y : Math.min(miny, elves.get(i).y);
+		}
+		for (int i = minx; i <= maxx; i++) {
+			for (int j = miny; j <= maxy; j++) {
+				if (!elves.contains(new Coord2(i, j))) {
+					answer1++;
+				}
+			}
+		}
+		int answer2 = helper2(elves2, 2000);
+		return new String[] { "" + answer1, "" + answer2 };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		int answer = 0;
 		List<String> lines = new ArrayList<>();

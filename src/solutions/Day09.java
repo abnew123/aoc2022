@@ -3,21 +3,41 @@ package src.solutions;
 import src.meta.DayTemplate;
 
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Day09 extends DayTemplate {
 
+	public String[] fullSolve(Scanner in) {
+		// The two parts share nothing but the input lines: the rope lengths differ, so
+		// each part needs its own positions/visited grid.
+		List<String> lines = readLines(in);
+		return new String[] { "" + simulate(lines, 2), "" + simulate(lines, 10) };
+	}
+
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
+		return "" + simulate(readLines(in), part1 ? 2 : 10);
+	}
+
+	private List<String> readLines(Scanner in) {
+		List<String> lines = new ArrayList<>();
+		while (in.hasNext()) {
+			lines.add(in.nextLine());
+		}
+		return lines;
+	}
+
+	private int simulate(List<String> lines, int size) {
 		int answer = 0;
-		int size = part1 ? 2 : 10;
 		int[] positionsX = new int[size];
 		int[] positionsY = new int[size];
 		boolean[][] grid = new boolean[1000][1000];
 		grid[positionsX[size - 1] + 500][positionsY[size - 1] + 500] = true;
 		int[] xdiff = new int[] { -1, 1, 0, 0 };
 		int[] ydiff = new int[] { 0, 0, -1, 1 };
-		while (in.hasNext()) {
-			String[] parts = in.nextLine().split(" ");
+		for (String line : lines) {
+			String[] parts = line.split(" ");
 			int val = Integer.parseInt(parts[1]);
 			int dir = 0;
 			switch (parts[0]) {
@@ -65,6 +85,6 @@ public class Day09 extends DayTemplate {
 				answer += square ? 1 : 0;
 			}
 		}
-		return "" + answer;
+		return answer;
 	}
 }
