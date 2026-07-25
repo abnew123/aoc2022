@@ -1,1 +1,1 @@
-package aoc2022;class D{int r,A,B,C,D;String s(boolean p,String[]x){for(var l:x){for(var t:l.split("\\D")){A=B;B=C;C=D;D=new Short(t);}if(p?(A-C)*(B-D)<1:A<=D&C<=B)r++;}return""+r;}}
+class D{int r,A,B,C,D;String s(boolean p,String[]x){for(var l:x){for(var t:l.split("\\D")){A=B;B=C;C=D;D=new Short(t);}if(p?(A-C)*(B-D)<1:A<=D&C<=B)r++;}return""+r;}}
