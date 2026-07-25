@@ -97,10 +97,10 @@ The table below counts **all characters, including whitespace** in each normal s
 | 19 | [Source](src/aoc2022/Day19.java) | [Golfed](src/aoc2022/Day19Golfed.java) | 3,776 | 482 |
 | 20 | [Source](src/aoc2022/Day20.java) | [Golfed](src/aoc2022/Day20Golfed.java) | 1,336 | 370 |
 | 21 | [Source](src/aoc2022/Day21.java) | [Golfed](src/aoc2022/Day21Golfed.java) | 4,332 | 476 |
-| 22 | [Source](src/aoc2022/Day22.java) | [Golfed](src/aoc2022/Day22Golfed.java) | 4,036 | 473 |
+| 22 | [Source](src/aoc2022/Day22.java) | [Golfed](src/aoc2022/Day22Golfed.java) | 4,033 | 461 |
 | 23 | [Source](src/aoc2022/Day23.java) | [Golfed](src/aoc2022/Day23Golfed.java) | 4,479 | 592 |
 | 24 | [Source](src/aoc2022/Day24.java) | [Golfed](src/aoc2022/Day24Golfed.java) | 5,064 | 471 |
 | 25 | [Source](src/aoc2022/Day25.java) | [Golfed](src/aoc2022/Day25Golfed.java) | 932 | 196 |
-| Total |  |  | 61,211 | 9,245 |
+| Total |  |  | 61,208 | 9,233 |
 
 <!-- CHAR COUNTS END -->
