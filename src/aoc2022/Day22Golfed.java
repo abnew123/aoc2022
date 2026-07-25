@@ -3,7 +3,7 @@ class V{
 String[]g;int R,x,y,d,n;
 String s(boolean p,String[]I){
 g=I;R=I.length-1;
-y=g[0].indexOf(46);
+y=50;
 for(int C:(I[R]+"<").getBytes())if(C<58)n=n*10+C-48;else{
 for(;n>0;n--){
 int c=d,u=x,w=y;
