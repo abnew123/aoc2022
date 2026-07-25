@@ -12,6 +12,6 @@ if(k==P)return t;
 var x=m[k];
 if(x.charAt(0)<58)return new Long(x);
 long a=q(h(x,0),N),b=q(h(x,7),N),c=a^b^N,o=x.charAt(5)&7;
-return t==N?a>N&b>N?o<3?a*b:o<4?a+b:o<6?a-b:a/b:N:q(h(x,a<b?0:7),k==3506402?c:o<3?t/c:o<4?t-c:o<6?a<b?t+c:c-t:a<b?t*c:c/t);
+return t==N?c<0?o<3?a*b:o<4?a+b:o<6?a-b:a/b:N:q(h(x,a<b?0:7),t==P?c:o<3?t/c:o<4?t-c:o<6?a<b?t+c:c-t:a<b?t*c:c/t);
 }
 }
