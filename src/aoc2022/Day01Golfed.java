@@ -1,1 +1,1 @@
-package aoc2022;import java.util.*;class A{String s(boolean p,String[]x){var b=new int[4];for(var l:x)if(l.isEmpty()){Arrays.sort(b);b[0]=0;}else b[0]+=new Integer(l);Arrays.sort(b);return b[3]+(p?0:b[2]+b[1])+"";}}
+package aoc2022;class A{int i;String s(boolean p,String[]x){var b=new int[3000];for(var l:x)b[l.isEmpty()?++i:i]-=new Integer("0"+l);java.util.Arrays.sort(b);return-b[0]-(p?0:b[1]+b[2])+"";}}

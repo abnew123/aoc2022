@@ -1,1 +1,1 @@
-package aoc2022;class Y{String s(boolean p,String[]I){long a=0,v;for(var l:I){v=0;for(var c:l.getBytes())v=v*5+(c^16)%5-2;a+=v;}var r="";for(;a>0;a/=5)r="=-012".charAt((int)((a+=2)%5))+r;return r;}}
+package aoc2022;class Y{long a,v;String s(boolean p,String[]I){for(var l:I){v=0;for(var c:l.getBytes())v=v*5+(c^16)%5-2;a+=v;}var r="";for(;a>0;a/=5)r="=-012".charAt((int)((a+=2)%5))+r;return r;}}

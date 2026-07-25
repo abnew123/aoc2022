@@ -1,1 +1,1 @@
-package aoc2022;class B{String s(boolean p,String[]x){int r=0;for(var l:x)r+="73481592648315972".charAt(l.hashCode()%47%9+(p?8:0))-48;return""+r;}}
+package aoc2022;class B{int r;String s(boolean p,String[]x){for(var l:x)r+=(p?0x279513846L:0x629518437L)>>l.hashCode()%47%9*4&15;return""+r;}}
