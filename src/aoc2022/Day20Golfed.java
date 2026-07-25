@@ -1,15 +1,1 @@
-package aoc2022;
-class T{
-int z,i=4;long r;
-String s(boolean p,String[]I){
-var a=new java.util.Stack<long[]>();
-for(var x:I)a.add(new long[]{new Long(x)*(p?1:811589153)});
-var o=a.toArray();
-for(int t=p?1:10;t-->0;)for(var n:o){
-int k=a.indexOf(n);
-a.add(Math.floorMod(k+((long[])n)[0],4999),a.remove(k));
-}
-for(;a.get(z)[0]!=0;z++);
-for(;--i>0;)r+=a.get((z+i*1000)%5000)[0];return""+r;
-}
-}
+package aoc2022;class T{int z,i=4;long r;String s(boolean p,String[]I){var a=new java.util.Stack<long[]>();for(var x:I)a.add(new long[]{new Long(x)*(p?1:811589153)});var o=a.toArray();for(int t=p?1:10;t-->0;)for(var n:o){int k=a.indexOf(n);a.add(Math.floorMod(k+((long[])n)[0],4999),a.remove(k));}for(;a.get(z)[0]!=0;z++);for(;--i>0;)r+=a.get((z+i*1000)%5000)[0];return""+r;}}
