@@ -1,0 +1,2 @@
+
+class J{String s(boolean p,String[]I){int x=1,c=0,a=0,g[]=new int[8];for(var l:I)for(var t:l.split(" ")){if(c%40==19)a+=-~c*x;if(c<240)g[c/5%8]=g[c/5%8]*2+(Math.abs(x-c%40)<2?1:0);c++;if(t.charAt(0)<97)x+=new Integer(t);}if(p)return""+a;var G="6zc40iAfv5vmkB6zaedoCgxv9cuEgxv9cgF6zaj4eGabfej6H3d5jd8Jack6mqK95y78eLfuz2moPfuz2qaRab6z4cUgonl0eZ";var s="";for(int v:g)s+=G.charAt(G.indexOf(Long.toString(v,36))+6);return s;}}
