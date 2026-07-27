@@ -1,1 +1,1 @@
-class F{String s(boolean p,String[]x){int n=p?4:14,i=n;while(x[0].substring(i-n,i).matches(".*(.).*\\1.*"))i++;return""+i;}}
+class F{Object s(boolean p,String[]x){int n=p?4:14,i=n;while(x[0].substring(i-n,i).matches(".*(.).*\\1.*"))i++;return i;}}
