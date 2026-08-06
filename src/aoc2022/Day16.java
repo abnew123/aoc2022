@@ -5,55 +5,148 @@ import java.util.*;
 
 public class Day16 extends DayTemplate {
 
+	private static final int MAX_TABLE_BITS = 20;
+	private static final int UNREACHABLE = Integer.MAX_VALUE / 4;
+
 	@Override
 	public String[] fullSolve(Scanner in) throws FileNotFoundException {
 		ValveNetwork network = parse(in);
-		int[] rates = network.rates();
-		int[][] distances = network.distances();
-		int maskCount = 1 << (rates.length - 1);
-		int part1 = bestPressure(0, 30, 0, distances, rates, new int[rates.length * 31 * maskCount], maskCount);
-		int[] bestByMask = new int[maskCount];
-		recordBestMasks(0, 26, 0, 0, distances, rates, bestByMask);
-		return new String[] { part1 + "", bestTwoActorPressure(bestByMask) + "" };
+		return new String[] { part1(network) + "", part2(network) + "" };
 	}
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
 		ValveNetwork network = parse(in);
-		int[] rates = network.rates();
-		int[][] distances = network.distances();
-		int maskCount = 1 << (rates.length - 1);
-		if (part1) {
-			return bestPressure(0, 30, 0, distances, rates, new int[rates.length * 31 * maskCount], maskCount) + "";
+		return (part1 ? part1(network) : part2(network)) + "";
+	}
+
+	private int part1(ValveNetwork network) {
+		return boundedBest(0, 30, 0L, 0, 0, network.distances(), network.rates());
+	}
+
+	private int part2(ValveNetwork network) {
+		int flowValves = network.rates().length - 1;
+		if (flowValves <= MAX_TABLE_BITS) {
+			int[] bestByMask = new int[1 << flowValves];
+			recordBestMasks(0, 26, 0, 0, network.distances(), network.rates(), bestByMask);
+			return bestTwoActorPressure(bestByMask);
 		}
-		int[] bestByMask = new int[maskCount];
-		recordBestMasks(0, 26, 0, 0, distances, rates, bestByMask);
-		return bestTwoActorPressure(bestByMask) + "";
+		Map<Long, Integer> bestByMask = new HashMap<>();
+		recordBestMasksBig(0, 26, 0L, 0, network.distances(), network.rates(), bestByMask);
+		return bestTwoActorPressureBig(bestByMask);
 	}
 
 	private ValveNetwork parse(Scanner in) {
-		Map<String, Valve> valvesByName = new HashMap<>();
+		List<String> names = new ArrayList<>();
+		List<Integer> flows = new ArrayList<>();
+		List<List<String>> tunnels = new ArrayList<>();
+		Map<String, Integer> idsByName = new HashMap<>();
 		while (in.hasNext()) {
 			String[] line = in.nextLine().split(" ");
-			List<String> tunnels = new ArrayList<>();
+			List<String> exits = new ArrayList<>();
 			for (int i = 9; i < line.length; i++) {
-				tunnels.add(line[i].substring(0, 2));
+				exits.add(line[i].substring(0, 2));
 			}
-			valvesByName.put(line[1], new Valve(line[1], Integer.parseInt(line[4].substring(5, line[4].length() - 1)), tunnels));
+			idsByName.put(line[1], names.size());
+			names.add(line[1]);
+			flows.add(Integer.parseInt(line[4].substring(5, line[4].length() - 1)));
+			tunnels.add(exits);
 		}
-		List<Valve> usefulValves = new ArrayList<>();
-		usefulValves.add(valvesByName.get("AA"));
-		for (Valve valve : valvesByName.values()) {
-			if (valve.flow > 0) {
-				usefulValves.add(valve);
+		int[][] adjacency = new int[names.size()][];
+		for (int i = 0; i < names.size(); i++) {
+			adjacency[i] = tunnels.get(i).stream().mapToInt(idsByName::get).toArray();
+		}
+		List<Integer> useful = new ArrayList<>();
+		useful.add(idsByName.get("AA"));
+		List<Integer> flowIds = new ArrayList<>();
+		for (int i = 0; i < names.size(); i++) {
+			if (flows.get(i) > 0) {
+				flowIds.add(i);
 			}
 		}
-		usefulValves.subList(1, usefulValves.size()).sort(Comparator.comparing(valve -> valve.name));
-		int[][] distances = usefulDistances(usefulValves, valvesByName);
-		int[] rates = new int[usefulValves.size()];
-		for (int i = 0; i < usefulValves.size(); i++) {
-			rates[i] = usefulValves.get(i).flow;
+		flowIds.sort(Comparator.comparing((Integer id) -> flows.get(id)).reversed()
+				.thenComparing(names::get));
+		useful.addAll(flowIds);
+		if (useful.size() - 1 > 62) {
+			throw new IllegalStateException("Too many flow valves for bitmask search: " + (useful.size() - 1));
+		}
+		int[][] distances = new int[useful.size()][useful.size()];
+		int[] rates = new int[useful.size()];
+		for (int i = 0; i < useful.size(); i++) {
+			int[] fromValve = distancesFrom(useful.get(i), adjacency);
+			for (int j = 0; j < useful.size(); j++) {
+				distances[i][j] = fromValve[useful.get(j)];
+			}
+			rates[i] = flows.get(useful.get(i));
 		}
 		return new ValveNetwork(distances, rates);
+	}
+
+	private int[] distancesFrom(int start, int[][] adjacency) {
+		int[] distances = new int[adjacency.length];
+		Arrays.fill(distances, UNREACHABLE);
+		int[] queue = new int[adjacency.length];
+		int head = 0;
+		int tail = 0;
+		distances[start] = 0;
+		queue[tail++] = start;
+		while (head < tail) {
+			int current = queue[head++];
+			int nextDistance = distances[current] + 1;
+			for (int next : adjacency[current]) {
+				if (distances[next] == UNREACHABLE) {
+					distances[next] = nextDistance;
+					queue[tail++] = next;
+				}
+			}
+		}
+		return distances;
+	}
+
+	/**
+	 * Branch-and-bound best pressure for a single actor. The bound assumes every
+	 * still-closed valve is reached along its direct shortest path from the current
+	 * valve, which no schedule can beat, so pruning never discards the optimum.
+	 * Valves are ordered by descending flow so strong branches are explored first.
+	 */
+	private int boundedBest(int current, int timeLeft, long openMask, int pressure, int best, int[][] distances,
+			int[] rates) {
+		if (pressure > best) {
+			best = pressure;
+		}
+		int bound = pressure;
+		for (int next = 1; next < rates.length; next++) {
+			if ((openMask & (1L << (next - 1))) == 0) {
+				int nextTime = timeLeft - distances[current][next] - 1;
+				if (nextTime > 0) {
+					bound += rates[next] * nextTime;
+				}
+			}
+		}
+		if (bound <= best) {
+			return best;
+		}
+		for (int next = 1; next < rates.length; next++) {
+			long bit = 1L << (next - 1);
+			int nextTime = timeLeft - distances[current][next] - 1;
+			if ((openMask & bit) == 0 && nextTime > 0) {
+				best = boundedBest(next, nextTime, openMask | bit, pressure + rates[next] * nextTime, best, distances,
+						rates);
+			}
+		}
+		return best;
+	}
+
+	private void recordBestMasks(int current, int timeLeft, int openMask, int pressure, int[][] distances, int[] rates,
+			int[] bestByMask) {
+		bestByMask[openMask] = Math.max(bestByMask[openMask], pressure);
+		for (int next = 1; next < rates.length; next++) {
+			int bit = 1 << (next - 1);
+			int nextTime = timeLeft - distances[current][next] - 1;
+			if ((openMask & bit) == 0 && nextTime > 0) {
+				recordBestMasks(next, nextTime, openMask | bit, pressure + rates[next] * nextTime, distances, rates,
+						bestByMask);
+			}
+		}
 	}
 
 	private int bestTwoActorPressure(int[] bestByMask) {
@@ -73,80 +166,55 @@ public class Day16 extends DayTemplate {
 		return answer;
 	}
 
-	private int[][] usefulDistances(List<Valve> usefulValves, Map<String, Valve> valvesByName) {
-		int[][] distances = new int[usefulValves.size()][usefulValves.size()];
-		for (int i = 0; i < usefulValves.size(); i++) {
-			Map<String, Integer> fromValve = distancesFrom(usefulValves.get(i).name, valvesByName);
-			for (int j = 0; j < usefulValves.size(); j++) {
-				distances[i][j] = fromValve.get(usefulValves.get(j).name);
-			}
-		}
-		return distances;
-	}
-
-	private Map<String, Integer> distancesFrom(String start, Map<String, Valve> valvesByName) {
-		Map<String, Integer> distances = new HashMap<>();
-		ArrayDeque<String> queue = new ArrayDeque<>();
-		distances.put(start, 0);
-		queue.add(start);
-		while (!queue.isEmpty()) {
-			String current = queue.poll();
-			int nextDistance = distances.get(current) + 1;
-			for (String next : valvesByName.get(current).tunnels) {
-				if (!distances.containsKey(next)) {
-					distances.put(next, nextDistance);
-					queue.add(next);
-				}
-			}
-		}
-		return distances;
-	}
-
-	private int bestPressure(int current, int timeLeft, int openMask, int[][] distances, int[] rates, int[] memo,
-			int maskCount) {
-		int key = (current * 31 + timeLeft) * maskCount + openMask;
-		if (memo[key] != 0) {
-			return memo[key] - 1;
-		}
-		int best = 0;
+	private void recordBestMasksBig(int current, int timeLeft, long openMask, int pressure, int[][] distances,
+			int[] rates, Map<Long, Integer> bestByMask) {
+		bestByMask.merge(openMask, pressure, Math::max);
 		for (int next = 1; next < rates.length; next++) {
-			int bit = 1 << (next - 1);
+			long bit = 1L << (next - 1);
 			int nextTime = timeLeft - distances[current][next] - 1;
 			if ((openMask & bit) == 0 && nextTime > 0) {
-				int released = rates[next] * nextTime;
-				best = Math.max(best,
-						released + bestPressure(next, nextTime, openMask | bit, distances, rates, memo, maskCount));
-			}
-		}
-		memo[key] = best + 1;
-		return best;
-	}
-
-	private void recordBestMasks(int current, int timeLeft, int openMask, int pressure, int[][] distances, int[] rates,
-			int[] bestByMask) {
-		bestByMask[openMask] = Math.max(bestByMask[openMask], pressure);
-		for (int next = 1; next < rates.length; next++) {
-			int bit = 1 << (next - 1);
-			int nextTime = timeLeft - distances[current][next] - 1;
-			if ((openMask & bit) == 0 && nextTime > 0) {
-				recordBestMasks(next, nextTime, openMask | bit, pressure + rates[next] * nextTime, distances, rates,
+				recordBestMasksBig(next, nextTime, openMask | bit, pressure + rates[next] * nextTime, distances, rates,
 						bestByMask);
 			}
 		}
 	}
 
-	private record ValveNetwork(int[][] distances, int[] rates) {
+	private int bestTwoActorPressureBig(Map<Long, Integer> bestByMask) {
+		int size = bestByMask.size();
+		long[] rawMasks = new long[size];
+		int[] rawValues = new int[size];
+		Integer[] order = new Integer[size];
+		int index = 0;
+		for (Map.Entry<Long, Integer> entry : bestByMask.entrySet()) {
+			rawMasks[index] = entry.getKey();
+			rawValues[index] = entry.getValue();
+			order[index] = index;
+			index++;
+		}
+		Arrays.sort(order, (a, b) -> Integer.compare(rawValues[b], rawValues[a]));
+		long[] masks = new long[size];
+		int[] values = new int[size];
+		for (int i = 0; i < size; i++) {
+			masks[i] = rawMasks[order[i]];
+			values[i] = rawValues[order[i]];
+		}
+		int answer = 0;
+		for (int i = 0; i < size; i++) {
+			if (values[i] * 2 <= answer) {
+				break;
+			}
+			for (int j = i; j < size; j++) {
+				if (values[i] + values[j] <= answer) {
+					break;
+				}
+				if ((masks[i] & masks[j]) == 0) {
+					answer = values[i] + values[j];
+				}
+			}
+		}
+		return answer;
 	}
-}
 
-class Valve {
-	int flow;
-	String name;
-	List<String> tunnels = new ArrayList<>();
-
-	public Valve(String name, int flow, List<String> tunnels) {
-		this.name = name;
-		this.flow = flow;
-		this.tunnels.addAll(tunnels);
+	private record ValveNetwork(int[][] distances, int[] rates) {
 	}
 }

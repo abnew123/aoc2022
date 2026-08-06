@@ -50,6 +50,33 @@ public class Day19 extends DayTemplate {
 	}
 }
 
+/**
+ * Bound-centric branch-and-bound. Branches on which robot to build next (idle
+ * minutes are skipped arithmetically); every prune below is exact, so the
+ * search provably returns the true optimum:
+ *
+ * 1. Robot caps: never own more robots of a resource than the largest
+ *    per-minute cost in that resource. With robots == cap, income alone covers
+ *    any spend schedule (one build per minute, each build costs at most cap),
+ *    so an extra robot can never enable anything.
+ * 2. Useless-build time cutoffs: a robot finished with fewer minutes left than
+ *    its product needs to reach a geode (geode 1, obsidian/ore 3, clay 5)
+ *    cannot contribute and is never built.
+ * 3. Saturation: once income covers a geode robot every minute (and one is
+ *    affordable now), the optimum from that state is exactly
+ *    geodes + geodeRobots*m + m(m-1)/2 - no recursion needed.
+ * 4. Geometric bound: even one new geode robot per minute only adds
+ *    m(m-1)/2 geodes. Costs one multiply; filters most nodes before 5.
+ * 5. Ore-relaxed bound: simulate m minutes ignoring ore, granting a free clay
+ *    robot every minute, and building obsidian/geode robots greedily (at most
+ *    one per minute) from clay/obsidian pools. Clay is only ever spent on
+ *    obsidian robots and obsidian only on geode robots, so this dominates
+ *    every real schedule and is a valid, much tighter upper bound.
+ *
+ * Geode-first branch order finds strong incumbents early, which is what makes
+ * bounds 4 and 5 bite. No memo table: after these prunes the tree is small
+ * enough that hashing would cost more than it saves.
+ */
 class BluePrint {
 	final int oreRobotOre;
 	final int clayRobotOre;
@@ -58,10 +85,7 @@ class BluePrint {
 	final int geodeRobotOre;
 	final int geodeRobotObsidian;
 	final int maxOreCost;
-	final int maxClayCost;
-	final int maxObsidianCost;
 	int best;
-	LongIntMap[] seen;
 
 	public BluePrint(int o1, int o2, int o3, int o4, int c3, int ob4) {
 		oreRobotOre = o1;
@@ -71,196 +95,114 @@ class BluePrint {
 		geodeRobotOre = o4;
 		geodeRobotObsidian = ob4;
 		maxOreCost = Math.max(Math.max(oreRobotOre, clayRobotOre), Math.max(obsidianRobotOre, geodeRobotOre));
-		maxClayCost = obsidianRobotClay;
-		maxObsidianCost = geodeRobotObsidian;
 	}
 
 	public int result(int minutes) {
 		best = 0;
-		seen = new LongIntMap[minutes + 1];
-		for (int i = 0; i < seen.length; i++) {
-			seen[i] = new LongIntMap(minutes == 24 ? 512 : 4096);
-		}
 		search(minutes, 1, 0, 0, 0, 0, 0, 0, 0);
 		return best;
 	}
 
-	private void search(int minutes, int oreRobots, int clayRobots, int obsidianRobots, int geodeRobots, int ore,
-			int clay, int obsidian, int geodes) {
-		best = Math.max(best, geodes + geodeRobots * minutes);
-		if (minutes == 0) {
+	private void search(int m, int oreRobots, int clayRobots, int obsidianRobots, int geodeRobots, int ore, int clay,
+			int obsidian, int geodes) {
+		int stop = geodes + geodeRobots * m;
+		if (stop > best) {
+			best = stop;
+		}
+
+		if (ore >= geodeRobotOre && obsidian >= geodeRobotObsidian && oreRobots >= geodeRobotOre
+				&& obsidianRobots >= geodeRobotObsidian) {
+			int exact = stop + m * (m - 1) / 2;
+			if (exact > best) {
+				best = exact;
+			}
 			return;
 		}
 
-		// Even if every remaining minute made a new geode robot, it could only add
-		// minutes - 1, minutes - 2, ... geodes before time runs out.
-		int optimistic = geodes + geodeRobots * minutes + (minutes * (minutes - 1)) / 2;
-		if (optimistic <= best) {
+		if (stop + m * (m - 1) / 2 <= best) {
+			return;
+		}
+		if (!relaxedBoundBeatsBest(m, clayRobots, obsidianRobots, clay, obsidian, stop)) {
 			return;
 		}
 
-		ore = cappedResource(ore, oreRobots, maxOreCost, minutes);
-		clay = cappedResource(clay, clayRobots, maxClayCost, minutes);
-		obsidian = cappedResource(obsidian, obsidianRobots, maxObsidianCost, minutes);
-
-		long state = packState(oreRobots, clayRobots, obsidianRobots, geodeRobots, ore, clay, obsidian);
-		int previousGeodes = seen[minutes].getOrDefault(state, -1);
-		if (previousGeodes >= geodes) {
-			return;
+		if (obsidianRobots > 0) {
+			int wait = Math.max(turnsToAfford(ore, oreRobots, geodeRobotOre),
+					turnsToAfford(obsidian, obsidianRobots, geodeRobotObsidian));
+			int after = m - wait - 1;
+			if (after >= 1) {
+				int elapsed = wait + 1;
+				search(after, oreRobots, clayRobots, obsidianRobots, geodeRobots + 1,
+						ore + oreRobots * elapsed - geodeRobotOre, clay + clayRobots * elapsed,
+						obsidian + obsidianRobots * elapsed - geodeRobotObsidian, geodes + geodeRobots * elapsed);
+			}
 		}
-		seen[minutes].put(state, geodes);
-
-		if (buildGeodeRobot(minutes, oreRobots, clayRobots, obsidianRobots, geodeRobots, ore, clay, obsidian, geodes)) {
-			return;
+		if (obsidianRobots < geodeRobotObsidian && clayRobots > 0) {
+			int wait = Math.max(turnsToAfford(ore, oreRobots, obsidianRobotOre),
+					turnsToAfford(clay, clayRobots, obsidianRobotClay));
+			int after = m - wait - 1;
+			if (after >= 3) {
+				int elapsed = wait + 1;
+				search(after, oreRobots, clayRobots, obsidianRobots + 1, geodeRobots,
+						ore + oreRobots * elapsed - obsidianRobotOre, clay + clayRobots * elapsed - obsidianRobotClay,
+						obsidian + obsidianRobots * elapsed, geodes + geodeRobots * elapsed);
+			}
 		}
-		if (obsidianRobots < maxObsidianCost) {
-			buildObsidianRobot(minutes, oreRobots, clayRobots, obsidianRobots, geodeRobots, ore, clay, obsidian, geodes);
-		}
-		if (clayRobots < maxClayCost) {
-			buildClayRobot(minutes, oreRobots, clayRobots, obsidianRobots, geodeRobots, ore, clay, obsidian, geodes);
+		if (clayRobots < obsidianRobotClay) {
+			int wait = turnsToAfford(ore, oreRobots, clayRobotOre);
+			int after = m - wait - 1;
+			if (after >= 5) {
+				int elapsed = wait + 1;
+				search(after, oreRobots, clayRobots + 1, obsidianRobots, geodeRobots,
+						ore + oreRobots * elapsed - clayRobotOre, clay + clayRobots * elapsed,
+						obsidian + obsidianRobots * elapsed, geodes + geodeRobots * elapsed);
+			}
 		}
 		if (oreRobots < maxOreCost) {
-			buildOreRobot(minutes, oreRobots, clayRobots, obsidianRobots, geodeRobots, ore, clay, obsidian, geodes);
+			int wait = turnsToAfford(ore, oreRobots, oreRobotOre);
+			int after = m - wait - 1;
+			if (after >= 3) {
+				int elapsed = wait + 1;
+				search(after, oreRobots + 1, clayRobots, obsidianRobots, geodeRobots,
+						ore + oreRobots * elapsed - oreRobotOre, clay + clayRobots * elapsed,
+						obsidian + obsidianRobots * elapsed, geodes + geodeRobots * elapsed);
+			}
 		}
 	}
 
-	private boolean buildGeodeRobot(int minutes, int oreRobots, int clayRobots, int obsidianRobots, int geodeRobots,
-			int ore, int clay, int obsidian, int geodes) {
-		int wait = waitTime(ore, oreRobots, geodeRobotOre, obsidian, obsidianRobots, geodeRobotObsidian);
-		if (wait < minutes) {
-			int elapsed = wait + 1;
-			search(minutes - elapsed, oreRobots, clayRobots, obsidianRobots, geodeRobots + 1,
-					ore + oreRobots * elapsed - geodeRobotOre, clay + clayRobots * elapsed,
-					obsidian + obsidianRobots * elapsed - geodeRobotObsidian, geodes + geodeRobots * elapsed);
-			return wait == 0;
+	private boolean relaxedBoundBeatsBest(int m, int clayRobots, int obsidianRobots, int clay, int obsidian, int base) {
+		int bound = base;
+		int clayPool = clay;
+		int obsPool = obsidian;
+		int clayRate = clayRobots;
+		int obsRate = obsidianRobots;
+		for (int k = m; k >= 1; k--) {
+			boolean buildObs = clayPool >= obsidianRobotClay;
+			if (obsPool >= geodeRobotObsidian) {
+				obsPool -= geodeRobotObsidian;
+				bound += k - 1;
+				if (bound > best) {
+					return true;
+				}
+			}
+			if (buildObs) {
+				clayPool -= obsidianRobotClay;
+			}
+			clayPool += clayRate;
+			obsPool += obsRate;
+			if (buildObs) {
+				obsRate++;
+			}
+			clayRate++;
 		}
-		return false;
-	}
-
-	private void buildObsidianRobot(int minutes, int oreRobots, int clayRobots, int obsidianRobots, int geodeRobots,
-			int ore, int clay, int obsidian, int geodes) {
-		int wait = waitTime(ore, oreRobots, obsidianRobotOre, clay, clayRobots, obsidianRobotClay);
-		if (wait < minutes) {
-			int elapsed = wait + 1;
-			search(minutes - elapsed, oreRobots, clayRobots, obsidianRobots + 1, geodeRobots,
-					ore + oreRobots * elapsed - obsidianRobotOre, clay + clayRobots * elapsed - obsidianRobotClay,
-					obsidian + obsidianRobots * elapsed, geodes + geodeRobots * elapsed);
-		}
-	}
-
-	private void buildClayRobot(int minutes, int oreRobots, int clayRobots, int obsidianRobots, int geodeRobots, int ore,
-			int clay, int obsidian, int geodes) {
-		int wait = turnsToAfford(ore, oreRobots, clayRobotOre);
-		if (wait < minutes) {
-			int elapsed = wait + 1;
-			search(minutes - elapsed, oreRobots, clayRobots + 1, obsidianRobots, geodeRobots,
-					ore + oreRobots * elapsed - clayRobotOre, clay + clayRobots * elapsed,
-					obsidian + obsidianRobots * elapsed, geodes + geodeRobots * elapsed);
-		}
-	}
-
-	private void buildOreRobot(int minutes, int oreRobots, int clayRobots, int obsidianRobots, int geodeRobots, int ore,
-			int clay, int obsidian, int geodes) {
-		int wait = turnsToAfford(ore, oreRobots, oreRobotOre);
-		if (wait < minutes) {
-			int elapsed = wait + 1;
-			search(minutes - elapsed, oreRobots + 1, clayRobots, obsidianRobots, geodeRobots,
-					ore + oreRobots * elapsed - oreRobotOre, clay + clayRobots * elapsed,
-					obsidian + obsidianRobots * elapsed, geodes + geodeRobots * elapsed);
-		}
-	}
-
-	private int waitTime(int resourceA, int robotsA, int costA, int resourceB, int robotsB, int costB) {
-		return Math.max(turnsToAfford(resourceA, robotsA, costA), turnsToAfford(resourceB, robotsB, costB));
+		return bound > best;
 	}
 
 	private int turnsToAfford(int resource, int robots, int cost) {
-		if (resource >= cost) {
+		int need = cost - resource;
+		if (need <= 0) {
 			return 0;
 		}
-		if (robots == 0) {
-			return Integer.MAX_VALUE;
-		}
-		return (cost - resource + robots - 1) / robots;
-	}
-
-	private int cappedResource(int resource, int robots, int maxSpend, int minutes) {
-		return Math.min(resource, Math.max(0, maxSpend * minutes - robots * (minutes - 1)));
-	}
-
-	private long packState(int oreRobots, int clayRobots, int obsidianRobots, int geodeRobots, int ore, int clay,
-			int obsidian) {
-		return oreRobots | ((long) clayRobots << 6) | ((long) obsidianRobots << 12) | ((long) geodeRobots << 18)
-				| ((long) ore << 24) | ((long) clay << 34) | ((long) obsidian << 44);
-	}
-}
-
-class LongIntMap {
-	private static final long EMPTY = 0L;
-	private long[] keys;
-	private int[] values;
-	private int mask;
-	private int size;
-	private int maxSize;
-
-	LongIntMap(int capacity) {
-		int actual = 1;
-		while (actual < capacity * 2) {
-			actual <<= 1;
-		}
-		keys = new long[actual];
-		values = new int[actual];
-		mask = actual - 1;
-		maxSize = actual / 2;
-	}
-
-	int getOrDefault(long key, int defaultValue) {
-		int index = index(key);
-		while (keys[index] != EMPTY) {
-			if (keys[index] == key) {
-				return values[index];
-			}
-			index = (index + 1) & mask;
-		}
-		return defaultValue;
-	}
-
-	void put(long key, int value) {
-		if (size >= maxSize) {
-			grow();
-		}
-		int index = index(key);
-		while (keys[index] != EMPTY) {
-			if (keys[index] == key) {
-				values[index] = value;
-				return;
-			}
-			index = (index + 1) & mask;
-		}
-		keys[index] = key;
-		values[index] = value;
-		size++;
-	}
-
-	private void grow() {
-		long[] oldKeys = keys;
-		int[] oldValues = values;
-		keys = new long[oldKeys.length * 2];
-		values = new int[oldValues.length * 2];
-		mask = keys.length - 1;
-		maxSize = keys.length / 2;
-		size = 0;
-		for (int i = 0; i < oldKeys.length; i++) {
-			if (oldKeys[i] != EMPTY) {
-				put(oldKeys[i], oldValues[i]);
-			}
-		}
-	}
-
-	private int index(long key) {
-		key ^= key >>> 33;
-		key *= 0xff51afd7ed558ccdL;
-		key ^= key >>> 33;
-		return (int) key & mask;
+		return (need + robots - 1) / robots;
 	}
 }

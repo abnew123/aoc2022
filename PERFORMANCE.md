@@ -10,17 +10,17 @@ Current 25-day means (n=100):
 
 | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 |---:|---:|---:|---:|---:|
-| 228.603737 | 199.539213 | 168.620773 | 22.100435 | 30.918440 |
+| 174.565 | 146.377 | 115.416 | 22.081 | 30.961 |
 
 Latest publication gate versus the preceding replay tip (n=100):
 
 | Metric | Previous mean (ms) | Current mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|---:|
-| wall | 238.055822 | 228.603737 | -9.452085 | [-11.836697, -7.067472] |
-| main | 207.524592 | 199.539213 | -7.985379 | [-9.657327, -6.313430] |
-| solver | 176.589489 | 168.620773 | -7.968716 | [-9.376687, -6.560745] |
-| startup | 21.953370 | 22.100435 | 0.147065 | [-0.269461, 0.563590] |
-| harness | 30.935103 | 30.918440 | -0.016663 | [-0.440095, 0.406770] |
+| wall | 227.622 | 174.565 | -53.056 | [-54.768, -51.344] |
+| main | 198.740 | 146.377 | -52.363 | [-53.490, -51.237] |
+| solver | 167.763 | 115.416 | -52.347 | [-53.299, -51.395] |
+| startup | 21.855 | 22.081 | 0.225 | [-0.185, 0.636] |
+| harness | 30.977 | 30.961 | -0.016 | [-0.453, 0.420] |
 
 ## Day 01
 
@@ -159,12 +159,12 @@ Sensors are parsed once; merged row intervals and exact boundary-line intersecti
 
 ## Day 16
 
-Useful valves are compressed into a bitmask search with memoized pressure states and direct disjoint-mask pairing for the elephant.
+Part 1 runs a branch-and-bound depth-first search whose admissible bound opens every remaining valve at its direct shortest-path arrival, replacing a memo table that zeroed sixteen million entries per call; part 2 keeps the bitmask best-per-subset table with subset-max pairing, now behind an input-adaptive fallback for larger valve counts.
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 231.947104 | — | — |
-| Current | 16.801325 | -215.145780 | [-250.301082, -179.990477] |
+| Previous | 15.143382 | — | — |
+| Current | 9.377223 | -5.766159 | [-5.945755, -5.586563] |
 
 ## Day 17
 
@@ -186,21 +186,21 @@ Packed cube membership supplies total exposed faces, while one bounded exterior 
 
 ## Day 19
 
-A resource-capped memoized search uses admissible geode bounds and dominance pruning instead of exploring redundant robot schedules.
+A proof-carrying branch-and-bound replaces the memoized search: next-robot branching with per-type useless-build time cutoffs, an exact saturation cutoff, the geometric geode bound, and an ore-relaxed simulation bound, with the memo tables and an unsound-in-general force-build-geode heuristic removed outright.
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 139.012754 | — | — |
-| Current | 20.951042 | -118.061712 | [-121.556491, -114.566933] |
+| Previous | 21.322199 | — | — |
+| Current | 1.862119 | -19.460080 | [-19.607108, -19.313052] |
 
 ## Day 20
 
-Numbers are parsed once and mixed through linked unrolled blocks for both decryption keys. Stable ID-to-block locations make removal and reinsertion local while block traversal supplies sequence indexes, replacing the pre-PR linear list movement.
+Mixing runs on a blocked order-statistic sequence over flat primitive arrays: fixed-stride blocks in one int array with small sequentially-scanned block indexes, every move a pure arraycopy with constant bookkeeping, long modular rotations, and a linear digit-scan parse replacing BigInteger arithmetic end to end.
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 270.777979 | — | — |
-| Current | 23.647137 | -247.130842 | [-249.966862, -244.294822] |
+| Previous | 22.259182 | — | — |
+| Current | 12.335832 | -9.923350 | [-10.233227, -9.613473] |
 
 ## Day 21
 
@@ -222,12 +222,12 @@ The current solver parses the board once, infers and folds any valid six-face cu
 
 ## Day 23
 
-Packed elf positions and move counts detect expansion and stabilization directly, avoiding repeated full-boundary rescans.
+Occupancy lives in bitmask rows: each round computes horizontal dilations, the four rotated direction proposals, destination shifts, and exact pairwise-intersection collision cancellation as whole-word operations over an adaptive, self-growing band, advancing up to sixty-four cells per instruction.
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 215.934833 | — | — |
-| Current | 35.681138 | -180.253696 | [-185.622593, -174.884798] |
+| Previous | 34.685634 | — | — |
+| Current | 16.183391 | -18.502243 | [-18.993427, -18.011059] |
 
 ## Day 24
 
