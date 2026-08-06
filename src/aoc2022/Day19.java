@@ -18,32 +18,45 @@ public class Day19 extends DayTemplate {
 		return (part1 ? part1(blueprints) : part2(blueprints)) + "";
 	}
 
+	// Each blueprint is exactly seven integers in statement order (id, then the
+	// six costs) regardless of layout — the official example wraps one blueprint
+	// across indented lines, real inputs use one line each.
 	private List<BluePrint> parse(Scanner in) {
 		List<BluePrint> blueprints = new ArrayList<>();
-		while (in.hasNext()) {
-			String[] line = in.nextLine().split(" ");
-			int o1 = Integer.parseInt(line[6]);
-			int o2 = Integer.parseInt(line[12]);
-			int o3 = Integer.parseInt(line[18]);
-			int o4 = Integer.parseInt(line[27]);
-			int c3 = Integer.parseInt(line[21]);
-			int ob4 = Integer.parseInt(line[30]);
-			blueprints.add(new BluePrint(o1, o2, o3, o4, c3, ob4));
+		int[] nums = new int[7];
+		int have = 0;
+		while (in.hasNextLine()) {
+			String line = in.nextLine();
+			for (int i = 0, n = line.length(); i < n; i++) {
+				char c = line.charAt(i);
+				if (c >= '0' && c <= '9') {
+					int v = c - '0';
+					while (i + 1 < n && (c = line.charAt(i + 1)) >= '0' && c <= '9') {
+						v = v * 10 + (c - '0');
+						i++;
+					}
+					nums[have++] = v;
+					if (have == 7) {
+						blueprints.add(new BluePrint(nums[0], nums[1], nums[2], nums[3], nums[4], nums[5], nums[6]));
+						have = 0;
+					}
+				}
+			}
 		}
 		return blueprints;
 	}
 
 	private int part1(List<BluePrint> blueprints) {
 		int answer = 0;
-		for (int i = 0; i < blueprints.size(); i++) {
-			answer += (i + 1) * blueprints.get(i).result(24);
+		for (BluePrint bp : blueprints) {
+			answer += bp.id * bp.result(24);
 		}
 		return answer;
 	}
 
 	private int part2(List<BluePrint> blueprints) {
 		int answer = 1;
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < Math.min(3, blueprints.size()); i++) {
 			answer *= blueprints.get(i).result(32);
 		}
 		return answer;
@@ -53,7 +66,9 @@ public class Day19 extends DayTemplate {
 /**
  * Bound-centric branch-and-bound. Branches on which robot to build next (idle
  * minutes are skipped arithmetically); every prune below is exact, so the
- * search provably returns the true optimum:
+ * search provably returns the true optimum. Precursor gates tolerate zero-cost
+ * blueprints, and part 2 uses at most the first three blueprints, so the
+ * two-blueprint official example works:
  *
  * 1. Robot caps: never own more robots of a resource than the largest
  *    per-minute cost in that resource. With robots == cap, income alone covers
@@ -78,6 +93,7 @@ public class Day19 extends DayTemplate {
  * enough that hashing would cost more than it saves.
  */
 class BluePrint {
+	final int id;
 	final int oreRobotOre;
 	final int clayRobotOre;
 	final int obsidianRobotOre;
@@ -87,13 +103,14 @@ class BluePrint {
 	final int maxOreCost;
 	int best;
 
-	public BluePrint(int o1, int o2, int o3, int o4, int c3, int ob4) {
-		oreRobotOre = o1;
-		clayRobotOre = o2;
-		obsidianRobotOre = o3;
-		obsidianRobotClay = c3;
-		geodeRobotOre = o4;
-		geodeRobotObsidian = ob4;
+	public BluePrint(int id, int oreOre, int clayOre, int obsOre, int obsClay, int geoOre, int geoObs) {
+		this.id = id;
+		oreRobotOre = oreOre;
+		clayRobotOre = clayOre;
+		obsidianRobotOre = obsOre;
+		obsidianRobotClay = obsClay;
+		geodeRobotOre = geoOre;
+		geodeRobotObsidian = geoObs;
 		maxOreCost = Math.max(Math.max(oreRobotOre, clayRobotOre), Math.max(obsidianRobotOre, geodeRobotOre));
 	}
 
@@ -126,7 +143,7 @@ class BluePrint {
 			return;
 		}
 
-		if (obsidianRobots > 0) {
+		if (geodeRobotObsidian == 0 || obsidianRobots > 0) {
 			int wait = Math.max(turnsToAfford(ore, oreRobots, geodeRobotOre),
 					turnsToAfford(obsidian, obsidianRobots, geodeRobotObsidian));
 			int after = m - wait - 1;
@@ -137,7 +154,7 @@ class BluePrint {
 						obsidian + obsidianRobots * elapsed - geodeRobotObsidian, geodes + geodeRobots * elapsed);
 			}
 		}
-		if (obsidianRobots < geodeRobotObsidian && clayRobots > 0) {
+		if (obsidianRobots < geodeRobotObsidian && (obsidianRobotClay == 0 || clayRobots > 0)) {
 			int wait = Math.max(turnsToAfford(ore, oreRobots, obsidianRobotOre),
 					turnsToAfford(clay, clayRobots, obsidianRobotClay));
 			int after = m - wait - 1;
