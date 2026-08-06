@@ -10,26 +10,26 @@ Current 25-day means (n=100):
 
 | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 |---:|---:|---:|---:|---:|
-| 174.565 | 146.377 | 115.416 | 22.081 | 30.961 |
+| 164.788 | 134.414 | 103.322 | 22.552 | 31.091 |
 
 Latest publication gate versus the preceding replay tip (n=100):
 
 | Metric | Previous mean (ms) | Current mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|---:|
-| wall | 227.622 | 174.565 | -53.056 | [-54.768, -51.344] |
-| main | 198.740 | 146.377 | -52.363 | [-53.490, -51.237] |
-| solver | 167.763 | 115.416 | -52.347 | [-53.299, -51.395] |
-| startup | 21.855 | 22.081 | 0.225 | [-0.185, 0.636] |
-| harness | 30.977 | 30.961 | -0.016 | [-0.453, 0.420] |
+| wall | 176.600 | 164.788 | -11.812 | [-13.634, -9.990] |
+| main | 147.969 | 134.414 | -13.556 | [-14.608, -12.503] |
+| solver | 116.580 | 103.322 | -13.258 | [-14.278, -12.237] |
+| startup | 22.780 | 22.552 | -0.229 | [-0.614, 0.157] |
+| harness | 31.389 | 31.091 | -0.298 | [-0.505, -0.091] |
 
 ## Day 01
 
-A single pass accumulates each inventory and maintains the largest three exact totals instead of retaining and sorting every group.
+One slurped buffer and a single digit-and-newline scan accumulate each inventory in long registers and keep the top three totals directly, replacing the line-oriented scanner and per-line arbitrary-precision arithmetic.
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 10.238506 | — | — |
-| Current | 8.526150 | -1.712356 | [-1.996534, -1.428179] |
+| Previous | 7.973420 | — | — |
+| Current | 1.802825 | -6.170595 | [-6.224161, -6.117029] |
 
 ## Day 02
 
@@ -141,12 +141,12 @@ Packets are parsed once; pair ordering is accumulated while reading and divider 
 
 ## Day 14
 
-A single sand simulation with the floor tracks the abyss threshold and final blockage instead of rebuilding the cave for each part.
+A flat bitset cave with a linear rock parser answers part 1 by an order-exact explicit-stack descent stopped at the first grain below the lowest rock, and part 2 by a branchless row-closure sweep counting sixty-four cells per word operation.
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 14.404017 | — | — |
-| Current | 4.831075 | -9.572942 | [-9.971650, -9.174233] |
+| Previous | 5.499029 | — | — |
+| Current | 1.464094 | -4.034935 | [-4.132255, -3.937616] |
 
 ## Day 15
 
@@ -231,12 +231,12 @@ Occupancy lives in bitmask rows: each round computes horizontal dilations, the f
 
 ## Day 24
 
-Periodic blizzard occupancy and packed frontier traversal replace repeated hazard simulation and share the three required valley legs.
+Reachability advances as multi-word bitmask rows — precomputed rotation and permutation phase tables give each minute's blizzard occupancy, and one five-way shift-OR-mask update moves the whole frontier — with the three valley legs chained off absolute time and no per-call table rebuilds.
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 702.492042 | — | — |
-| Current | 9.913908 | -692.578133 | [-705.041534, -680.114732] |
+| Previous | 9.345993 | — | — |
+| Current | 2.669663 | -6.676330 | [-6.744613, -6.608047] |
 
 ## Day 25
 

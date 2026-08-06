@@ -8,362 +8,267 @@ import java.util.Scanner;
 
 public class Day24 extends DayTemplate {
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		List<String> lines = new ArrayList<>();
-		while (in.hasNextLine()) {
-			lines.add(in.nextLine());
-		}
-		int rows = lines.size();
-		int cols = lines.get(0).length();
-		int cells = rows * cols;
-		boolean[] walls = new boolean[cells];
-		int[] blizzardX = new int[cells];
-		int[] blizzardY = new int[cells];
-		byte[] blizzardDirections = new byte[cells];
-		int blizzardCount = 0;
-		int startX = -1;
-		int startY = -1;
-		boolean first = true;
-		int endX = -1;
-		int endY = -1;
-		for (int i = 0; i < lines.size(); i++) {
-			for (int j = 0; j < cols; j++) {
-				char c = lines.get(i).charAt(j);
-				if (c == '.') {
-					if (first) {
-						startX = i;
-						startY = j;
-						first = false;
-					}
-					endX = i;
-					endY = j;
-				} else if (c == '^' || c == '>' || c == 'v' || c == '<') {
-					blizzardX[blizzardCount] = i;
-					blizzardY[blizzardCount] = j;
-					blizzardDirections[blizzardCount] = direction(c);
-					blizzardCount++;
-				} else if (c == '#') {
-					walls[i * cols + j] = true;
-				}
-			}
-		}
-		Valley valley = buildBlockedStates(rows, cols, walls, blizzardX, blizzardY, blizzardDirections, blizzardCount);
-		int start = startX * cols + startY;
-		int end = endX * cols + endY;
-		byte[] seen = new byte[valley.blocked().length];
-		int trip1 = travel(start, end, 0, valley, seen, (byte) 1);
+		Basin basin = new Basin(readLines(in));
+		int trip1 = basin.travel(true, 0);
 		if (part1) {
 			return "" + trip1;
 		}
-		int trip2 = travel(end, start, trip1, valley, seen, (byte) 2);
-		int trip3 = travel(start, end, trip2, valley, seen, (byte) 3);
+		int trip2 = basin.travel(false, trip1);
+		int trip3 = basin.travel(true, trip2);
 		return "" + trip3;
 	}
 
 	@Override
 	public String[] fullSolve(Scanner in) throws FileNotFoundException {
+		Basin basin = new Basin(readLines(in));
+		int trip1 = basin.travel(true, 0);
+		int trip2 = basin.travel(false, trip1);
+		int trip3 = basin.travel(true, trip2);
+		return new String[] { trip1 + "", trip3 + "" };
+	}
+
+	private static List<String> readLines(Scanner in) {
 		List<String> lines = new ArrayList<>();
 		while (in.hasNextLine()) {
 			lines.add(in.nextLine());
 		}
-		int rows = lines.size();
-		int cols = lines.get(0).length();
-		int cells = rows * cols;
-		boolean[] walls = new boolean[cells];
-		int[] blizzardX = new int[cells];
-		int[] blizzardY = new int[cells];
-		byte[] blizzardDirections = new byte[cells];
-		int blizzardCount = 0;
-		int startX = -1;
-		int startY = -1;
-		boolean first = true;
-		int endX = -1;
-		int endY = -1;
-		for (int i = 0; i < lines.size(); i++) {
-			for (int j = 0; j < cols; j++) {
-				char c = lines.get(i).charAt(j);
-				if (c == '.') {
-					if (first) {
-						startX = i;
-						startY = j;
-						first = false;
+		return lines;
+	}
+
+	/**
+	 * Time-expanded bitset reachability over interior cells only. Each interior
+	 * row is a multi-word bit mask (bit c = interior column c), so any valley
+	 * width is supported. Blizzard occupancy is assembled per minute from two
+	 * small phase tables instead of a full period-expanded blocked grid:
+	 * horizontal blizzards repeat with period W, so W phase tables of H row
+	 * masks are built by 1-bit rotations; vertical blizzards repeat with period
+	 * H and only permute whole rows, so H phase tables are built by OR-ing
+	 * row-shifted copies of the up/down masks. Each minute the reachable set is
+	 * widened by the four shifts plus waiting and masked by free cells. The
+	 * entry and exit cells sit outside the interior and are tracked as two
+	 * booleans; they are never blocked and touch one interior cell each.
+	 */
+	private static final class Basin {
+		private final int height;
+		private final int width;
+		private final int rowWords;
+		private final long lastMask;
+		private final int period;
+		private final int topWord;
+		private final long topBit;
+		private final int bottomWord;
+		private final long bottomBit;
+		private final long[] horizontalPhases;
+		private final long[] verticalPhases;
+		private final long[] current;
+		private final long[] next;
+
+		Basin(List<String> lines) {
+			int rows = lines.size();
+			int cols = lines.get(0).length();
+			height = rows - 2;
+			width = cols - 2;
+			rowWords = (width + 63) >>> 6;
+			int topBits = width - ((rowWords - 1) << 6);
+			lastMask = topBits == 64 ? -1L : (1L << topBits) - 1;
+			period = lcm(width, height);
+			int topCol = lines.get(0).indexOf('.') - 1;
+			int bottomCol = lines.get(rows - 1).indexOf('.') - 1;
+			topWord = topCol >>> 6;
+			topBit = 1L << (topCol & 63);
+			bottomWord = (height - 1) * rowWords + (bottomCol >>> 6);
+			bottomBit = 1L << (bottomCol & 63);
+			long[] right = new long[height * rowWords];
+			long[] left = new long[height * rowWords];
+			long[] down = new long[height * rowWords];
+			long[] up = new long[height * rowWords];
+			for (int r = 0; r < height; r++) {
+				String line = lines.get(r + 1);
+				int base = r * rowWords;
+				for (int c = 0; c < width; c++) {
+					char ch = line.charAt(c + 1);
+					if (ch == '.') {
+						continue;
 					}
-					endX = i;
-					endY = j;
-				} else if (c == '^' || c == '>' || c == 'v' || c == '<') {
-					blizzardX[blizzardCount] = i;
-					blizzardY[blizzardCount] = j;
-					blizzardDirections[blizzardCount] = direction(c);
-					blizzardCount++;
-				} else if (c == '#') {
-					walls[i * cols + j] = true;
+					int word = base + (c >>> 6);
+					long bit = 1L << (c & 63);
+					if (ch == '>') {
+						right[word] |= bit;
+					} else if (ch == '<') {
+						left[word] |= bit;
+					} else if (ch == 'v') {
+						down[word] |= bit;
+					} else if (ch == '^') {
+						up[word] |= bit;
+					}
 				}
 			}
+			horizontalPhases = buildHorizontalPhases(right, left);
+			verticalPhases = buildVerticalPhases(down, up);
+			current = new long[height * rowWords];
+			next = new long[height * rowWords];
 		}
-		PackedValley valley = buildPackedStates(rows, cols, walls, blizzardX, blizzardY, blizzardDirections,
-				blizzardCount);
-		int start = startX * cols + startY;
-		int end = endX * cols + endY;
-		long[] seen = new long[valley.blocked().length];
-		int trip1 = packedTravel(start, end, 0, valley, seen);
-		int trip2 = packedTravel(end, start, trip1, valley, seen);
-		int trip3 = packedTravel(start, end, trip2, valley, seen);
-		return new String[] { trip1 + "", trip3 + "" };
-	}
 
-	private PackedValley buildPackedStates(int rows, int cols, boolean[] walls, int[] blizzardX,
-			int[] blizzardY, byte[] blizzardDirections, int blizzardCount) {
-		int cells = rows * cols;
-		int period = lcm(rows - 2, cols - 2);
-		int words = (cells + 63) >>> 6;
-		long[] wallBits = new long[words];
-		for (int cell = 0; cell < cells; cell++) {
-			if (walls[cell]) {
-				wallBits[cell >>> 6] |= 1L << cell;
-			}
-		}
-		long[] blocked = new long[Math.multiplyExact(period, words)];
-		for (int time = 0; time < period; time++) {
-			int offset = time * words;
-			System.arraycopy(wallBits, 0, blocked, offset, words);
-			for (int i = 0; i < blizzardCount; i++) {
-				int x = blizzardX[i];
-				int y = blizzardY[i];
-				int cell = x * cols + y;
-				blocked[offset + (cell >>> 6)] |= 1L << cell;
-				if (blizzardDirections[i] == 0) {
-					x--;
-					if (x == 0) x = rows - 2;
-				} else if (blizzardDirections[i] == 1) {
-					y++;
-					if (y == cols - 1) y = 1;
-				} else if (blizzardDirections[i] == 2) {
-					x++;
-					if (x == rows - 1) x = 1;
-				} else {
-					y--;
-					if (y == 0) y = cols - 2;
-				}
-				blizzardX[i] = x;
-				blizzardY[i] = y;
-			}
-		}
-		return new PackedValley(cols, cells, period, words, blocked);
-	}
-
-	private int packedTravel(int start, int end, int startTime, PackedValley valley, long[] seen) {
-		int words = valley.words();
-		long[] frontier = new long[words];
-		long[] next = new long[words];
-		Arrays.fill(seen, 0);
-		frontier[start >>> 6] = 1L << start;
-		seen[(startTime % valley.period()) * words + (start >>> 6)] |= 1L << start;
-		int endWord = end >>> 6;
-		long endBit = 1L << end;
-		int tailBits = valley.cells() & 63;
-		long tailMask = tailBits == 0 ? -1L : (1L << tailBits) - 1;
-		int nextTime = startTime + 1;
-		while (true) {
-			Arrays.fill(next, 0);
-			System.arraycopy(frontier, 0, next, 0, words);
-			orShiftHigher(frontier, next, 1);
-			orShiftLower(frontier, next, 1);
-			orShiftHigher(frontier, next, valley.cols());
-			orShiftLower(frontier, next, valley.cols());
-			next[words - 1] &= tailMask;
-			int offset = (nextTime % valley.period()) * words;
-			boolean any = false;
-			for (int word = 0; word < words; word++) {
-				long reachable = next[word] & ~valley.blocked()[offset + word] & ~seen[offset + word];
-				next[word] = reachable;
-				seen[offset + word] |= reachable;
-				any |= reachable != 0;
-			}
-			if ((next[endWord] & endBit) != 0) return nextTime;
-			if (!any) return -1;
-			long[] swap = frontier;
-			frontier = next;
-			next = swap;
-			nextTime++;
-		}
-	}
-
-	private void orShiftHigher(long[] source, long[] target, int distance) {
-		int wordShift = distance >>> 6;
-		int bitShift = distance & 63;
-		for (int sourceWord = 0; sourceWord < source.length; sourceWord++) {
-			long value = source[sourceWord];
-			int targetWord = sourceWord + wordShift;
-			if (targetWord < target.length) target[targetWord] |= value << bitShift;
-			if (bitShift != 0 && targetWord + 1 < target.length) {
-				target[targetWord + 1] |= value >>> (64 - bitShift);
-			}
-		}
-	}
-
-	private void orShiftLower(long[] source, long[] target, int distance) {
-		int wordShift = distance >>> 6;
-		int bitShift = distance & 63;
-		for (int sourceWord = 0; sourceWord < source.length; sourceWord++) {
-			long value = source[sourceWord];
-			int targetWord = sourceWord - wordShift;
-			if (targetWord >= 0) target[targetWord] |= value >>> bitShift;
-			if (bitShift != 0 && targetWord - 1 >= 0) {
-				target[targetWord - 1] |= value << (64 - bitShift);
-			}
-		}
-	}
-
-	private Valley buildBlockedStates(int rows, int cols, boolean[] walls, int[] blizzardX, int[] blizzardY,
-			byte[] blizzardDirections, int blizzardCount) {
-		int cells = rows * cols;
-		int period = lcm(rows - 2, cols - 2);
-		boolean[] blocked = new boolean[period * cells];
-		for (int time = 0; time < period; time++) {
-			int offset = time * cells;
-			System.arraycopy(walls, 0, blocked, offset, cells);
-			for (int i = 0; i < blizzardCount; i++) {
-				int x = blizzardX[i];
-				int y = blizzardY[i];
-				blocked[offset + x * cols + y] = true;
-				if (blizzardDirections[i] == 0) {
-					x--;
-					if (x == 0) {
-						x = rows - 2;
-					}
-				} else if (blizzardDirections[i] == 1) {
-					y++;
-					if (y == cols - 1) {
-						y = 1;
-					}
-				} else if (blizzardDirections[i] == 2) {
-					x++;
-					if (x == rows - 1) {
-						x = 1;
-					}
-				} else {
-					y--;
-					if (y == 0) {
-						y = cols - 2;
+		/**
+		 * horizontalPhases[p] holds, for phase p = t mod W, the union of '>' and
+		 * '<' occupancy as H row masks. Built by rotating each row's phase-0
+		 * masks one bit per phase. Bits at or above W in each row's last word
+		 * are set so that AND-NOT with the assembled occupancy also clears any
+		 * overflow bit produced by the move-right shift.
+		 */
+		private long[] buildHorizontalPhases(long[] right, long[] left) {
+			int stride = height * rowWords;
+			long[] phases = new long[width * stride];
+			int topShift = (width - 1) & 63;
+			for (int phase = 0; phase < width; phase++) {
+				int offset = phase * stride;
+				if (phase > 0) {
+					for (int r = 0; r < height; r++) {
+						rotateUpOneBit(right, r * rowWords, topShift);
+						rotateDownOneBit(left, r * rowWords, topShift);
 					}
 				}
-				blizzardX[i] = x;
-				blizzardY[i] = y;
-			}
-		}
-		return new Valley(cols, cells, period, blocked);
-	}
-
-	private int travel(int start, int end, int startTime, Valley valley, byte[] seen, byte seenMark) {
-		int cols = valley.cols();
-		int cells = valley.cells();
-		int period = valley.period();
-		boolean[] blocked = valley.blocked();
-		int[] frontier = new int[cells];
-		int[] next = new int[cells];
-		int frontierSize = 1;
-		int nextTime = startTime + 1;
-		int offset = (nextTime % period) * cells;
-		frontier[0] = start;
-		seen[(startTime % period) * cells + start] = seenMark;
-		while (frontierSize > 0) {
-			int nextSize = 0;
-			for (int i = 0; i < frontierSize; i++) {
-				int position = frontier[i];
-				int col = position % cols;
-				int candidate;
-				int seenIndex;
-				if (position >= cols) {
-					candidate = position - cols;
-					if (candidate == end) {
-						return nextTime;
+				for (int r = 0; r < height; r++) {
+					int base = r * rowWords;
+					for (int k = 0; k < rowWords; k++) {
+						long occupancy = right[base + k] | left[base + k];
+						if (k == rowWords - 1) {
+							occupancy |= ~lastMask;
+						}
+						phases[offset + base + k] = occupancy;
 					}
-					seenIndex = offset + candidate;
-					if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
-						seen[seenIndex] = seenMark;
-						next[nextSize++] = candidate;
-					}
-				}
-				if (col > 0) {
-					candidate = position - 1;
-					if (candidate == end) {
-						return nextTime;
-					}
-					seenIndex = offset + candidate;
-					if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
-						seen[seenIndex] = seenMark;
-						next[nextSize++] = candidate;
-					}
-				}
-				if (position + cols < cells) {
-					candidate = position + cols;
-					if (candidate == end) {
-						return nextTime;
-					}
-					seenIndex = offset + candidate;
-					if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
-						seen[seenIndex] = seenMark;
-						next[nextSize++] = candidate;
-					}
-				}
-				if (col + 1 < cols) {
-					candidate = position + 1;
-					if (candidate == end) {
-						return nextTime;
-					}
-					seenIndex = offset + candidate;
-					if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
-						seen[seenIndex] = seenMark;
-						next[nextSize++] = candidate;
-					}
-				}
-				seenIndex = offset + position;
-				if (!blocked[seenIndex] && seen[seenIndex] != seenMark) {
-					seen[seenIndex] = seenMark;
-					next[nextSize++] = position;
 				}
 			}
-			int[] tmp = frontier;
-			frontier = next;
-			next = tmp;
-			frontierSize = nextSize;
-			nextTime++;
-			offset += cells;
-			if (offset == blocked.length) {
-				offset = 0;
+			return phases;
+		}
+
+		/** Cyclic 1-bit shift toward higher columns within W bits ('>' step). */
+		private void rotateUpOneBit(long[] masks, int base, int topShift) {
+			long carry = (masks[base + rowWords - 1] >>> topShift) & 1L;
+			for (int k = 0; k < rowWords; k++) {
+				long value = masks[base + k];
+				masks[base + k] = (value << 1) | carry;
+				carry = value >>> 63;
 			}
+			masks[base + rowWords - 1] &= lastMask;
 		}
-		return -1;
-	}
 
-	private byte direction(char c) {
-		if (c == '^') {
-			return 0;
+		/** Cyclic 1-bit shift toward lower columns within W bits ('<' step). */
+		private void rotateDownOneBit(long[] masks, int base, int topShift) {
+			long carry = masks[base] & 1L;
+			for (int k = 0; k < rowWords - 1; k++) {
+				masks[base + k] = (masks[base + k] >>> 1) | (masks[base + k + 1] << 63);
+			}
+			masks[base + rowWords - 1] = (masks[base + rowWords - 1] >>> 1) | (carry << topShift);
 		}
-		if (c == '>') {
-			return 1;
+
+		/**
+		 * verticalPhases[p] holds, for phase p = t mod H, the union of 'v' and
+		 * '^' occupancy. Vertical blizzards keep their column and cycle rows, so
+		 * phase p is just the phase-0 row sets re-indexed by +-p rows.
+		 */
+		private long[] buildVerticalPhases(long[] down, long[] up) {
+			int stride = height * rowWords;
+			long[] phases = new long[height * stride];
+			for (int phase = 0; phase < height; phase++) {
+				int offset = phase * stride;
+				for (int r = 0; r < height; r++) {
+					int downRow = r - phase;
+					if (downRow < 0) {
+						downRow += height;
+					}
+					int upRow = r + phase;
+					if (upRow >= height) {
+						upRow -= height;
+					}
+					for (int k = 0; k < rowWords; k++) {
+						phases[offset + r * rowWords + k] =
+								down[downRow * rowWords + k] | up[upRow * rowWords + k];
+					}
+				}
+			}
+			return phases;
 		}
-		if (c == 'v') {
-			return 2;
+
+		/**
+		 * Returns the first minute the target door is reached, starting from the
+		 * other door at startTime. The source door stays reachable forever
+		 * (waiting there is always legal), so the search state is the interior
+		 * bitset plus two door flags.
+		 */
+		int travel(boolean fromTop, int startTime) {
+			long[] cur = current;
+			long[] nxt = next;
+			Arrays.fill(cur, 0L);
+			boolean topReach = fromTop;
+			boolean bottomReach = !fromTop;
+			int stride = height * rowWords;
+			long steps = (long) period * ((long) height * width + 2) + 1;
+			int limit = (int) Math.min(Integer.MAX_VALUE - 8L, startTime + steps);
+			for (int time = startTime + 1; time <= limit; time++) {
+				for (int r = 0; r < height; r++) {
+					int base = r * rowWords;
+					int above = base - rowWords;
+					int below = base + rowWords;
+					for (int k = 0; k < rowWords; k++) {
+						long value = cur[base + k];
+						if (r > 0) {
+							value |= cur[above + k];
+						}
+						if (r + 1 < height) {
+							value |= cur[below + k];
+						}
+						nxt[base + k] = value;
+					}
+					long carry = 0;
+					for (int k = 0; k < rowWords; k++) {
+						long value = cur[base + k];
+						nxt[base + k] |= (value << 1) | carry;
+						carry = value >>> 63;
+					}
+					carry = 0;
+					for (int k = rowWords - 1; k >= 0; k--) {
+						long value = cur[base + k];
+						nxt[base + k] |= (value >>> 1) | carry;
+						carry = value << 63;
+					}
+				}
+				if (topReach) {
+					nxt[topWord] |= topBit;
+				}
+				if (bottomReach) {
+					nxt[bottomWord] |= bottomBit;
+				}
+				int hOffset = (time % width) * stride;
+				int vOffset = (time % height) * stride;
+				for (int i = 0; i < stride; i++) {
+					nxt[i] &= ~(horizontalPhases[hOffset + i] | verticalPhases[vOffset + i]);
+				}
+				boolean newTop = topReach || (cur[topWord] & topBit) != 0;
+				boolean newBottom = bottomReach || (cur[bottomWord] & bottomBit) != 0;
+				if (fromTop ? newBottom : newTop) {
+					return time;
+				}
+				topReach = newTop;
+				bottomReach = newBottom;
+				long[] swap = cur;
+				cur = nxt;
+				nxt = swap;
+			}
+			return -1;
 		}
-		return 3;
-	}
 
-	private int lcm(int a, int b) {
-		return a / gcd(a, b) * b;
-	}
-
-	private int gcd(int a, int b) {
-		while (b != 0) {
-			int tmp = a % b;
-			a = b;
-			b = tmp;
+		private static int lcm(int a, int b) {
+			return a / gcd(a, b) * b;
 		}
-		return a;
-	}
 
-	private record Valley(int cols, int cells, int period, boolean[] blocked) {
-	}
-
-	private record PackedValley(int cols, int cells, int period, int words, long[] blocked) {
+		private static int gcd(int a, int b) {
+			while (b != 0) {
+				int tmp = a % b;
+				a = b;
+				b = tmp;
+			}
+			return a;
+		}
 	}
 }
