@@ -10,17 +10,17 @@ Current 25-day means (n=100):
 
 | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 |---:|---:|---:|---:|---:|
-| 160.410 | 130.855 | 101.646 | 20.965 | 29.209 |
+| 162.142 | 128.011 | 99.736 | 20.712 | 28.275 |
 
 Latest publication gate versus the preceding replay tip (n=100):
 
 | Metric | Previous mean (ms) | Current mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|---:|
-| wall | 176.600 | 164.788 | -11.812 | [-13.634, -9.990] |
-| main | 147.969 | 134.414 | -13.556 | [-14.608, -12.503] |
-| solver | 116.580 | 103.322 | -13.258 | [-14.278, -12.237] |
-| startup | 22.780 | 22.552 | -0.229 | [-0.614, 0.157] |
-| harness | 31.389 | 31.091 | -0.298 | [-0.505, -0.091] |
+| wall | 158.965 | 162.142 | +3.177 | [+1.245, +5.108] |
+| main | 128.788 | 128.011 | -0.778 | [-1.167, -0.388] |
+| solver | 100.586 | 99.736 | -0.850 | [-1.218, -0.482] |
+| startup | 20.733 | 20.712 | -0.021 | [-0.217, +0.174] |
+| harness | 28.202 | 28.275 | +0.073 | [-0.027, +0.173] |
 
 ## Day 01
 
@@ -228,6 +228,8 @@ Occupancy lives in bitmask rows: each round computes horizontal dilations, the f
 |---|---:|---:|---:|
 | Pre-PR | 212.539597 | — | — |
 | Current | 16.547287 | -195.99231 | [-197.752041, -194.232578] |
+
+*Pre-PR is the documented pre-speed measurement; Current is the 2026-08-07 n=100 confirming run. The measured step versus the preceding tip (n=100) was -1.064 [-1.345, -0.783].*
 
 ## Day 24
 
