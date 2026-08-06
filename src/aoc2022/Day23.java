@@ -1,390 +1,393 @@
 package aoc2022;
 
-import java.io.*;
-import java.util.*;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Scanner;
 
 public class Day23 extends DayTemplate {
 
-	private static final int[] MOVE_ROWS = { -1, 1, 0, 0 };
-	private static final int[] MOVE_COLS = { 0, 0, -1, 1 };
-
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		List<String> lines = new ArrayList<>();
-		int elfCount = 0;
-		while (in.hasNextLine()) {
-			String line = in.nextLine();
-			lines.add(line);
-			for (int col = 0; col < line.length(); col++) {
-				if (line.charAt(col) == '#') {
-					elfCount++;
-				}
-			}
-		}
-
-		int[] rows = new int[elfCount];
-		int[] cols = new int[elfCount];
-		int index = 0;
-		for (int row = 0; row < lines.size(); row++) {
-			String line = lines.get(row);
-			for (int col = 0; col < line.length(); col++) {
-				if (line.charAt(col) == '#') {
-					rows[index] = row;
-					cols[index] = col;
-					index++;
-				}
-			}
-		}
-
-		Simulation simulation = new Simulation(rows, cols);
+		BitboardSimulation simulation = new BitboardSimulation(readLines(in));
 		if (part1) {
 			simulation.runRounds(10);
 			return "" + simulation.emptyGroundInBoundingBox();
 		}
-		return "" + simulation.firstRoundWithoutMovement();
+		return "" + simulation.runUntilNoMovement();
 	}
 
 	@Override
 	public String[] fullSolve(Scanner in) throws FileNotFoundException {
-		List<String> lines = new ArrayList<>();
-		int elfCount = 0;
-		while (in.hasNextLine()) {
-			String line = in.nextLine();
-			lines.add(line);
-			for (int col = 0; col < line.length(); col++) {
-				if (line.charAt(col) == '#') {
-					elfCount++;
-				}
-			}
-		}
-
-		int[] rows = new int[elfCount];
-		int[] cols = new int[elfCount];
-		int index = 0;
-		for (int row = 0; row < lines.size(); row++) {
-			String line = lines.get(row);
-			for (int col = 0; col < line.length(); col++) {
-				if (line.charAt(col) == '#') {
-					rows[index] = row;
-					cols[index] = col;
-					index++;
-				}
-			}
-		}
-
-		Simulation simulation = new Simulation(rows, cols);
-		int firstRoundWithoutMovement = simulation.runRoundsFindingStop(10);
+		BitboardSimulation simulation = new BitboardSimulation(readLines(in));
+		int firstRoundWithoutMovement = simulation.runRounds(10);
 		long part1 = simulation.emptyGroundInBoundingBox();
-		int part2 = firstRoundWithoutMovement == 0
-				? simulation.firstRoundWithoutMovement(10)
-				: firstRoundWithoutMovement;
+		int part2 = firstRoundWithoutMovement != 0
+				? firstRoundWithoutMovement
+				: simulation.runUntilNoMovement();
 		return new String[] { part1 + "", part2 + "" };
 	}
 
-	private static final class Simulation {
-		private final int[] rows;
-		private final int[] cols;
-		private final int[] positions;
-		private final int[] proposedPositions;
-		private final int[] proposedDirections;
-		private final int[] proposedElves;
-		private final StampedGrid grid;
-
-		Simulation(int[] rows, int[] cols) {
-			this.rows = rows;
-			this.cols = cols;
-			this.positions = new int[rows.length];
-			this.proposedPositions = new int[rows.length];
-			this.proposedDirections = new int[rows.length];
-			this.proposedElves = new int[rows.length];
-			this.grid = new StampedGrid(rows, cols);
-			this.grid.rebuildOccupied(rows, cols, positions);
+	private static List<String> readLines(Scanner in) {
+		List<String> lines = new ArrayList<>();
+		while (in.hasNextLine()) {
+			lines.add(in.nextLine());
 		}
-
-		void runRounds(int rounds) {
-			for (int round = 0; round < rounds; round++) {
-				runRound(round);
-			}
-		}
-
-		int runRoundsFindingStop(int rounds) {
-			int firstRoundWithoutMovement = 0;
-			for (int round = 0; round < rounds; round++) {
-				if (!runRound(round) && firstRoundWithoutMovement == 0) {
-					firstRoundWithoutMovement = round + 1;
-				}
-			}
-			return firstRoundWithoutMovement;
-		}
-
-		int firstRoundWithoutMovement() {
-			return firstRoundWithoutMovement(0);
-		}
-
-		int firstRoundWithoutMovement(int startRound) {
-			for (int round = startRound;; round++) {
-				if (!runRound(round)) {
-					return round + 1;
-				}
-			}
-		}
-
-		long emptyGroundInBoundingBox() {
-			if (rows.length == 0) {
-				return 0;
-			}
-			int minRow = rows[0];
-			int maxRow = rows[0];
-			int minCol = cols[0];
-			int maxCol = cols[0];
-			for (int i = 1; i < rows.length; i++) {
-				minRow = Math.min(minRow, rows[i]);
-				maxRow = Math.max(maxRow, rows[i]);
-				minCol = Math.min(minCol, cols[i]);
-				maxCol = Math.max(maxCol, cols[i]);
-			}
-			long area = (long) (maxRow - minRow + 1) * (maxCol - minCol + 1);
-			return area - rows.length;
-		}
-
-		private boolean runRound(int round) {
-			grid.clearProposals();
-			int proposedElfCount = 0;
-			int firstDirection = round & 3;
-
-			for (int i = 0; i < rows.length; i++) {
-				int position = positions[i];
-
-				if (!grid.hasAnyNeighbor(position)) {
-					continue;
-				}
-
-				int direction = firstDirection;
-				for (int attempt = 0; attempt < 4; attempt++) {
-					if (grid.canMove(position, direction)) {
-						int proposedPosition = grid.move(position, direction);
-						proposedPositions[i] = proposedPosition;
-						proposedDirections[i] = direction;
-						proposedElves[proposedElfCount++] = i;
-						grid.addProposal(proposedPosition);
-						break;
-					}
-					direction = (direction + 1) & 3;
-				}
-			}
-
-			boolean moved = false;
-			boolean resize = false;
-			for (int i = 0; i < proposedElfCount; i++) {
-				int elf = proposedElves[i];
-				if (grid.proposalCount(proposedPositions[elf]) == 1) {
-					int direction = proposedDirections[elf];
-					grid.moveOccupied(positions[elf], proposedPositions[elf]);
-					positions[elf] = proposedPositions[elf];
-					rows[elf] += MOVE_ROWS[direction];
-					cols[elf] += MOVE_COLS[direction];
-					moved = true;
-					resize |= grid.needsResize(rows[elf], cols[elf]);
-				}
-			}
-			if (resize) {
-				grid.rebuildOccupied(rows, cols, positions);
-			}
-			return moved;
-		}
+		return lines;
 	}
 
 	/*
-	 * The grid expands from the current elf bounds, so the simulation is not tied
-	 * to the original fixed 300x300 puzzle-sized array. Stamps avoid clearing the
-	 * full grid each round: a cell is occupied or proposed only when its stored
-	 * stamp matches the current generation.
+	 * Bitboard rewrite: occupancy is a long bitmask per 64 columns of each row
+	 * (bit b of word w = column w * 64 + b). Every round is computed with whole
+	 * row words at a time - horizontal dilations, the four rotated direction
+	 * proposals, the shifted destination masks and the collision cancellations
+	 * are all shift/AND/OR word operations, so up to 64 cells advance per
+	 * instruction instead of one elf at a time through a stamped grid.
+	 *
+	 * Collision semantics: within one direction the source-to-destination map is
+	 * injective (each destination cell has exactly one possible source cell), so
+	 * a cell proposed by two or more elves always shows up as an intersection of
+	 * two different direction destination masks. Cancelling the union of all six
+	 * pairwise intersections therefore cancels every multiply-proposed cell
+	 * exactly, with no counting or parity tricks - three-plus-way pileups (were
+	 * the geometry ever to allow them) would still hit at least one pairwise
+	 * intersection and every involved elf stays put.
+	 *
+	 * The board keeps guard rows/columns and regrows (in 64-row / 64-column
+	 * chunks) whenever the occupied bounding band drifts near an edge, so the
+	 * grid adapts to any input size and any amount of diffusion.
 	 */
-	private static final class StampedGrid {
-		private static final int NEIGHBOR_MARGIN = 2;
-		private static final int MIN_PADDING = 32;
+	private static final class BitboardSimulation {
+		private static final int ROW_MARGIN = 34;
+		private static final int COL_MARGIN = 34;
+		private static final int GROW_CHUNK_ROWS = 64;
 
-		private int[] occupiedStamp;
-		private int[] proposalStamp;
-		private int[] proposalCounts;
-		private int occupiedGeneration = 1;
-		private int proposalGeneration = 1;
-		private int baseRow;
-		private int baseCol;
+		private int words;
 		private int height;
-		private int width;
+		private long[][] cur;
+		private long[][] next;
+		private long[][] full;
+		private long[][] propN;
+		private long[][] propS;
+		private long[][] propW;
+		private long[][] propE;
+		private long[][] coll;
+		private long[] vert3;
+		private long[] colOr;
+		private int lo;
+		private int hi;
+		private int minCol;
+		private int maxCol;
+		private int elfCount;
+		private int round;
 
-		StampedGrid(int[] rows, int[] cols) {
-			resizeToFit(rows, cols, NEIGHBOR_MARGIN);
-		}
+		BitboardSimulation(List<String> lines) {
+			int inputRows = lines.size();
+			int inputCols = 0;
+			for (String line : lines) {
+				inputCols = Math.max(inputCols, line.length());
+			}
+			height = inputRows + 2 * ROW_MARGIN;
+			words = (inputCols + 2 * COL_MARGIN + 63) >> 6;
+			allocate();
 
-		void rebuildOccupied(int[] rows, int[] cols, int[] positions) {
-			ensureCovers(rows, cols, NEIGHBOR_MARGIN);
-			occupiedGeneration = nextGeneration(occupiedGeneration, occupiedStamp);
-			for (int i = 0; i < rows.length; i++) {
-				int rowIndex = rows[i] - baseRow;
-				int colIndex = cols[i] - baseCol;
-				int position = rowIndex * width + colIndex;
-				positions[i] = position;
-				occupiedStamp[position] = occupiedGeneration;
+			lo = Integer.MAX_VALUE;
+			hi = Integer.MIN_VALUE;
+			minCol = Integer.MAX_VALUE;
+			maxCol = Integer.MIN_VALUE;
+			for (int r = 0; r < inputRows; r++) {
+				String line = lines.get(r);
+				long[] row = cur[r + ROW_MARGIN];
+				for (int c = 0; c < line.length(); c++) {
+					if (line.charAt(c) == '#') {
+						int col = c + COL_MARGIN;
+						row[col >> 6] |= 1L << (col & 63);
+						elfCount++;
+						lo = Math.min(lo, r + ROW_MARGIN);
+						hi = Math.max(hi, r + ROW_MARGIN);
+						minCol = Math.min(minCol, col);
+						maxCol = Math.max(maxCol, col);
+					}
+				}
+			}
+			if (elfCount == 0) {
+				lo = height / 2;
+				hi = lo;
+				minCol = COL_MARGIN;
+				maxCol = COL_MARGIN;
 			}
 		}
 
-		boolean needsResize(int row, int col) {
-			return (long) row - NEIGHBOR_MARGIN < baseRow
-					|| (long) row + NEIGHBOR_MARGIN >= (long) baseRow + height
-					|| (long) col - NEIGHBOR_MARGIN < baseCol
-					|| (long) col + NEIGHBOR_MARGIN >= (long) baseCol + width;
+		private void allocate() {
+			cur = new long[height][words];
+			next = new long[height][words];
+			full = new long[height][words];
+			propN = new long[height][words];
+			propS = new long[height][words];
+			propW = new long[height][words];
+			propE = new long[height][words];
+			coll = new long[height][words];
+			vert3 = new long[words];
+			colOr = new long[words];
 		}
 
-		void clearProposals() {
-			proposalGeneration = nextGeneration(proposalGeneration, proposalStamp);
+		/**
+		 * Runs the given number of rounds; returns the 1-based index of the first
+		 * round without movement if one occurred within them, otherwise 0. All
+		 * rounds are executed regardless (the direction rotation keeps advancing),
+		 * matching the reference semantics.
+		 */
+		int runRounds(int rounds) {
+			int firstStall = 0;
+			for (int i = 0; i < rounds; i++) {
+				if (!step() && firstStall == 0) {
+					firstStall = round;
+				}
+			}
+			return firstStall;
 		}
 
-		boolean hasAnyNeighbor(int position) {
-			int[] stamps = occupiedStamp;
-			int generation = occupiedGeneration;
-			int rowAbove = position - width;
-			int rowBelow = position + width;
-			return stamps[rowAbove - 1] == generation
-					|| stamps[rowAbove] == generation
-					|| stamps[rowAbove + 1] == generation
-					|| stamps[position - 1] == generation
-					|| stamps[position + 1] == generation
-					|| stamps[rowBelow - 1] == generation
-					|| stamps[rowBelow] == generation
-					|| stamps[rowBelow + 1] == generation;
+		/** Continues from the current round; returns the first round with no movement (1-based). */
+		int runUntilNoMovement() {
+			while (step()) {
+				// keep stepping
+			}
+			return round;
 		}
 
-		boolean canMove(int position, int direction) {
-			int[] stamps = occupiedStamp;
-			int generation = occupiedGeneration;
-			switch (direction) {
-			case 0:
-				int north = position - width;
-				return stamps[north - 1] != generation
-						&& stamps[north] != generation
-						&& stamps[north + 1] != generation;
-			case 1:
-				int south = position + width;
-				return stamps[south - 1] != generation
-						&& stamps[south] != generation
-						&& stamps[south + 1] != generation;
-			case 2:
-				return stamps[position - width - 1] != generation
-						&& stamps[position - 1] != generation
-						&& stamps[position + width - 1] != generation;
-			default:
-				return stamps[position - width + 1] != generation
-						&& stamps[position + 1] != generation
-						&& stamps[position + width + 1] != generation;
+		long emptyGroundInBoundingBox() {
+			if (elfCount == 0) {
+				return 0;
+			}
+			long area = (long) (hi - lo + 1) * (maxCol - minCol + 1);
+			return area - elfCount;
+		}
+
+		/** Executes one round; returns true if any elf moved. */
+		private boolean step() {
+			ensureCapacity();
+			int rot = round & 3;
+			int words = this.words;
+			int lo = this.lo;
+			int hi = this.hi;
+
+			// Pass A: horizontal dilation of every relevant row.
+			for (int r = lo - 2; r <= hi + 2; r++) {
+				long[] c = cur[r];
+				long[] f = full[r];
+				for (int w = 0; w < words; w++) {
+					f[w] = c[w] | shl(c, w) | shr(c, w);
+				}
+			}
+
+			// Pass B: active elves and the four direction proposals in rotated priority.
+			for (int r = lo - 1; r <= hi + 1; r++) {
+				long[] c = cur[r];
+				long[] up = cur[r - 1];
+				long[] dn = cur[r + 1];
+				long[] fu = full[r - 1];
+				long[] fd = full[r + 1];
+				long[] v = vert3;
+				for (int w = 0; w < words; w++) {
+					v[w] = up[w] | c[w] | dn[w];
+				}
+				long[] pN = propN[r];
+				long[] pS = propS[r];
+				long[] pW = propW[r];
+				long[] pE = propE[r];
+				for (int w = 0; w < words; w++) {
+					long horiz = shl(c, w) | shr(c, w);
+					long act = c[w] & (fu[w] | fd[w] | horiz);
+					long bN = fu[w];
+					long bS = fd[w];
+					long bW = shl(v, w);
+					long bE = shr(v, w);
+					long rem = act;
+					long prN = 0;
+					long prS = 0;
+					long prW = 0;
+					long prE = 0;
+					switch (rot) {
+					case 0:
+						prN = rem & ~bN; rem &= bN;
+						prS = rem & ~bS; rem &= bS;
+						prW = rem & ~bW; rem &= bW;
+						prE = rem & ~bE;
+						break;
+					case 1:
+						prS = rem & ~bS; rem &= bS;
+						prW = rem & ~bW; rem &= bW;
+						prE = rem & ~bE; rem &= bE;
+						prN = rem & ~bN;
+						break;
+					case 2:
+						prW = rem & ~bW; rem &= bW;
+						prE = rem & ~bE; rem &= bE;
+						prN = rem & ~bN; rem &= bN;
+						prS = rem & ~bS;
+						break;
+					default:
+						prE = rem & ~bE; rem &= bE;
+						prN = rem & ~bN; rem &= bN;
+						prS = rem & ~bS; rem &= bS;
+						prW = rem & ~bW;
+						break;
+					}
+					pN[w] = prN;
+					pS[w] = prS;
+					pW[w] = prW;
+					pE[w] = prE;
+				}
+			}
+
+			// The band moves at most one row per round, so rows just outside the
+			// freshly written range are cleared defensively before they are read.
+			zeroRow(propN, lo - 2);
+			zeroRow(propN, hi + 2);
+			zeroRow(propS, lo - 2);
+			zeroRow(propS, hi + 2);
+			zeroRow(coll, lo - 2);
+			zeroRow(coll, hi + 2);
+
+			// Pass C1: destination masks, collision cells, arrivals.
+			for (int r = lo - 1; r <= hi + 1; r++) {
+				long[] dNs = propN[r + 1];
+				long[] dSs = propS[r - 1];
+				long[] pW = propW[r];
+				long[] pE = propE[r];
+				long[] cl = coll[r];
+				long[] nx = next[r];
+				for (int w = 0; w < words; w++) {
+					long dN = dNs[w];
+					long dS = dSs[w];
+					long dW = shr(pW, w);
+					long dE = shl(pE, w);
+					long clash = (dN & dS) | ((dN | dS) & (dW | dE)) | (dW & dE);
+					cl[w] = clash;
+					nx[w] = (dN | dS | dW | dE) & ~clash;
+				}
+			}
+
+			// Pass C2: keep stayers, drop successful movers, track bounds.
+			long movedOr = 0;
+			Arrays.fill(colOr, 0L);
+			for (int r = lo - 1; r <= hi + 1; r++) {
+				long[] c = cur[r];
+				long[] nx = next[r];
+				long[] pN = propN[r];
+				long[] pS = propS[r];
+				long[] pW = propW[r];
+				long[] pE = propE[r];
+				long[] cu = coll[r - 1];
+				long[] cd = coll[r + 1];
+				long[] cs = coll[r];
+				for (int w = 0; w < words; w++) {
+					long leavers = (pN[w] & ~cu[w])
+							| (pS[w] & ~cd[w])
+							| (pW[w] & ~shl(cs, w))
+							| (pE[w] & ~shr(cs, w));
+					movedOr |= leavers;
+					long value = nx[w] | (c[w] & ~leavers);
+					nx[w] = value;
+					colOr[w] |= value;
+				}
+			}
+
+			long[][] swap = cur;
+			cur = next;
+			next = swap;
+			round++;
+			updateBounds();
+			return movedOr != 0;
+		}
+
+		private void updateBounds() {
+			int newLo = lo - 1;
+			int limit = hi + 1;
+			while (newLo <= limit && rowEmpty(cur[newLo])) {
+				newLo++;
+			}
+			if (newLo <= limit) {
+				int newHi = limit;
+				while (rowEmpty(cur[newHi])) {
+					newHi--;
+				}
+				lo = newLo;
+				hi = newHi;
+			}
+			int w0 = 0;
+			while (w0 < words && colOr[w0] == 0) {
+				w0++;
+			}
+			if (w0 < words) {
+				minCol = (w0 << 6) + Long.numberOfTrailingZeros(colOr[w0]);
+				int w1 = words - 1;
+				while (colOr[w1] == 0) {
+					w1--;
+				}
+				maxCol = (w1 << 6) + 63 - Long.numberOfLeadingZeros(colOr[w1]);
 			}
 		}
 
-		int move(int position, int direction) {
-			switch (direction) {
-			case 0:
-				return position - width;
-			case 1:
-				return position + width;
-			case 2:
-				return position - 1;
-			default:
-				return position + 1;
+		private void ensureCapacity() {
+			int growTop = lo < 3 ? GROW_CHUNK_ROWS : 0;
+			int growBottom = hi > height - 4 ? GROW_CHUNK_ROWS : 0;
+			if (growTop != 0 || growBottom != 0) {
+				growRows(growTop, growBottom);
+			}
+			int growWest = minCol < 3 ? 1 : 0;
+			int growEast = maxCol > (words << 6) - 4 ? 1 : 0;
+			if (growWest != 0 || growEast != 0) {
+				growCols(growWest, growEast);
 			}
 		}
 
-		void addProposal(int position) {
-			if (proposalStamp[position] != proposalGeneration) {
-				proposalStamp[position] = proposalGeneration;
-				proposalCounts[position] = 1;
-			} else {
-				proposalCounts[position]++;
+		private void growRows(int top, int bottom) {
+			long[][] oldCur = cur;
+			int oldHeight = height;
+			height += top + bottom;
+			allocate();
+			for (int r = 0; r < oldHeight; r++) {
+				cur[r + top] = oldCur[r];
 			}
+			lo += top;
+			hi += top;
 		}
 
-		int proposalCount(int position) {
-			if (proposalStamp[position] == proposalGeneration) {
-				return proposalCounts[position];
+		private void growCols(int westWords, int eastWords) {
+			long[][] oldCur = cur;
+			int oldWords = words;
+			words += westWords + eastWords;
+			allocate();
+			for (int r = 0; r < height; r++) {
+				System.arraycopy(oldCur[r], 0, cur[r], westWords, oldWords);
 			}
-			return 0;
+			minCol += westWords << 6;
+			maxCol += westWords << 6;
 		}
 
-		void moveOccupied(int oldPosition, int newPosition) {
-			occupiedStamp[oldPosition] = 0;
-			occupiedStamp[newPosition] = occupiedGeneration;
+		private void zeroRow(long[][] grid, int r) {
+			Arrays.fill(grid[r], 0L);
 		}
 
-		private boolean ensureCovers(int[] rows, int[] cols, int margin) {
-			if (rows.length == 0) {
-				return false;
+		private boolean rowEmpty(long[] row) {
+			long or = 0;
+			for (int w = 0; w < words; w++) {
+				or |= row[w];
 			}
-			int minRow = rows[0];
-			int maxRow = rows[0];
-			int minCol = cols[0];
-			int maxCol = cols[0];
-			for (int i = 1; i < rows.length; i++) {
-				minRow = Math.min(minRow, rows[i]);
-				maxRow = Math.max(maxRow, rows[i]);
-				minCol = Math.min(minCol, cols[i]);
-				maxCol = Math.max(maxCol, cols[i]);
-			}
-			if (occupiedStamp == null
-					|| (long) minRow - margin < baseRow
-					|| (long) maxRow + margin >= (long) baseRow + height
-					|| (long) minCol - margin < baseCol
-					|| (long) maxCol + margin >= (long) baseCol + width) {
-				resizeToFit(minRow, maxRow, minCol, maxCol, margin);
-				return true;
-			}
-			return false;
+			return or == 0;
 		}
 
-		private void resizeToFit(int[] rows, int[] cols, int margin) {
-			if (rows.length == 0) {
-				height = 8;
-				width = 8;
-				occupiedStamp = new int[height * width];
-				proposalStamp = new int[height * width];
-				proposalCounts = new int[height * width];
-				baseRow = -4;
-				baseCol = -4;
-				return;
-			}
-
-			int minRow = rows[0];
-			int maxRow = rows[0];
-			int minCol = cols[0];
-			int maxCol = cols[0];
-			for (int i = 1; i < rows.length; i++) {
-				minRow = Math.min(minRow, rows[i]);
-				maxRow = Math.max(maxRow, rows[i]);
-				minCol = Math.min(minCol, cols[i]);
-				maxCol = Math.max(maxCol, cols[i]);
-			}
-			resizeToFit(minRow, maxRow, minCol, maxCol, margin);
+		/** Mask of cells whose west-neighbour bit is set in {@code row} (bits move toward higher columns). */
+		private long shl(long[] row, int w) {
+			long x = row[w] << 1;
+			return w == 0 ? x : x | (row[w - 1] >>> 63);
 		}
 
-		private void resizeToFit(int minRow, int maxRow, int minCol, int maxCol, int margin) {
-			int rowSpan = maxRow - minRow + 1 + margin * 2;
-			int colSpan = maxCol - minCol + 1 + margin * 2;
-			int padding = Math.max(MIN_PADDING, Math.max(rowSpan, colSpan));
-			height = rowSpan + padding * 2;
-			width = colSpan + padding * 2;
-			baseRow = minRow - margin - padding;
-			baseCol = minCol - margin - padding;
-			occupiedStamp = new int[height * width];
-			proposalStamp = new int[height * width];
-			proposalCounts = new int[height * width];
-			occupiedGeneration = 1;
-			proposalGeneration = 1;
-		}
-
-		private int nextGeneration(int generation, int[] stamps) {
-			if (generation == Integer.MAX_VALUE) {
-				Arrays.fill(stamps, 0);
-				return 1;
-			}
-			return generation + 1;
+		/** Mask of cells whose east-neighbour bit is set in {@code row} (bits move toward lower columns). */
+		private long shr(long[] row, int w) {
+			long x = row[w] >>> 1;
+			return w == words - 1 ? x : x | (row[w + 1] << 63);
 		}
 	}
 }
