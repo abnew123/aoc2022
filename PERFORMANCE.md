@@ -2,7 +2,7 @@
 
 ## Methodology and current full suite
 
-All timings use the original personal input corpus with OpenJDK 23.0.1 on Apple silicon. The harness compiles the fixed pre-speed source and current source into separate empty classpaths, excludes one true-cold launch per side, then runs 10 separate JVM pairs in counterbalanced A/B order. Solver is the sum of the 25 `fullSolve` calls; main includes solver plus in-process harness work; startup is process launch through the child start marker; harness is main minus solver; wall is the complete child process.
+All timings use the original personal input corpus with OpenJDK 23.0.1 on Apple silicon. The pre-speed baseline is the normal Java solvers at pre-campaign main commit `821fb777`, compiled with the current benchmark harness into its own classpath. The day tables below come from one 100-pair pre-speed-versus-current run (2026-08-06): every measured side is a separate fresh JVM, within-pair order is seeded-random, and one true-cold launch per side is excluded. Solver is the sum of the 25 `fullSolve` calls; main includes solver plus in-process harness work; startup is process launch through the child start marker; harness is main minus solver; wall is the complete child process. The checked-in n=10 counterbalanced `--compare` mode remains the quick reproduction default.
 
 Reproduce after compiling both trees with `java -Daoc.data.dir=<data-dir> -cp <current-cp> aoc2022.FreshJvmBenchmark --compare <previous-cp> <current-cp>`. Every published state passes all 50 independent solves, all 25 combined solves, and independent/`fullSolve` equivalence. The tables below come from a 100-pair run of the same child protocol with seeded random within-pair order and the cold pair excluded; the checked-in n=10 counterbalanced mode remains the quick reproduction default.
 
@@ -10,7 +10,7 @@ Current 25-day means (n=100):
 
 | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 |---:|---:|---:|---:|---:|
-| 164.788 | 134.414 | 103.322 | 22.552 | 31.091 |
+| 160.410 | 130.855 | 101.646 | 20.965 | 29.209 |
 
 Latest publication gate versus the preceding replay tip (n=100):
 
@@ -28,8 +28,8 @@ One slurped buffer and a single digit-and-newline scan accumulate each inventory
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Previous | 7.973420 | — | — |
-| Current | 1.802825 | -6.170595 | [-6.224161, -6.117029] |
+| Pre-PR | 9.021869 | — | — |
+| Current | 1.69724 | -7.324629 | [-7.388401, -7.260858] |
 
 ## Day 02
 
@@ -37,8 +37,8 @@ Direct token decoding and score tables replace repeated splitting and branching 
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 6.701937 | — | — |
-| Current | 2.463218 | -4.238719 | [-4.359793, -4.117645] |
+| Pre-PR | 6.186076 | — | — |
+| Current | 5.698855 | -0.487221 | [-0.544934, -0.429509] |
 
 ## Day 03
 
@@ -46,8 +46,8 @@ Both parts share one pass of compact 52-bit item masks instead of rebuilding set
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 3.352615 | — | — |
-| Current | 1.521379 | -1.831236 | [-1.970948, -1.691523] |
+| Pre-PR | 3.865567 | — | — |
+| Current | 1.365998 | -2.499569 | [-2.526719, -2.472418] |
 
 ## Day 04
 
@@ -55,8 +55,8 @@ Each assignment pair is parsed once and tested directly for containment and over
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 2.842785 | — | — |
-| Current | 1.875266 | -0.967518 | [-1.041189, -0.893848] |
+| Pre-PR | 2.728932 | — | — |
+| Current | 3.190119 | 0.461187 | [0.425684, 0.496691] |
 
 ## Day 05
 
@@ -64,8 +64,8 @@ The stack drawing and moves are parsed once, then the two crane models advance t
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 2.490979 | — | — |
-| Current | 1.506810 | -0.984169 | [-1.036418, -0.931920] |
+| Pre-PR | 2.271267 | — | — |
+| Current | 1.350722 | -0.920545 | [-0.944843, -0.896246] |
 
 ## Day 06
 
@@ -73,8 +73,8 @@ One marker scan maintains the necessary recent-character state for both requeste
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 4.194467 | — | — |
-| Current | 0.916146 | -3.278321 | [-3.364472, -3.192170] |
+| Pre-PR | 3.628152 | — | — |
+| Current | 1.041071 | -2.587081 | [-2.617976, -2.556186] |
 
 ## Day 07
 
@@ -82,8 +82,8 @@ One transcript parse accumulates exact directory sizes through ancestor links an
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 5.165429 | — | — |
-| Current | 1.680439 | -3.484990 | [-3.622744, -3.347235] |
+| Pre-PR | 4.775992 | — | — |
+| Current | 2.025813 | -2.75018 | [-2.815838, -2.684522] |
 
 ## Day 08
 
@@ -91,8 +91,8 @@ A shared primitive grid analysis computes visibility and scenic distances for bo
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 12.359738 | — | — |
-| Current | 1.545867 | -10.813871 | [-11.186713, -10.441028] |
+| Pre-PR | 11.90659 | — | — |
+| Current | 1.718041 | -10.188549 | [-10.316031, -10.061067] |
 
 ## Day 09
 
@@ -100,8 +100,8 @@ One ten-knot simulation records visits for knot 1 and knot 9 together using unbo
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 7.980317 | — | — |
-| Current | 6.115329 | -1.864988 | [-2.711609, -1.018366] |
+| Pre-PR | 7.705925 | — | — |
+| Current | 5.629668 | -2.076257 | [-2.378118, -1.774396] |
 
 ## Day 10
 
@@ -109,8 +109,8 @@ One instruction interpretation computes signal strength and the 40×6 raster tog
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 0.489419 | — | — |
-| Current | 0.838140 | 0.348721 | [0.299263, 0.398179] |
+| Pre-PR | 0.388629 | — | — |
+| Current | 0.779058 | 0.390429 | [0.368848, 0.41201] |
 
 ## Day 11
 
@@ -118,8 +118,8 @@ Primitive monkey queues and shared parsed operations replace boxed queue churn w
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 20.400708 | — | — |
-| Current | 6.010183 | -14.390525 | [-15.609892, -13.171158] |
+| Pre-PR | 19.241567 | — | — |
+| Current | 6.105633 | -13.135934 | [-13.571352, -12.700517] |
 
 ## Day 12
 
@@ -127,8 +127,8 @@ One reverse breadth-first traversal from the endpoint supplies both the start di
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 30.211234 | — | — |
-| Current | 1.214496 | -28.996738 | [-30.632040, -27.361435] |
+| Pre-PR | 28.228053 | — | — |
+| Current | 1.433566 | -26.794487 | [-27.206401, -26.382573] |
 
 ## Day 13
 
@@ -136,8 +136,8 @@ Packets are parsed once; pair ordering is accumulated while reading and divider 
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 14.090446 | — | — |
-| Current | 3.700104 | -10.390342 | [-11.228022, -9.552661] |
+| Pre-PR | 15.574664 | — | — |
+| Current | 4.425127 | -11.149537 | [-11.366805, -10.93227] |
 
 ## Day 14
 
@@ -145,8 +145,8 @@ A flat bitset cave with a linear rock parser answers part 1 by an order-exact ex
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Previous | 5.499029 | — | — |
-| Current | 1.464094 | -4.034935 | [-4.132255, -3.937616] |
+| Pre-PR | 14.116496 | — | — |
+| Current | 1.575866 | -12.54063 | [-12.715181, -12.36608] |
 
 ## Day 15
 
@@ -154,8 +154,8 @@ Sensors are parsed once; merged row intervals and exact boundary-line intersecti
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 2.081554 | — | — |
-| Current | 2.672327 | 0.590773 | [0.453341, 0.728204] |
+| Pre-PR | 1.908207 | — | — |
+| Current | 2.442435 | 0.534228 | [0.502166, 0.56629] |
 
 ## Day 16
 
@@ -163,8 +163,8 @@ Part 1 runs a branch-and-bound depth-first search whose admissible bound opens e
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Previous | 15.143382 | — | — |
-| Current | 9.377223 | -5.766159 | [-5.945755, -5.586563] |
+| Pre-PR | 187.805766 | — | — |
+| Current | 9.125765 | -178.68 | [-183.164186, -174.195815] |
 
 ## Day 17
 
@@ -172,8 +172,8 @@ One compact rock simulation detects a verified cycle and shares checkpoints for 
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 255.557587 | — | — |
-| Current | 4.167775 | -251.389813 | [-264.410494, -238.369131] |
+| Pre-PR | 243.830219 | — | — |
+| Current | 4.352457 | -239.477762 | [-240.780706, -238.174819] |
 
 ## Day 18
 
@@ -181,17 +181,17 @@ Packed cube membership supplies total exposed faces, while one bounded exterior 
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 10.037810 | — | — |
-| Current | 3.919654 | -6.118156 | [-6.403313, -5.832999] |
+| Pre-PR | 7.454357 | — | — |
+| Current | 3.776764 | -3.677593 | [-3.760026, -3.59516] |
 
 ## Day 19
 
-A proof-carrying branch-and-bound replaces the memoized search: next-robot branching with per-type useless-build time cutoffs, an exact saturation cutoff, the geometric geode bound, and an ore-relaxed simulation bound, with the memo tables and an unsound-in-general force-build-geode heuristic removed outright.
+A proof-carrying branch-and-bound replaces the memoized search: next-robot branching with per-type useless-build time cutoffs, an exact saturation cutoff, the geometric geode bound, and an ore-relaxed simulation bound, with the memo tables and an unsound-in-general force-build-geode heuristic removed outright. A follow-up correctness pass makes the parse layout-independent (the official example wraps each blueprint across indented lines), weights part 1 by the parsed blueprint id, caps part 2 at the first `min(3, n)` blueprints so the two-blueprint official example passes (33 / 3472), and lets the precursor gates tolerate zero-cost blueprints (oracle-verified); answers on both corpora are unchanged and a paired n=100 run measured the fix as timing-neutral (day 19: -0.061 ms [-0.087, -0.034]).
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Previous | 21.322199 | — | — |
-| Current | 1.862119 | -19.460080 | [-19.607108, -19.313052] |
+| Pre-PR | 123.423861 | — | — |
+| Current | 1.853062 | -121.570799 | [-122.646597, -120.495] |
 
 ## Day 20
 
@@ -199,8 +199,8 @@ Mixing runs on a blocked order-statistic sequence over flat primitive arrays: fi
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Previous | 22.259182 | — | — |
-| Current | 12.335832 | -9.923350 | [-10.233227, -9.613473] |
+| Pre-PR | 260.812499 | — | — |
+| Current | 11.375177 | -249.437322 | [-250.092152, -248.782493] |
 
 ## Day 21
 
@@ -208,8 +208,8 @@ One exact expression graph supports numeric evaluation and inverse symbolic solv
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 252.670108 | — | — |
-| Current | 6.839296 | -245.830813 | [-258.655057, -233.006568] |
+| Pre-PR | 237.8846 | — | — |
+| Current | 4.933586 | -232.951014 | [-233.971113, -231.930914] |
 
 ## Day 22
 
@@ -217,8 +217,8 @@ The current solver parses the board once, infers and folds any valid six-face cu
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 13.540065 | — | — |
-| Current | 6.155384 | -7.384680 | [-7.552188, -7.217173] |
+| Pre-PR | 8.209422 | — | — |
+| Current | 6.219048 | -1.990374 | [-2.074659, -1.906088] |
 
 ## Day 23
 
@@ -226,8 +226,8 @@ Occupancy lives in bitmask rows: each round computes horizontal dilations, the f
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Previous | 34.685634 | — | — |
-| Current | 16.183391 | -18.502243 | [-18.993427, -18.011059] |
+| Pre-PR | 212.539597 | — | — |
+| Current | 16.547287 | -195.99231 | [-197.752041, -194.232578] |
 
 ## Day 24
 
@@ -235,8 +235,8 @@ Reachability advances as multi-word bitmask rows — precomputed rotation and pe
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Previous | 9.345993 | — | — |
-| Current | 2.669663 | -6.676330 | [-6.744613, -6.608047] |
+| Pre-PR | 694.604007 | — | — |
+| Current | 2.603782 | -692.000225 | [-694.054028, -689.946422] |
 
 ## Day 25
 
@@ -244,5 +244,5 @@ One exact SNAFU accumulation converts the final sum directly without retaining a
 
 | Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|
-| Pre-PR | 3.210615 | — | — |
-| Current | 0.315656 | -2.894958 | [-3.069140, -2.720777] |
+| Pre-PR | 2.498165 | — | — |
+| Current | 0.380285 | -2.11788 | [-2.157572, -2.078189] |
