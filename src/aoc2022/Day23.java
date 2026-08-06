@@ -53,9 +53,26 @@ public class Day23 extends DayTemplate {
 	 * the geometry ever to allow them) would still hit at least one pairwise
 	 * intersection and every involved elf stays put.
 	 *
+	 * Active-window narrowing: an elf with no neighbour proposes nothing under
+	 * every direction rotation, and a row whose three-row neighbourhood did not
+	 * change keeps the same activity status, so rows outside the hull of
+	 * {rows with active elves} union {rows within one row of a change} can
+	 * neither propose nor receive arrivals. Each round therefore runs the same
+	 * four passes over a contiguous window [winLo, winHi] instead of the whole
+	 * occupied band, with the window re-derived every round from the observed
+	 * activity and change hulls (activity can spread at most one row per
+	 * round). Diffusion runs converge locally, so late rounds shrink the
+	 * window to the last moving pocket while the loop structure - and hence
+	 * JIT behaviour - stays identical to the full-band version. cur/next swap
+	 * row pointers across the processed window only, so rows outside it keep
+	 * their words without copying; lo/hi stay exact via edge scans; the column
+	 * extent is tracked conservatively (expand-only) for growth checks and the
+	 * exact bounding box is rescanned on demand for the part-1 count.
+	 *
 	 * The board keeps guard rows/columns and regrows (in 64-row / 64-column
 	 * chunks) whenever the occupied bounding band drifts near an edge, so the
-	 * grid adapts to any input size and any amount of diffusion.
+	 * grid adapts to any input size and any amount of diffusion. After a grow
+	 * the window resets to the whole band.
 	 */
 	private static final class BitboardSimulation {
 		private static final int ROW_MARGIN = 34;
@@ -80,6 +97,8 @@ public class Day23 extends DayTemplate {
 		private int maxCol;
 		private int elfCount;
 		private int round;
+		private int winLo;
+		private int winHi;
 
 		BitboardSimulation(List<String> lines) {
 			int inputRows = lines.size();
@@ -116,6 +135,8 @@ public class Day23 extends DayTemplate {
 				minCol = COL_MARGIN;
 				maxCol = COL_MARGIN;
 			}
+			winLo = lo;
+			winHi = hi;
 		}
 
 		private void allocate() {
@@ -159,7 +180,25 @@ public class Day23 extends DayTemplate {
 			if (elfCount == 0) {
 				return 0;
 			}
-			long area = (long) (hi - lo + 1) * (maxCol - minCol + 1);
+			int exactMin = Integer.MAX_VALUE;
+			int exactMax = Integer.MIN_VALUE;
+			for (int r = lo; r <= hi; r++) {
+				long[] c = cur[r];
+				for (int w = 0; w < words; w++) {
+					long bits = c[w];
+					if (bits != 0) {
+						int first = (w << 6) + Long.numberOfTrailingZeros(bits);
+						int last = (w << 6) + 63 - Long.numberOfLeadingZeros(bits);
+						if (first < exactMin) {
+							exactMin = first;
+						}
+						if (last > exactMax) {
+							exactMax = last;
+						}
+					}
+				}
+			}
+			long area = (long) (hi - lo + 1) * (exactMax - exactMin + 1);
 			return area - elfCount;
 		}
 
@@ -168,11 +207,20 @@ public class Day23 extends DayTemplate {
 			ensureCapacity();
 			int rot = round & 3;
 			int words = this.words;
-			int lo = this.lo;
-			int hi = this.hi;
 
-			// Pass A: horizontal dilation of every relevant row.
-			for (int r = lo - 2; r <= hi + 2; r++) {
+			// The window holds every row that can propose this round (hull of
+			// last round's active rows and one-row-dilated changes). Rows
+			// outside it are static: inactive elves stay inactive while their
+			// three-row neighbourhood is unchanged, whatever the rotation.
+			int wLo = Math.max(winLo, lo - 1);
+			int wHi = Math.min(winHi, hi + 1);
+			if (wLo > wHi) {
+				round++;
+				return false;
+			}
+
+			// Pass A: horizontal dilation of every row pass B will read.
+			for (int r = wLo - 2; r <= wHi + 2; r++) {
 				long[] c = cur[r];
 				long[] f = full[r];
 				for (int w = 0; w < words; w++) {
@@ -180,8 +228,12 @@ public class Day23 extends DayTemplate {
 				}
 			}
 
-			// Pass B: active elves and the four direction proposals in rotated priority.
-			for (int r = lo - 1; r <= hi + 1; r++) {
+			// Pass B: active elves and the four direction proposals in rotated
+			// priority; the hull of rows with any active elf feeds the next
+			// window.
+			int actLo = Integer.MAX_VALUE;
+			int actHi = Integer.MIN_VALUE;
+			for (int r = wLo - 1; r <= wHi + 1; r++) {
 				long[] c = cur[r];
 				long[] up = cur[r - 1];
 				long[] dn = cur[r + 1];
@@ -195,9 +247,11 @@ public class Day23 extends DayTemplate {
 				long[] pS = propS[r];
 				long[] pW = propW[r];
 				long[] pE = propE[r];
+				long actOr = 0;
 				for (int w = 0; w < words; w++) {
 					long horiz = shl(c, w) | shr(c, w);
 					long act = c[w] & (fu[w] | fd[w] | horiz);
+					actOr |= act;
 					long bN = fu[w];
 					long bS = fd[w];
 					long bW = shl(v, w);
@@ -238,19 +292,26 @@ public class Day23 extends DayTemplate {
 					pW[w] = prW;
 					pE[w] = prE;
 				}
+				if (actOr != 0) {
+					if (r < actLo) {
+						actLo = r;
+					}
+					actHi = r;
+				}
 			}
 
-			// The band moves at most one row per round, so rows just outside the
-			// freshly written range are cleared defensively before they are read.
-			zeroRow(propN, lo - 2);
-			zeroRow(propN, hi + 2);
-			zeroRow(propS, lo - 2);
-			zeroRow(propS, hi + 2);
-			zeroRow(coll, lo - 2);
-			zeroRow(coll, hi + 2);
+			// The window moves at most one row per round, so rows just outside
+			// the freshly written range are cleared defensively before they are
+			// read.
+			zeroRow(propN, wLo - 2);
+			zeroRow(propN, wHi + 2);
+			zeroRow(propS, wLo - 2);
+			zeroRow(propS, wHi + 2);
+			zeroRow(coll, wLo - 2);
+			zeroRow(coll, wHi + 2);
 
 			// Pass C1: destination masks, collision cells, arrivals.
-			for (int r = lo - 1; r <= hi + 1; r++) {
+			for (int r = wLo - 1; r <= wHi + 1; r++) {
 				long[] dNs = propN[r + 1];
 				long[] dSs = propS[r - 1];
 				long[] pW = propW[r];
@@ -268,10 +329,13 @@ public class Day23 extends DayTemplate {
 				}
 			}
 
-			// Pass C2: keep stayers, drop successful movers, track bounds.
+			// Pass C2: keep stayers, drop successful movers, track the change
+			// hull, the moved flag and the processed columns.
 			long movedOr = 0;
+			int chgLo = Integer.MAX_VALUE;
+			int chgHi = Integer.MIN_VALUE;
 			Arrays.fill(colOr, 0L);
-			for (int r = lo - 1; r <= hi + 1; r++) {
+			for (int r = wLo - 1; r <= wHi + 1; r++) {
 				long[] c = cur[r];
 				long[] nx = next[r];
 				long[] pN = propN[r];
@@ -281,6 +345,7 @@ public class Day23 extends DayTemplate {
 				long[] cu = coll[r - 1];
 				long[] cd = coll[r + 1];
 				long[] cs = coll[r];
+				long diffOr = 0;
 				for (int w = 0; w < words; w++) {
 					long leavers = (pN[w] & ~cu[w])
 							| (pS[w] & ~cd[w])
@@ -289,13 +354,32 @@ public class Day23 extends DayTemplate {
 					movedOr |= leavers;
 					long value = nx[w] | (c[w] & ~leavers);
 					nx[w] = value;
+					diffOr |= value ^ c[w];
 					colOr[w] |= value;
+				}
+				if (diffOr != 0) {
+					if (r < chgLo) {
+						chgLo = r;
+					}
+					chgHi = r;
 				}
 			}
 
-			long[][] swap = cur;
-			cur = next;
-			next = swap;
+			// Swap the row pointers of the processed window; rows outside it
+			// are untouched and keep their current words.
+			for (int r = wLo - 1; r <= wHi + 1; r++) {
+				long[] swap = cur[r];
+				cur[r] = next[r];
+				next[r] = swap;
+			}
+
+			// Next round's window: active rows may keep proposing under a new
+			// rotation, and changes wake their one-row neighbourhood.
+			int newLo = Math.min(actLo, chgLo - 1);
+			int newHi = Math.max(actHi, chgHi + 1);
+			winLo = newLo;
+			winHi = newHi;
+
 			round++;
 			updateBounds();
 			return movedOr != 0;
@@ -320,12 +404,22 @@ public class Day23 extends DayTemplate {
 				w0++;
 			}
 			if (w0 < words) {
-				minCol = (w0 << 6) + Long.numberOfTrailingZeros(colOr[w0]);
+				int seenMin = (w0 << 6) + Long.numberOfTrailingZeros(colOr[w0]);
 				int w1 = words - 1;
 				while (colOr[w1] == 0) {
 					w1--;
 				}
-				maxCol = (w1 << 6) + 63 - Long.numberOfLeadingZeros(colOr[w1]);
+				int seenMax = (w1 << 6) + 63 - Long.numberOfLeadingZeros(colOr[w1]);
+				// Expand-only: columns outside the processed window were not
+				// scanned, so the tracked extent may only widen. It is exact
+				// whenever it matters for growth, because any new extreme
+				// column is created by a move inside the window.
+				if (seenMin < minCol) {
+					minCol = seenMin;
+				}
+				if (seenMax > maxCol) {
+					maxCol = seenMax;
+				}
 			}
 		}
 
@@ -352,6 +446,8 @@ public class Day23 extends DayTemplate {
 			}
 			lo += top;
 			hi += top;
+			winLo = lo;
+			winHi = hi;
 		}
 
 		private void growCols(int westWords, int eastWords) {
@@ -364,6 +460,8 @@ public class Day23 extends DayTemplate {
 			}
 			minCol += westWords << 6;
 			maxCol += westWords << 6;
+			winLo = lo;
+			winHi = hi;
 		}
 
 		private void zeroRow(long[][] grid, int r) {
