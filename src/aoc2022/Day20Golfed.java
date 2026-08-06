@@ -1,19 +1,15 @@
 package aoc2022;
-import java.util.*;
 class T{
-String s(boolean p,String in){
-var a=new ArrayList<long[]>();var o=new ArrayList<long[]>();
-for(String x:in.split("\n")){
-long[]n={$.l(x)*(p?1:811589153L)};
-a.add(n);o.add(n);
-}
+String s(boolean p,String[]I){
+var a=new java.util.Stack<long[]>();
+for(var x:I)a.add(new long[]{new Long(x)*(p?1:811589153)});
+var o=a.toArray(new long[0][]);
 for(int r=p?1:10;r-->0;)for(var n:o){
 int i=a.indexOf(n);
-a.remove(i);
-a.add($.f(i+n[0],a.size()),n);
+a.add(Math.floorMod(i+n[0],a.size()-1),a.remove(i));
 }
-int z=0,m=a.size();
+int z=0,i=4;
 for(;a.get(z)[0]!=0;z++);
-return""+(a.get((z+1000)%m)[0]+a.get((z+2000)%m)[0]+a.get((z+3000)%m)[0]);
+long r=0;for(;--i>0;)r+=a.get((z+i*1000)%a.size())[0];return""+r;
 }
 }
