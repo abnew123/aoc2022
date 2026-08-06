@@ -1,44 +1,18 @@
 package aoc2022;
-import java.util.*;
 class Q{
-int[][]P={{15},{2,7,2},{7,4,4},{1,1,1,1},{3,3}};
-String s(boolean p,String j){
-j=j.trim();
-ArrayList<Integer>c=$.a();HashMap<String,long[]>m=$.h();
-int[]h=new int[7];long n=p?2022:1000000000000L,r=0,e=0;int q=0;boolean z=0>1;
-for(;r<n;r++){
-int k=(int)(r%5),x=2,y=c.size()+3;
-for(;;){
-int X=x+(j.charAt(q)==60?-1:1);q=(q+1)%j.length();
-if(o(P[k],X,y,c))x=X;
-if(o(P[k],x,y-1,c))y--;else{u(P[k],x,y,c,h);break;}
+int P[]={15,33666,66055,2113665,387},h,k,q,y;java.math.BigInteger c,B;
+String s(boolean p,String[]j){
+var m=new java.util.HashMap();long n=p?2022:(long)1e12,r=0,e=0,a;
+for(c=c.ZERO,k=q=~(h=0);r++<n;){
+B=c.valueOf(P[k=++k%5]);int x=2,X;y=h+3;
+do x=o(X=x+j[0].charAt(q=++q%j[0].length())-61)?X:x;while(o(x+--y-y));
+X=h=((c=c.or(B.shiftLeft(x+7*++y))).bitLength()+6)/7;
+for(x=7;x-->0;X=++y>0&y<X?y:X)for(y=h;y-->0&&!c.testBit(7*y+x););
+if(e<1&&m.put(q+":"+k+c.shiftRight(7*X),new long[]{r,h})instanceof long[]v){e=(n-r)/(a=r-v[0])*(h-v[1]);r=n-(n-r)%a;}
 }
-if(!z){
-String K=k(r+1,q,c,h);long[]v=m.putIfAbsent(K,new long[]{r+1,c.size()});
-if(v!=null){long a=r+1-v[0],b=c.size()-v[1],g=(n-r-1)/a;r+=g*a;e+=g*b;z=1>0;}
+return e+h+"";
 }
-}
-return""+(e+c.size());
-}
-boolean o(int[]p,int x,int y,ArrayList<Integer>c){
-if(x<0||y<0)return 0>1;
-for(int r=0;r<p.length;r++){
-int w=p[r]<<x;
-if((w&-128)!=0||y+r<c.size()&&(w&c.get(y+r))!=0)return 0>1;
-}
-return 1>0;
-}
-void u(int[]p,int x,int y,ArrayList<Integer>c,int[]h){
-for(int r=0;r<p.length;r++){
-for(;c.size()<=y+r;)c.add(0);
-int w=p[r]<<x;c.set(y+r,c.get(y+r)|w);
-for(int i=0;i<7;i++)if((w&1<<i)!=0)h[i]=$.x(h[i],y+r+1);
-}
-}
-String k(long r,int q,ArrayList<Integer>c,int[]h){
-int f=c.size();String s=r%5+","+q;
-for(int x:h){f=$.n(f,x);s+=","+(c.size()-x);}
-for(int y=f;y<c.size();y++)s+=","+c.get(y);
-return s;
+boolean o(int x){
+return(x|y|(23843>>3*k&7)-x)>=0&c.and(B.shiftLeft(x+7*y)).signum()<1;
 }
 }
