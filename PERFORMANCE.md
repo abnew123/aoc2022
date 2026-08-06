@@ -4,23 +4,23 @@
 
 All timings use the original personal input corpus with OpenJDK 23.0.1 on Apple silicon. The harness compiles the fixed pre-speed source and current source into separate empty classpaths, excludes one true-cold launch per side, then runs 10 separate JVM pairs in counterbalanced A/B order. Solver is the sum of the 25 `fullSolve` calls; main includes solver plus in-process harness work; startup is process launch through the child start marker; harness is main minus solver; wall is the complete child process.
 
-Reproduce after compiling both trees with `java -Daoc.data.dir=<data-dir> -cp <current-cp> aoc2022.FreshJvmBenchmark --compare <previous-cp> <current-cp>`. Every published state passes all 50 independent solves, all 25 combined solves, and independent/`fullSolve` equivalence.
+Reproduce after compiling both trees with `java -Daoc.data.dir=<data-dir> -cp <current-cp> aoc2022.FreshJvmBenchmark --compare <previous-cp> <current-cp>`. Every published state passes all 50 independent solves, all 25 combined solves, and independent/`fullSolve` equivalence. The tables below come from a 100-pair run of the same child protocol with seeded random within-pair order and the cold pair excluded; the checked-in n=10 counterbalanced mode remains the quick reproduction default.
 
-Current 25-day means (n=10):
+Current 25-day means (n=100):
 
 | Wall (ms) | Main (ms) | Solver (ms) | Startup (ms) | Harness (ms) |
 |---:|---:|---:|---:|---:|
-| 260.321825 | 218.544000 | 184.569366 | 30.660492 | 33.974634 |
+| 228.603737 | 199.539213 | 168.620773 | 22.100435 | 30.918440 |
 
-Latest publication gate versus the preceding replay tip (n=10):
+Latest publication gate versus the preceding replay tip (n=100):
 
 | Metric | Previous mean (ms) | Current mean (ms) | Delta (ms) | Paired 95% CI (ms) |
 |---|---:|---:|---:|---:|
-| wall | 275.818117 | 257.142346 | -18.675771 | [-34.685966, -2.665576] |
-| main | 234.623358 | 211.268567 | -23.354792 | [-28.485481, -18.224102] |
-| solver | 202.271246 | 178.734321 | -23.536926 | [-28.585316, -18.488535] |
-| startup | 28.713712 | 38.143450 | 9.429737 | [-12.025944, 30.885419] |
-| harness | 32.352112 | 32.534246 | 0.182134 | [-0.965303, 1.329571] |
+| wall | 238.055822 | 228.603737 | -9.452085 | [-11.836697, -7.067472] |
+| main | 207.524592 | 199.539213 | -7.985379 | [-9.657327, -6.313430] |
+| solver | 176.589489 | 168.620773 | -7.968716 | [-9.376687, -6.560745] |
+| startup | 21.953370 | 22.100435 | 0.147065 | [-0.269461, 0.563590] |
+| harness | 30.935103 | 30.918440 | -0.016663 | [-0.440095, 0.406770] |
 
 ## Day 01
 
@@ -213,7 +213,12 @@ One exact expression graph supports numeric evaluation and inverse symbolic solv
 
 ## Day 22
 
-Unchanged from the pre-PR implementation. Current solver mean: 14.684996 ms.
+The current solver parses the board once, infers and folds any valid six-face cube net, and shares primitive face-edge transitions between the flat and cube walkers instead of allocating and scanning a fixed million-cell board twice. The generic fold also replaces two hardcoded edge transitions that were geometrically impossible (one collapsed an entire edge onto a single cell); the previous answers survived on this input only because the diverging trajectory happened to re-merge. Verified against the official example, an independent literal-3D-folding oracle across all eleven cube nets, and a site-verified answer on a second input.
+
+| Version | Solver mean (ms) | Delta (ms) | Paired 95% CI (ms) |
+|---|---:|---:|---:|
+| Pre-PR | 13.540065 | — | — |
+| Current | 6.155384 | -7.384680 | [-7.552188, -7.217173] |
 
 ## Day 23
 
