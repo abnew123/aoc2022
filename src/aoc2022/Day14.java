@@ -1,8 +1,7 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class Day14 extends DayTemplate {
@@ -10,187 +9,235 @@ public class Day14 extends DayTemplate {
 	private static final int SOURCE_X = 500;
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		Cave cave = parseCave(in);
-		return "" + simulateSand(part1, cave.blocked, cave.minX, cave.maxY, cave.floorY);
+		int[] answers = solveBoth(in);
+		return "" + answers[part1 ? 0 : 1];
 	}
 
 	@Override
 	public String[] fullSolve(Scanner in) throws FileNotFoundException {
-		Cave cave = parseCave(in);
-		int[] answers = simulateBoth(cave.blocked, cave.minX, cave.maxY, cave.floorY);
+		int[] answers = solveBoth(in);
 		return new String[] {"" + answers[0], "" + answers[1]};
 	}
 
-	private Cave parseCave(Scanner in) {
-		List<int[]> paths = new ArrayList<>();
+	/**
+	 * Solves both parts in one pass over a bitset rock grid.
+	 *
+	 * Part 2: the terminal sand configuration equals the set of cells reachable from
+	 * the source through non-rock cells by steps (dx in {-1,0,1}, dy = +1) above the
+	 * floor, so the answer is one branchless row-by-row closure sweep with popcounts.
+	 *
+	 * Part 1 is order-sensitive: grains settle in exactly the post-order of a
+	 * depth-first descent whose children are tried down, down-left, down-right, and
+	 * the per-grain simulation ends when the first grain steps below the lowest rock.
+	 * A DFS with an explicit stack that stops the first time it would push a cell in
+	 * row maxY + 1 has therefore settled exactly the part 1 grain count.
+	 */
+	private static int[] solveBoth(Scanner in) {
+		char[] text = (in.useDelimiter("\\A").hasNext() ? in.next() : "").toCharArray();
+
+		// Linear parse: coordinate pairs into flat segment quads, tracking maxY.
+		int[] segments = new int[256];
+		int segmentEnd = 0;
 		int maxY = 0;
-		while (in.hasNextLine()) {
-			String line = in.nextLine();
-			int[] path = parsePath(line);
-			paths.add(path);
-			for (int i = 1; i < path.length; i += 2) {
-				maxY = Math.max(maxY, path[i]);
+		int pendingX = 0;
+		boolean havePendingX = false;
+		int prevX = 0;
+		int prevY = 0;
+		int linePoints = 0;
+		int n = text.length;
+		int i = 0;
+		while (i <= n) {
+			char c = i < n ? text[i] : '\n';
+			if ((c >= '0' && c <= '9')
+					|| (c == '-' && i + 1 < n && text[i + 1] >= '0' && text[i + 1] <= '9')) {
+				boolean negative = c == '-';
+				if (negative) {
+					i++;
+				}
+				long value = 0;
+				while (i < n && text[i] >= '0' && text[i] <= '9') {
+					value = value * 10 + (text[i] - '0');
+					if (value > Integer.MAX_VALUE) {
+						throw new NumberFormatException("Coordinate out of range");
+					}
+					i++;
+				}
+				int number = (int) (negative ? -value : value);
+				if (!havePendingX) {
+					pendingX = number;
+					havePendingX = true;
+				} else {
+					if (number < 0) {
+						throw new IllegalArgumentException("Rock depth must be nonnegative");
+					}
+					if (number > maxY) {
+						maxY = number;
+					}
+					if (linePoints > 0) {
+						if (segmentEnd + 4 > segments.length) {
+							segments = Arrays.copyOf(segments, segments.length * 2);
+						}
+						segments[segmentEnd++] = prevX;
+						segments[segmentEnd++] = prevY;
+						segments[segmentEnd++] = pendingX;
+						segments[segmentEnd++] = number;
+					}
+					prevX = pendingX;
+					prevY = number;
+					linePoints++;
+					havePendingX = false;
+				}
+				continue;
 			}
+			if (c == '\n' || c == '\r') {
+				if (havePendingX) {
+					throw new IllegalArgumentException("Malformed rock path");
+				}
+				if (linePoints == 1) {
+					if (segmentEnd + 4 > segments.length) {
+						segments = Arrays.copyOf(segments, segments.length * 2);
+					}
+					segments[segmentEnd++] = prevX;
+					segments[segmentEnd++] = prevY;
+					segments[segmentEnd++] = prevX;
+					segments[segmentEnd++] = prevY;
+				}
+				linePoints = 0;
+			}
+			i++;
 		}
 
-		if (maxY > (Integer.MAX_VALUE - 3) / 2) {
+		// Sand cells occupy rows 0 .. maxY + 1 (the floor is at maxY + 2). Every
+		// reachable cell satisfies |x - SOURCE_X| <= y <= maxY + 1, so a grid of
+		// half-width maxY + 2 keeps all reachable cells one full column away from
+		// both edges and neighbour access needs no bounds checks.
+		long rowsLong = (long) maxY + 2;
+		long wordsPerRowLong = (2L * ((long) maxY + 2) + 1 + 63) >> 6;
+		if (rowsLong * wordsPerRowLong > Integer.MAX_VALUE - 8) {
 			throw new IllegalArgumentException("Cave is too deep to index");
 		}
-		int floorY = maxY + 2;
-		int radius = floorY - 1;
-		long width = 2L * radius + 1;
-		if (width > Integer.MAX_VALUE) {
-			throw new IllegalArgumentException("Cave is too deep to index");
-		}
-		int minX = SOURCE_X - radius;
-		int maxX = SOURCE_X + radius;
+		int rows = (int) rowsLong;
+		int halfWidth = maxY + 2;
+		int cols = 2 * halfWidth + 1;
+		int wordsPerRow = (int) wordsPerRowLong;
+		int originX = SOURCE_X - halfWidth;
+		int sourceCol = halfWidth;
 
-		boolean[][] blocked = new boolean[(int) width][floorY + 1];
-		for (int[] path : paths) {
-			addPath(path, blocked, minX, maxX);
-		}
-		return new Cave(blocked, minX, maxY, floorY);
-	}
-
-	private int[] parsePath(String line) {
-		String[] coords = line.split(" -> ");
-		int[] path = new int[coords.length * 2];
-		for (int i = 0; i < coords.length; i++) {
-			int comma = coords[i].indexOf(',');
-			path[2 * i] = Integer.parseInt(coords[i].substring(0, comma));
-			path[2 * i + 1] = Integer.parseInt(coords[i].substring(comma + 1));
-			if (path[2 * i + 1] < 0) {
-				throw new IllegalArgumentException("Rock depth must be nonnegative");
-			}
-		}
-		return path;
-	}
-
-	private void addPath(int[] path, boolean[][] blocked, int minX, int maxX) {
-		if (path.length == 2) {
-			markRock(path[0], path[1], blocked, minX, maxX);
-			return;
-		}
-		for (int i = 2; i < path.length; i += 2) {
-			int x1 = path[i - 2];
-			int y1 = path[i - 1];
-			int x2 = path[i];
-			int y2 = path[i + 1];
+		long[] rock = new long[rows * wordsPerRow];
+		int maxCol = cols - 1;
+		for (int s = 0; s < segmentEnd; s += 4) {
+			int x1 = segments[s];
+			int y1 = segments[s + 1];
+			int x2 = segments[s + 2];
+			int y2 = segments[s + 3];
 			if (y1 == y2) {
-				int fromX = Math.max(minX, Math.min(x1, x2));
-				int toX = Math.min(maxX, Math.max(x1, x2));
-				for (int x = fromX; x <= toX; x++) {
-					blocked[x - minX][y1] = true;
+				int from = Math.min(x1, x2);
+				int to = Math.max(x1, x2);
+				if (from < originX) {
+					from = originX;
+				}
+				if (to > originX + maxCol) {
+					to = originX + maxCol;
+				}
+				int base = y1 * wordsPerRow;
+				for (int x = from; x <= to; x++) {
+					int col = x - originX;
+					rock[base + (col >>> 6)] |= 1L << col;
 				}
 			} else if (x1 == x2) {
-				if (x1 < minX || x1 > maxX) {
+				if (x1 < originX || x1 > originX + maxCol) {
 					continue;
 				}
-				for (int y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
-					blocked[x1 - minX][y] = true;
+				int col = x1 - originX;
+				int word = col >>> 6;
+				long bit = 1L << col;
+				int from = Math.min(y1, y2);
+				int to = Math.max(y1, y2);
+				for (int y = from; y <= to; y++) {
+					rock[y * wordsPerRow + word] |= bit;
 				}
 			} else {
 				throw new IllegalArgumentException("Rock paths must be horizontal or vertical");
 			}
 		}
-	}
 
-	private void markRock(int x, int y, boolean[][] blocked, int minX, int maxX) {
-		if (x >= minX && x <= maxX) {
-			blocked[x - minX][y] = true;
+		if ((rock[sourceCol >>> 6] >>> sourceCol & 1) != 0) {
+			return new int[] {0, 0};
 		}
-	}
 
-	private int simulateSand(boolean part1, boolean[][] blocked, int minX, int maxY, int floorY) {
-		int answer = 0;
-		int sourceX = SOURCE_X - minX;
-		int[] pathX = new int[floorY + 1];
-		int[] pathY = new int[pathX.length];
-		int pathLength = 1;
-		pathX[0] = sourceX;
-		pathY[0] = 0;
-
-		while (!blocked[sourceX][0]) {
-			int x = pathX[pathLength - 1];
-			int y = pathY[pathLength - 1];
-			while (true) {
-				if (part1 && y > maxY) {
-					return answer;
-				}
-				if (!isBlocked(blocked, part1, x, y + 1, floorY)) {
-					y++;
-				} else if (!isBlocked(blocked, part1, x - 1, y + 1, floorY)) {
-					x--;
-					y++;
-				} else if (!isBlocked(blocked, part1, x + 1, y + 1, floorY)) {
-					x++;
-					y++;
-				} else {
-					blocked[x][y] = true;
-					answer++;
-					pathLength--;
-					if (pathLength == 0) {
-						pathLength = 1;
-						pathX[0] = sourceX;
-						pathY[0] = 0;
-					}
-					break;
-				}
-				pathX[pathLength] = x;
-				pathY[pathLength] = y;
-				pathLength++;
-			}
-		}
-		return answer;
-	}
-
-	private int[] simulateBoth(boolean[][] blocked, int minX, int maxY, int floorY) {
+		// Part 1: explicit-stack DFS in grain order. The stack is always a path that
+		// descends one row per entry, so the entry at depth d sits in row d.
+		long[] settledBits = new long[rows * wordsPerRow];
+		int[] stackCol = new int[rows];
+		int bottomRow = rows - 1;
+		settledBits[sourceCol >>> 6] |= 1L << sourceCol;
+		stackCol[0] = sourceCol;
+		int depth = 0;
 		int settled = 0;
-		int part1 = -1;
-		int sourceX = SOURCE_X - minX;
-		int[] pathX = new int[floorY + 1];
-		int[] pathY = new int[pathX.length];
-		int pathLength = 1;
-		pathX[0] = sourceX;
-		pathY[0] = 0;
-
-		while (!blocked[sourceX][0]) {
-			int x = pathX[pathLength - 1];
-			int y = pathY[pathLength - 1];
-			while (true) {
-				if (part1 < 0 && y > maxY) {
-					part1 = settled;
-				}
-				if (!isBlocked(blocked, false, x, y + 1, floorY)) {
-					y++;
-				} else if (!isBlocked(blocked, false, x - 1, y + 1, floorY)) {
-					x--;
-					y++;
-				} else if (!isBlocked(blocked, false, x + 1, y + 1, floorY)) {
-					x++;
-					y++;
+		int part1;
+		while (true) {
+			int col = stackCol[depth];
+			int base = (depth + 1) * wordsPerRow;
+			int child = -1;
+			int word = base + (col >>> 6);
+			if (((rock[word] | settledBits[word]) >>> col & 1) == 0) {
+				child = col;
+			} else {
+				int left = col - 1;
+				int leftWord = base + (left >>> 6);
+				if (((rock[leftWord] | settledBits[leftWord]) >>> left & 1) == 0) {
+					child = left;
 				} else {
-					blocked[x][y] = true;
-					settled++;
-					pathLength--;
-					if (pathLength == 0) {
-						pathLength = 1;
-						pathX[0] = sourceX;
-						pathY[0] = 0;
+					int right = col + 1;
+					int rightWord = base + (right >>> 6);
+					if (((rock[rightWord] | settledBits[rightWord]) >>> right & 1) == 0) {
+						child = right;
 					}
+				}
+			}
+			if (child >= 0) {
+				if (depth + 1 == bottomRow) {
+					// First grain past the lowest rock: part 1 is complete.
+					part1 = settled;
 					break;
 				}
-				pathX[pathLength] = x;
-				pathY[pathLength] = y;
-				pathLength++;
+				settledBits[base + (child >>> 6)] |= 1L << child;
+				stackCol[++depth] = child;
+			} else {
+				// All three lower neighbours blocked: the grain settles here.
+				settled++;
+				if (--depth < 0) {
+					// Source sealed before any grain overflowed.
+					part1 = settled;
+					break;
+				}
 			}
 		}
-		return new int[] {part1 < 0 ? settled : part1, settled};
-	}
 
-	private boolean isBlocked(boolean[][] blocked, boolean part1, int x, int y, int floorY) {
-		return (!part1 && y == floorY) || blocked[x][y];
+		// Part 2: reachability closure, one row at a time, 64 cells per word.
+		long[] above = new long[wordsPerRow];
+		long[] current = new long[wordsPerRow];
+		above[sourceCol >>> 6] = 1L << sourceCol;
+		int part2 = 1;
+		for (int row = 1; row < rows; row++) {
+			int base = row * wordsPerRow;
+			for (int w = 0; w < wordsPerRow; w++) {
+				long center = above[w];
+				long spread = center | (center << 1) | (center >>> 1);
+				if (w > 0) {
+					spread |= above[w - 1] >>> 63;
+				}
+				if (w + 1 < wordsPerRow) {
+					spread |= above[w + 1] << 63;
+				}
+				long reach = spread & ~rock[base + w];
+				current[w] = reach;
+				part2 += Long.bitCount(reach);
+			}
+			long[] swap = above;
+			above = current;
+			current = swap;
+		}
+		return new int[] {part1, part2};
 	}
-
-	private record Cave(boolean[][] blocked, int minX, int maxY, int floorY) {}
 }
