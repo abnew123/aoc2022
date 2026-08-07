@@ -35,50 +35,143 @@ public class Day16 extends DayTemplate {
 		return bestTwoActorPressureBig(bestByMask);
 	}
 
+	/**
+	 * One slurp, manual scan. Line fields are the single-space-separated tokens
+	 * of the incumbent parse: token 1 is the valve name, token 4 carries
+	 * "rate=N;", tokens 9+ are exit names (first two characters). Whitespace-only
+	 * lines are skipped. Valve ids are file order; duplicate names resolve to the
+	 * last occurrence.
+	 */
 	private ValveNetwork parse(Scanner in) {
-		List<String> names = new ArrayList<>();
-		List<Integer> flows = new ArrayList<>();
-		List<List<String>> tunnels = new ArrayList<>();
-		Map<String, Integer> idsByName = new HashMap<>();
-		while (in.hasNext()) {
-			String[] line = in.nextLine().split(" ");
-			List<String> exits = new ArrayList<>();
-			for (int i = 9; i < line.length; i++) {
-				exits.add(line[i].substring(0, 2));
+		String text = in.useDelimiter("\\A").hasNext() ? in.next() : "";
+		int n = text.length();
+		String[] names = new String[16];
+		int[] flows = new int[16];
+		String[][] exits = new String[16][];
+		int valveCount = 0;
+		int i = 0;
+		while (i < n) {
+			int lineStart = i;
+			while (i < n && text.charAt(i) != '\n' && text.charAt(i) != '\r') {
+				i++;
 			}
-			idsByName.put(line[1], names.size());
-			names.add(line[1]);
-			flows.add(Integer.parseInt(line[4].substring(5, line[4].length() - 1)));
-			tunnels.add(exits);
+			int lineEnd = i;
+			if (i < n) {
+				if (text.charAt(i) == '\r' && i + 1 < n && text.charAt(i + 1) == '\n') {
+					i++;
+				}
+				i++;
+			}
+			boolean blank = true;
+			for (int k = lineStart; k < lineEnd; k++) {
+				if (!Character.isWhitespace(text.charAt(k))) {
+					blank = false;
+					break;
+				}
+			}
+			if (blank) {
+				continue;
+			}
+			String[] tokens = new String[12];
+			int tokenCount = 0;
+			int tokenStart = lineStart;
+			for (int k = lineStart; k <= lineEnd; k++) {
+				if (k == lineEnd || text.charAt(k) == ' ') {
+					if (tokenCount == tokens.length) {
+						tokens = Arrays.copyOf(tokens, tokens.length * 2);
+					}
+					tokens[tokenCount++] = text.substring(tokenStart, k);
+					tokenStart = k + 1;
+				}
+			}
+			while (tokenCount > 0 && tokens[tokenCount - 1].isEmpty()) {
+				tokenCount--;
+			}
+			if (tokenCount < 5) {
+				throw new IllegalArgumentException("Malformed valve line");
+			}
+			String flowToken = tokens[4];
+			int flow = Integer.parseInt(flowToken.substring(5, flowToken.length() - 1));
+			String[] valveExits = new String[Math.max(0, tokenCount - 9)];
+			for (int t = 9; t < tokenCount; t++) {
+				valveExits[t - 9] = tokens[t].substring(0, 2);
+			}
+			if (valveCount == names.length) {
+				names = Arrays.copyOf(names, valveCount * 2);
+				flows = Arrays.copyOf(flows, valveCount * 2);
+				exits = Arrays.copyOf(exits, valveCount * 2);
+			}
+			names[valveCount] = tokens[1];
+			flows[valveCount] = flow;
+			exits[valveCount] = valveExits;
+			valveCount++;
 		}
-		int[][] adjacency = new int[names.size()][];
-		for (int i = 0; i < names.size(); i++) {
-			adjacency[i] = tunnels.get(i).stream().mapToInt(idsByName::get).toArray();
+		int[][] adjacency = new int[valveCount][];
+		for (int v = 0; v < valveCount; v++) {
+			int[] ids = new int[exits[v].length];
+			for (int e = 0; e < ids.length; e++) {
+				ids[e] = idOf(names, valveCount, exits[v][e]);
+			}
+			adjacency[v] = ids;
 		}
-		List<Integer> useful = new ArrayList<>();
-		useful.add(idsByName.get("AA"));
-		List<Integer> flowIds = new ArrayList<>();
-		for (int i = 0; i < names.size(); i++) {
-			if (flows.get(i) > 0) {
-				flowIds.add(i);
+		int flowIdCount = 0;
+		for (int v = 0; v < valveCount; v++) {
+			if (flows[v] > 0) {
+				flowIdCount++;
 			}
 		}
-		flowIds.sort(Comparator.comparing((Integer id) -> flows.get(id)).reversed()
-				.thenComparing(names::get));
-		useful.addAll(flowIds);
-		if (useful.size() - 1 > 62) {
-			throw new IllegalStateException("Too many flow valves for bitmask search: " + (useful.size() - 1));
-		}
-		int[][] distances = new int[useful.size()][useful.size()];
-		int[] rates = new int[useful.size()];
-		for (int i = 0; i < useful.size(); i++) {
-			int[] fromValve = distancesFrom(useful.get(i), adjacency);
-			for (int j = 0; j < useful.size(); j++) {
-				distances[i][j] = fromValve[useful.get(j)];
+		int[] flowIds = new int[flowIdCount];
+		int next = 0;
+		for (int v = 0; v < valveCount; v++) {
+			if (flows[v] > 0) {
+				flowIds[next++] = v;
 			}
-			rates[i] = flows.get(useful.get(i));
+		}
+		// Stable insertion sort: flow descending, ties by name ascending.
+		for (int a = 1; a < flowIdCount; a++) {
+			int id = flowIds[a];
+			int b = a - 1;
+			while (b >= 0 && sortsBefore(id, flowIds[b], flows, names)) {
+				flowIds[b + 1] = flowIds[b];
+				b--;
+			}
+			flowIds[b + 1] = id;
+		}
+		int[] useful = new int[1 + flowIdCount];
+		useful[0] = idOf(names, valveCount, "AA");
+		for (int u = 0; u < flowIdCount; u++) {
+			useful[u + 1] = flowIds[u];
+		}
+		if (useful.length - 1 > 62) {
+			throw new IllegalStateException("Too many flow valves for bitmask search: " + (useful.length - 1));
+		}
+		int[][] distances = new int[useful.length][useful.length];
+		int[] rates = new int[useful.length];
+		for (int a = 0; a < useful.length; a++) {
+			int[] fromValve = distancesFrom(useful[a], adjacency);
+			for (int b = 0; b < useful.length; b++) {
+				distances[a][b] = fromValve[useful[b]];
+			}
+			rates[a] = flows[useful[a]];
 		}
 		return new ValveNetwork(distances, rates);
+	}
+
+	/** Last matching id, mirroring the incumbent's map overwrite on duplicate names. */
+	private int idOf(String[] names, int valveCount, String name) {
+		for (int v = valveCount - 1; v >= 0; v--) {
+			if (names[v].equals(name)) {
+				return v;
+			}
+		}
+		throw new IllegalArgumentException("Unknown valve name");
+	}
+
+	private boolean sortsBefore(int left, int right, int[] flows, String[] names) {
+		if (flows[left] != flows[right]) {
+			return flows[left] > flows[right];
+		}
+		return names[left].compareTo(names[right]) < 0;
 	}
 
 	private int[] distancesFrom(int start, int[][] adjacency) {

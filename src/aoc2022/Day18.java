@@ -130,25 +130,103 @@ public class Day18 extends DayTemplate {
 		return new SurfaceAreas(totalFaces, exteriorFaces);
 	}
 
+	/**
+	 * One slurp, manual scan. Each nonblank line is three signed decimal longs
+	 * separated by commas, with optional surrounding whitespace; blank lines are
+	 * skipped.
+	 */
 	private Coordinates parse(Scanner in) {
+		String text = in.useDelimiter("\\A").hasNext() ? in.next() : "";
 		Coordinates cubes = new Coordinates();
-		while (in.hasNextLine()) {
-			String line = in.nextLine().trim();
-			if (line.isEmpty()) {
+		long[] out = new long[1];
+		int n = text.length();
+		int i = 0;
+		while (i < n) {
+			int lineStart = i;
+			while (i < n && text.charAt(i) != '\n' && text.charAt(i) != '\r') {
+				i++;
+			}
+			int lineEnd = i;
+			if (i < n) {
+				if (text.charAt(i) == '\r' && i + 1 < n && text.charAt(i + 1) == '\n') {
+					i++;
+				}
+				i++;
+			}
+			int p = skipSpaces(text, lineStart, lineEnd);
+			if (p == lineEnd) {
 				continue;
 			}
-			int firstComma = line.indexOf(',');
-			int secondComma = line.indexOf(',', firstComma + 1);
-			if (firstComma <= 0 || secondComma <= firstComma + 1 || secondComma == line.length() - 1
-					|| line.indexOf(',', secondComma + 1) >= 0) {
-				throw new IllegalArgumentException("Invalid cube coordinate: " + line);
+			p = parseSignedLong(text, p, lineEnd, out);
+			long x = out[0];
+			p = skipSpaces(text, p, lineEnd);
+			p = expectComma(text, p, lineEnd);
+			p = skipSpaces(text, p, lineEnd);
+			p = parseSignedLong(text, p, lineEnd, out);
+			long y = out[0];
+			p = skipSpaces(text, p, lineEnd);
+			p = expectComma(text, p, lineEnd);
+			p = skipSpaces(text, p, lineEnd);
+			p = parseSignedLong(text, p, lineEnd, out);
+			long z = out[0];
+			p = skipSpaces(text, p, lineEnd);
+			if (p != lineEnd) {
+				throw new IllegalArgumentException("Invalid cube coordinate line");
 			}
-			long x = Long.parseLong(line.substring(0, firstComma).trim());
-			long y = Long.parseLong(line.substring(firstComma + 1, secondComma).trim());
-			long z = Long.parseLong(line.substring(secondComma + 1).trim());
 			cubes.add(x, y, z);
 		}
 		return cubes;
+	}
+
+	private int skipSpaces(String text, int from, int lineEnd) {
+		int p = from;
+		while (p < lineEnd && text.charAt(p) <= ' ') {
+			p++;
+		}
+		return p;
+	}
+
+	private int expectComma(String text, int p, int lineEnd) {
+		if (p == lineEnd || text.charAt(p) != ',') {
+			throw new IllegalArgumentException("Invalid cube coordinate line");
+		}
+		return p + 1;
+	}
+
+	/** Parses one signed long into out[0]; accumulates negated so Long.MIN_VALUE parses exactly. */
+	private int parseSignedLong(String text, int from, int lineEnd, long[] out) {
+		int p = from;
+		boolean negative = false;
+		if (p < lineEnd && (text.charAt(p) == '+' || text.charAt(p) == '-')) {
+			negative = text.charAt(p) == '-';
+			p++;
+		}
+		long value = 0;
+		boolean sawDigit = false;
+		while (p < lineEnd) {
+			char c = text.charAt(p);
+			if (c < '0' || c > '9') {
+				break;
+			}
+			int digit = c - '0';
+			if (value < Long.MIN_VALUE / 10 || value * 10 < Long.MIN_VALUE + digit) {
+				throw new NumberFormatException("Cube coordinate out of range");
+			}
+			value = value * 10 - digit;
+			sawDigit = true;
+			p++;
+		}
+		if (!sawDigit) {
+			throw new NumberFormatException("Invalid cube coordinate");
+		}
+		if (!negative) {
+			if (value == Long.MIN_VALUE) {
+				throw new NumberFormatException("Cube coordinate out of range");
+			}
+			value = -value;
+		}
+		out[0] = value;
+		return p;
 	}
 
 	private static final class Coordinates {

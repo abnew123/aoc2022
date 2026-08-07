@@ -5,17 +5,21 @@ import java.util.Scanner;
 public class Day09 extends DayTemplate {
 
 	public String solve(boolean part1, Scanner in) {
-		long[] visits = simulate(in, part1 ? 2 : 10, false);
+		long[] visits = simulate(readAll(in), part1 ? 2 : 10, false);
 		return "" + visits[1];
 	}
 
 	@Override
 	public String[] fullSolve(Scanner in) {
-		long[] visits = simulate(in, 10, true);
+		long[] visits = simulate(readAll(in), 10, true);
 		return new String[] { "" + visits[0], "" + visits[1] };
 	}
 
-	private long[] simulate(Scanner in, int knotCount, boolean trackKnotOne) {
+	private String readAll(Scanner in) {
+		return in.useDelimiter("\\A").hasNext() ? in.next() : "";
+	}
+
+	private long[] simulate(String input, int knotCount, boolean trackKnotOne) {
 		long[] x = new long[knotCount];
 		long[] y = new long[knotCount];
 		PointSet knotOneVisits = trackKnotOne ? new PointSet() : null;
@@ -25,32 +29,46 @@ public class Day09 extends DayTemplate {
 		}
 		tailVisits.add(0, 0);
 
-		while (in.hasNextLine()) {
-			String line = in.nextLine();
-			int index = 0;
-			while (index < line.length() && Character.isWhitespace(line.charAt(index))) {
+		int offset = 0;
+		while (offset < input.length()) {
+			int lineStart = offset;
+			while (offset < input.length() && input.charAt(offset) != '\n'
+					&& input.charAt(offset) != '\r') {
+				offset++;
+			}
+			int lineEnd = offset;
+			if (offset < input.length()) {
+				char ending = input.charAt(offset++);
+				if (ending == '\r' && offset < input.length() && input.charAt(offset) == '\n') {
+					offset++;
+				}
+			}
+			int index = lineStart;
+			while (index < lineEnd && Character.isWhitespace(input.charAt(index))) {
 				index++;
 			}
-			if (index == line.length()) {
+			if (index == lineEnd) {
 				continue;
 			}
 			long dx = 0;
 			long dy = 0;
-			switch (line.charAt(index++)) {
+			switch (input.charAt(index++)) {
 			case 'U' -> dy = 1;
 			case 'D' -> dy = -1;
 			case 'L' -> dx = -1;
 			case 'R' -> dx = 1;
-			default -> throw new IllegalArgumentException("Invalid direction: " + line);
+			default -> throw new IllegalArgumentException(
+					"Invalid direction: " + input.substring(lineStart, lineEnd));
 			}
 
-			if (index == line.length() || !Character.isWhitespace(line.charAt(index))) {
-				throw new IllegalArgumentException("Invalid motion: " + line);
+			if (index == lineEnd || !Character.isWhitespace(input.charAt(index))) {
+				throw new IllegalArgumentException(
+						"Invalid motion: " + input.substring(lineStart, lineEnd));
 			}
-			while (index < line.length() && Character.isWhitespace(line.charAt(index))) {
+			while (index < lineEnd && Character.isWhitespace(input.charAt(index))) {
 				index++;
 			}
-			long steps = parseSteps(line, index);
+			long steps = parseSteps(input, index, lineStart, lineEnd);
 			for (long step = 0; step < steps; step++) {
 				x[0] = Math.addExact(x[0], dx);
 				y[0] = Math.addExact(y[0], dy);
@@ -72,11 +90,11 @@ public class Day09 extends DayTemplate {
 		return new long[] { trackKnotOne ? knotOneVisits.size() : 0, tailVisits.size() };
 	}
 
-	private long parseSteps(String line, int index) {
+	private long parseSteps(String input, int index, int lineStart, int lineEnd) {
 		long steps = 0;
 		int start = index;
-		while (index < line.length()) {
-			char digit = line.charAt(index);
+		while (index < lineEnd) {
+			char digit = input.charAt(index);
 			if (digit < '0' || digit > '9') {
 				break;
 			}
@@ -84,13 +102,15 @@ public class Day09 extends DayTemplate {
 			index++;
 		}
 		if (index == start) {
-			throw new IllegalArgumentException("Invalid step count: " + line);
+			throw new IllegalArgumentException(
+					"Invalid step count: " + input.substring(lineStart, lineEnd));
 		}
-		while (index < line.length() && Character.isWhitespace(line.charAt(index))) {
+		while (index < lineEnd && Character.isWhitespace(input.charAt(index))) {
 			index++;
 		}
-		if (index != line.length()) {
-			throw new IllegalArgumentException("Invalid motion: " + line);
+		if (index != lineEnd) {
+			throw new IllegalArgumentException(
+					"Invalid motion: " + input.substring(lineStart, lineEnd));
 		}
 		return steps;
 	}

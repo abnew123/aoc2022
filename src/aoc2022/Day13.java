@@ -21,6 +21,7 @@ public class Day13 extends DayTemplate {
 	}
 
 	private Answers analyze(Scanner in) {
+		String input = in.useDelimiter("\\A").hasNext() ? in.next() : "";
 		Packet dividerTwo = Packet.parse("[[2]]");
 		Packet dividerSix = Packet.parse("[[6]]");
 		BigInteger orderedPairs = BigInteger.ZERO;
@@ -28,10 +29,22 @@ public class Day13 extends DayTemplate {
 		long pairIndex = 1;
 		long rankTwo = 1;
 		long rankSix = 2;
-		while (in.hasNextLine()) {
-			String line = in.nextLine();
-			if (!line.isBlank()) {
-				Packet packet = Packet.parse(line);
+		int offset = 0;
+		while (offset < input.length()) {
+			int lineStart = offset;
+			while (offset < input.length() && input.charAt(offset) != '\n'
+					&& input.charAt(offset) != '\r') {
+				offset++;
+			}
+			int lineEnd = offset;
+			if (offset < input.length()) {
+				char ending = input.charAt(offset++);
+				if (ending == '\r' && offset < input.length() && input.charAt(offset) == '\n') {
+					offset++;
+				}
+			}
+			if (!isBlank(input, lineStart, lineEnd)) {
+				Packet packet = Packet.parse(input, lineStart, lineEnd);
 				// Input packets precede the appended dividers in the puzzle's stable sort.
 				if (packet.compareTo(dividerTwo) <= 0) {
 					rankTwo++;
@@ -58,6 +71,15 @@ public class Day13 extends DayTemplate {
 		return new Answers(orderedPairs.toString(), decoderKey.toString());
 	}
 
+	private boolean isBlank(String input, int start, int end) {
+		for (int i = start; i < end; i++) {
+			if (!Character.isWhitespace(input.charAt(i))) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	private record Answers(String orderedPairs, String decoderKey) {}
 }
 
@@ -73,7 +95,11 @@ final class Packet implements Comparable<Packet> {
 	}
 
 	static Packet parse(String text) {
-		Parser parser = new Parser(text);
+		return parse(text, 0, text.length());
+	}
+
+	static Packet parse(String text, int start, int end) {
+		Parser parser = new Parser(text, start, end);
 		Packet packet = parser.parsePacket();
 		parser.skipWhitespace();
 		if (!parser.atEnd()) {
@@ -119,10 +145,13 @@ final class Packet implements Comparable<Packet> {
 
 	private static final class Parser {
 		private final String text;
+		private final int end;
 		private int index;
 
-		private Parser(String text) {
+		private Parser(String text, int start, int end) {
 			this.text = text;
+			this.index = start;
+			this.end = end;
 		}
 
 		private Packet parsePacket() {
@@ -179,7 +208,7 @@ final class Packet implements Comparable<Packet> {
 		}
 
 		private boolean atEnd() {
-			return index == text.length();
+			return index == end;
 		}
 
 		private IllegalArgumentException error(String message) {

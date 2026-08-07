@@ -26,21 +26,25 @@ public class Day07 extends DayTemplate {
 	}
 
 	private Answers analyze(Scanner in) {
+		String input = in.useDelimiter("\\A").hasNext() ? in.next() : "";
 		List<Directory> directories = new ArrayList<>();
 		Directory root = new Directory("/", null);
 		directories.add(root);
 		Directory current = root;
 
-		while (in.hasNextLine()) {
-			String line = in.nextLine();
-			int start = skipWhitespace(line, 0);
-			if (start == line.length()) {
+		int offset = 0;
+		while (offset < input.length()) {
+			int lineStart = offset;
+			int lineEnd = lineEnd(input, offset);
+			offset = afterLineBreak(input, lineEnd);
+			int start = skipWhitespace(input, lineStart, lineEnd);
+			if (start == lineEnd) {
 				continue;
 			}
-			if (line.charAt(start) == '$') {
-				current = command(line, start + 1, current, root, directories);
+			if (input.charAt(start) == '$') {
+				current = command(input, lineStart, start + 1, lineEnd, current, root, directories);
 			} else {
-				listing(line, start, current, directories);
+				listing(input, lineStart, start, lineEnd, current, directories);
 			}
 		}
 
@@ -68,20 +72,22 @@ public class Day07 extends DayTemplate {
 		return new Answers(part1, part2);
 	}
 
-	private Directory command(String line, int index, Directory current, Directory root,
-			List<Directory> directories) {
-		index = skipWhitespace(line, index);
+	private Directory command(String input, int lineStart, int index, int lineEnd,
+			Directory current, Directory root, List<Directory> directories) {
+		index = skipWhitespace(input, index, lineEnd);
 		int commandStart = index;
-		index = skipToken(line, index);
-		String command = line.substring(commandStart, index);
-		index = skipWhitespace(line, index);
-		if (command.equals("ls") && index == line.length()) {
+		index = skipToken(input, index, lineEnd);
+		int commandLength = index - commandStart;
+		index = skipWhitespace(input, index, lineEnd);
+		if (commandLength == 2 && input.regionMatches(commandStart, "ls", 0, 2)
+				&& index == lineEnd) {
 			return current;
 		}
-		if (!command.equals("cd") || index == line.length()) {
-			throw malformed(line);
+		if (commandLength != 2 || !input.regionMatches(commandStart, "cd", 0, 2)
+				|| index == lineEnd) {
+			throw malformed(input, lineStart, lineEnd);
 		}
-		String destination = line.substring(index);
+		String destination = input.substring(index, lineEnd);
 		if (destination.equals("/")) {
 			return root;
 		}
@@ -91,50 +97,69 @@ public class Day07 extends DayTemplate {
 		return current.directory(destination, directories);
 	}
 
-	private void listing(String line, int index, Directory current,
+	private void listing(String input, int lineStart, int index, int lineEnd, Directory current,
 			List<Directory> directories) {
-		int firstEnd = skipToken(line, index);
-		if (firstEnd == line.length()) {
-			throw malformed(line);
+		int firstEnd = skipToken(input, index, lineEnd);
+		if (firstEnd == lineEnd) {
+			throw malformed(input, lineStart, lineEnd);
 		}
-		String first = line.substring(index, firstEnd);
-		int nameStart = skipWhitespace(line, firstEnd);
-		if (nameStart == line.length()) {
-			throw malformed(line);
+		int nameStart = skipWhitespace(input, firstEnd, lineEnd);
+		if (nameStart == lineEnd) {
+			throw malformed(input, lineStart, lineEnd);
 		}
-		String name = line.substring(nameStart);
-		if (first.equals("dir")) {
+		String name = input.substring(nameStart, lineEnd);
+		if (firstEnd - index == 3 && input.regionMatches(index, "dir", 0, 3)) {
 			current.directory(name, directories);
 			return;
 		}
 		BigInteger size;
 		try {
-			size = new BigInteger(first);
+			size = new BigInteger(input.substring(index, firstEnd));
 		} catch (NumberFormatException exception) {
-			throw new IllegalArgumentException("Malformed terminal output: " + line, exception);
+			throw new IllegalArgumentException(
+					"Malformed terminal output: " + input.substring(lineStart, lineEnd), exception);
 		}
 		if (size.signum() < 0) {
-			throw malformed(line);
+			throw malformed(input, lineStart, lineEnd);
 		}
 		current.file(name, size);
 	}
 
-	private int skipWhitespace(String line, int index) {
-		while (index < line.length() && Character.isWhitespace(line.charAt(index))) {
+	private int lineEnd(String input, int start) {
+		while (start < input.length() && input.charAt(start) != '\n'
+				&& input.charAt(start) != '\r') {
+			start++;
+		}
+		return start;
+	}
+
+	private int afterLineBreak(String input, int end) {
+		if (end < input.length()) {
+			char ending = input.charAt(end++);
+			if (ending == '\r' && end < input.length() && input.charAt(end) == '\n') {
+				end++;
+			}
+		}
+		return end;
+	}
+
+	private int skipWhitespace(String input, int index, int end) {
+		while (index < end && Character.isWhitespace(input.charAt(index))) {
 			index++;
 		}
 		return index;
 	}
 
-	private int skipToken(String line, int index) {
-		while (index < line.length() && !Character.isWhitespace(line.charAt(index))) {
+	private int skipToken(String input, int index, int end) {
+		while (index < end && !Character.isWhitespace(input.charAt(index))) {
 			index++;
 		}
 		return index;
 	}
 
-	private IllegalArgumentException malformed(String line) {
-		return new IllegalArgumentException("Malformed terminal output: " + line);
+	private IllegalArgumentException malformed(String input, int start, int end) {
+		return new IllegalArgumentException(
+				"Malformed terminal output: " + input.substring(start, end));
 	}
 
 	private static final class Directory {

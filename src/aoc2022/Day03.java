@@ -6,22 +6,41 @@ import java.util.Scanner;
 public class Day03 extends DayTemplate {
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
+		String input = readAll(in);
 		long answer = 0;
+		int offset = 0;
 		if (part1) {
-			while (in.hasNextLine()) {
-				answer += helper1(in.nextLine());
+			while (offset < input.length()) {
+				int start = offset;
+				int end = lineEnd(input, offset);
+				offset = afterLineBreak(input, end);
+				int length = end - start;
+				if ((length & 1) != 0) {
+					throw new IllegalArgumentException("Rucksack compartments must be equal-sized");
+				}
+				int middle = start + length / 2;
+				answer += priority(mask(input, start, middle) & mask(input, middle, end));
 			}
 		} else {
-			while (in.hasNextLine()) {
-				String first = in.nextLine();
-				if (!in.hasNextLine()) {
+			while (offset < input.length()) {
+				int firstStart = offset;
+				int firstEnd = lineEnd(input, offset);
+				offset = afterLineBreak(input, firstEnd);
+				if (offset >= input.length()) {
 					throw new IllegalArgumentException("Rucksacks must form groups of three");
 				}
-				String second = in.nextLine();
-				if (!in.hasNextLine()) {
+				int secondStart = offset;
+				int secondEnd = lineEnd(input, offset);
+				offset = afterLineBreak(input, secondEnd);
+				if (offset >= input.length()) {
 					throw new IllegalArgumentException("Rucksacks must form groups of three");
 				}
-				answer += helper2(first, second, in.nextLine());
+				int thirdStart = offset;
+				int thirdEnd = lineEnd(input, offset);
+				offset = afterLineBreak(input, thirdEnd);
+				answer += priority(mask(input, firstStart, firstEnd)
+						& mask(input, secondStart, secondEnd)
+						& mask(input, thirdStart, thirdEnd));
 			}
 		}
 		return "" + answer;
@@ -29,20 +48,25 @@ public class Day03 extends DayTemplate {
 
 	@Override
 	public String[] fullSolve(Scanner in) throws FileNotFoundException {
+		String input = readAll(in);
 		long part1 = 0;
 		long part2 = 0;
 		long group = 0;
 		int groupIndex = 0;
-		while (in.hasNextLine()) {
-			String rucksack = in.nextLine();
-			if ((rucksack.length() & 1) != 0) {
+		int offset = 0;
+		while (offset < input.length()) {
+			int start = offset;
+			int end = lineEnd(input, offset);
+			offset = afterLineBreak(input, end);
+			int length = end - start;
+			if ((length & 1) != 0) {
 				throw new IllegalArgumentException("Rucksack compartments must be equal-sized");
 			}
 			long left = 0;
 			long right = 0;
-			for (int i = 0; i < rucksack.length(); i++) {
-				long bit = itemBit(rucksack.charAt(i));
-				if (i < rucksack.length() / 2) {
+			for (int i = start; i < end; i++) {
+				long bit = itemBit(input.charAt(i));
+				if (i - start < length / 2) {
 					left |= bit;
 				} else {
 					right |= bit;
@@ -62,17 +86,26 @@ public class Day03 extends DayTemplate {
 		return new String[] { part1 + "", part2 + "" };
 	}
 
-	public int helper1(String rucksack) {
-		if ((rucksack.length() & 1) != 0) {
-			throw new IllegalArgumentException("Rucksack compartments must be equal-sized");
-		}
-		int middle = rucksack.length() / 2;
-		return priority(mask(rucksack, 0, middle) & mask(rucksack, middle, rucksack.length()));
+	private String readAll(Scanner in) {
+		return in.useDelimiter("\\A").hasNext() ? in.next() : "";
 	}
 
-	public int helper2(String first, String second, String third) {
-		return priority(mask(first, 0, first.length()) & mask(second, 0, second.length())
-				& mask(third, 0, third.length()));
+	private int lineEnd(String input, int start) {
+		while (start < input.length() && input.charAt(start) != '\n'
+				&& input.charAt(start) != '\r') {
+			start++;
+		}
+		return start;
+	}
+
+	private int afterLineBreak(String input, int end) {
+		if (end < input.length()) {
+			char ending = input.charAt(end++);
+			if (ending == '\r' && end < input.length() && input.charAt(end) == '\n') {
+				end++;
+			}
+		}
+		return end;
 	}
 
 	private long mask(String items, int start, int end) {

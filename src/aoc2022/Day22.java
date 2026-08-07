@@ -132,9 +132,24 @@ public class Day22 extends DayTemplate {
 	}
 
 	private static Parsed parse(Scanner in) {
+		// One slurp; manual line split (\n, \r\n and lone \r all end a line).
+		String text = in.useDelimiter("\\A").hasNext() ? in.next() : "";
 		List<String> lines = new ArrayList<>();
-		while (in.hasNextLine()) {
-			lines.add(in.nextLine());
+		int length = text.length();
+		int position = 0;
+		while (position < length) {
+			int lineStart = position;
+			while (position < length && text.charAt(position) != '\n' && text.charAt(position) != '\r') {
+				position++;
+			}
+			lines.add(text.substring(lineStart, position));
+			if (position < length) {
+				if (text.charAt(position) == '\r' && position + 1 < length
+						&& text.charAt(position + 1) == '\n') {
+					position++;
+				}
+				position++;
+			}
 		}
 		int separator = 0;
 		while (separator < lines.size() && !lines.get(separator).trim().isEmpty()) {

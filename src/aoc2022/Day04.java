@@ -18,24 +18,30 @@ public class Day04 extends DayTemplate {
 	}
 
 	private Counts count(Scanner in) {
+		String input = in.useDelimiter("\\A").hasNext() ? in.next() : "";
 		long contained = 0;
 		long overlapping = 0;
-		while (in.hasNextLine()) {
-			String line = in.nextLine();
-			if (line.isEmpty()) {
+		int offset = 0;
+		while (offset < input.length()) {
+			int lineStart = offset;
+			int lineEnd = lineEnd(input, offset);
+			offset = afterLineBreak(input, lineEnd);
+			if (lineStart == lineEnd) {
 				continue;
 			}
-			int firstDash = line.indexOf('-');
-			int comma = line.indexOf(',', firstDash + 1);
-			int secondDash = line.indexOf('-', comma + 1);
+			int length = lineEnd - lineStart;
+			int firstDash = relativeIndexOf(input, '-', 0, lineStart, lineEnd);
+			int comma = relativeIndexOf(input, ',', firstDash + 1, lineStart, lineEnd);
+			int secondDash = relativeIndexOf(input, '-', comma + 1, lineStart, lineEnd);
 			if (firstDash < 1 || comma < firstDash + 2 || secondDash < comma + 2
-					|| secondDash + 1 >= line.length()) {
-				throw new IllegalArgumentException("Malformed assignment pair: " + line);
+					|| secondDash + 1 >= length) {
+				throw new IllegalArgumentException(
+						"Malformed assignment pair: " + input.substring(lineStart, lineEnd));
 			}
-			BigInteger firstStart = number(line, 0, firstDash);
-			BigInteger firstEnd = number(line, firstDash + 1, comma);
-			BigInteger secondStart = number(line, comma + 1, secondDash);
-			BigInteger secondEnd = number(line, secondDash + 1, line.length());
+			BigInteger firstStart = number(input, lineStart, lineStart + firstDash);
+			BigInteger firstEnd = number(input, lineStart + firstDash + 1, lineStart + comma);
+			BigInteger secondStart = number(input, lineStart + comma + 1, lineStart + secondDash);
+			BigInteger secondEnd = number(input, lineStart + secondDash + 1, lineEnd);
 			if (firstStart.compareTo(firstEnd) > 0 || secondStart.compareTo(secondEnd) > 0) {
 				throw new IllegalArgumentException("Assignment ranges must be ascending");
 			}
@@ -50,8 +56,41 @@ public class Day04 extends DayTemplate {
 		return new Counts(contained, overlapping);
 	}
 
-	private BigInteger number(String line, int start, int end) {
-		return new BigInteger(line.substring(start, end).trim());
+	private int lineEnd(String input, int start) {
+		while (start < input.length() && input.charAt(start) != '\n'
+				&& input.charAt(start) != '\r') {
+			start++;
+		}
+		return start;
+	}
+
+	private int afterLineBreak(String input, int end) {
+		if (end < input.length()) {
+			char ending = input.charAt(end++);
+			if (ending == '\r' && end < input.length() && input.charAt(end) == '\n') {
+				end++;
+			}
+		}
+		return end;
+	}
+
+	private int relativeIndexOf(String input, char target, int fromRelative, int lineStart,
+			int lineEnd) {
+		int index = lineStart + Math.max(fromRelative, 0);
+		while (index < lineEnd && input.charAt(index) != target) {
+			index++;
+		}
+		return index < lineEnd ? index - lineStart : -1;
+	}
+
+	private BigInteger number(String input, int start, int end) {
+		while (start < end && input.charAt(start) <= ' ') {
+			start++;
+		}
+		while (end > start && input.charAt(end - 1) <= ' ') {
+			end--;
+		}
+		return new BigInteger(input.substring(start, end));
 	}
 
 	private record Counts(long contained, long overlapping) {

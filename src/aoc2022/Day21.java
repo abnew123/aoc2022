@@ -5,7 +5,6 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.StringTokenizer;
 
 public class Day21 extends DayTemplate {
 
@@ -24,39 +23,87 @@ public class Day21 extends DayTemplate {
 		return new String[] {part1.toString(), part2.toString()};
 	}
 
+	/**
+	 * One slurp, manual scan. Each nonblank line is "name: job" where the job is
+	 * either one literal number or "left op right"; job tokens are separated by
+	 * whitespace. Blank lines are skipped.
+	 */
 	private Map<String, Monkey> parse(Scanner in) {
+		String text = in.useDelimiter("\\A").hasNext() ? in.next() : "";
 		Map<String, Monkey> monkeys = new HashMap<>();
-		while (in.hasNextLine()) {
-			String line = in.nextLine();
-			if (line.isBlank()) {
+		String[] tokens = new String[4];
+		int n = text.length();
+		int i = 0;
+		while (i < n) {
+			int lineStart = i;
+			while (i < n && text.charAt(i) != '\n' && text.charAt(i) != '\r') {
+				i++;
+			}
+			int lineEnd = i;
+			if (i < n) {
+				if (text.charAt(i) == '\r' && i + 1 < n && text.charAt(i + 1) == '\n') {
+					i++;
+				}
+				i++;
+			}
+			boolean blank = true;
+			for (int k = lineStart; k < lineEnd; k++) {
+				if (!Character.isWhitespace(text.charAt(k))) {
+					blank = false;
+					break;
+				}
+			}
+			if (blank) {
 				continue;
 			}
-			int colon = line.indexOf(':');
-			if (colon < 1) {
-				throw new IllegalArgumentException("Invalid monkey job: " + line);
+			int colon = -1;
+			for (int k = lineStart; k < lineEnd; k++) {
+				if (text.charAt(k) == ':') {
+					colon = k;
+					break;
+				}
 			}
-			String name = line.substring(0, colon).trim();
-			StringTokenizer job = new StringTokenizer(line.substring(colon + 1));
-			if (!job.hasMoreTokens()) {
-				throw new IllegalArgumentException("Missing job for " + name);
+			if (colon <= lineStart) {
+				throw new IllegalArgumentException("Invalid monkey job");
 			}
-			String first = job.nextToken();
+			String name = text.substring(lineStart, colon).trim();
+			int tokenCount = 0;
+			int k = colon + 1;
+			while (k < lineEnd) {
+				char c = text.charAt(k);
+				if (c == ' ' || c == '\t' || c == '\f') {
+					k++;
+					continue;
+				}
+				int tokenStart = k;
+				while (k < lineEnd) {
+					c = text.charAt(k);
+					if (c == ' ' || c == '\t' || c == '\f') {
+						break;
+					}
+					k++;
+				}
+				if (tokenCount == tokens.length) {
+					throw new IllegalArgumentException("Invalid monkey job");
+				}
+				tokens[tokenCount++] = text.substring(tokenStart, k);
+			}
 			Monkey monkey;
-			if (!job.hasMoreTokens()) {
-				monkey = new Monkey(new BigInteger(first), null, null, '\0');
+			if (tokenCount == 0) {
+				throw new IllegalArgumentException("Missing monkey job");
+			} else if (tokenCount == 1) {
+				monkey = new Monkey(new BigInteger(tokens[0]), null, null, '\0');
+			} else if (tokenCount == 3) {
+				String operator = tokens[1];
+				if (operator.length() != 1 || "+-*/".indexOf(operator.charAt(0)) < 0) {
+					throw new IllegalArgumentException("Invalid monkey job");
+				}
+				monkey = new Monkey(null, tokens[0], tokens[2], operator.charAt(0));
 			} else {
-				String operator = job.nextToken();
-				if (operator.length() != 1 || !job.hasMoreTokens()) {
-					throw new IllegalArgumentException("Invalid job for " + name);
-				}
-				String right = job.nextToken();
-				if (job.hasMoreTokens() || "+-*/".indexOf(operator.charAt(0)) < 0) {
-					throw new IllegalArgumentException("Invalid job for " + name);
-				}
-				monkey = new Monkey(null, first, right, operator.charAt(0));
+				throw new IllegalArgumentException("Invalid monkey job");
 			}
 			if (monkeys.put(name, monkey) != null) {
-				throw new IllegalArgumentException("Duplicate monkey " + name);
+				throw new IllegalArgumentException("Duplicate monkey");
 			}
 		}
 		return monkeys;

@@ -19,30 +19,43 @@ public class Day02 extends DayTemplate {
 	}
 
 	private Scores score(Scanner in) {
+		String input = in.useDelimiter("\\A").hasNext() ? in.next() : "";
 		ExactTotal part1 = new ExactTotal();
 		ExactTotal part2 = new ExactTotal();
-		while (in.hasNextLine()) {
-			String line = in.nextLine();
-			int index = skipWhitespace(line, 0);
-			if (index == line.length()) {
+		int offset = 0;
+		while (offset < input.length()) {
+			int lineStart = offset;
+			while (offset < input.length() && input.charAt(offset) != '\n'
+					&& input.charAt(offset) != '\r') {
+				offset++;
+			}
+			int lineEnd = offset;
+			if (offset < input.length()) {
+				char ending = input.charAt(offset++);
+				if (ending == '\r' && offset < input.length() && input.charAt(offset) == '\n') {
+					offset++;
+				}
+			}
+			int index = skipWhitespace(input, lineStart, lineEnd);
+			if (index == lineEnd) {
 				continue;
 			}
 			int opponentStart = index;
-			index = skipToken(line, index);
+			index = skipToken(input, index, lineEnd);
 			if (index - opponentStart != 1) {
-				throw malformed(line);
+				throw malformed(input, lineStart, lineEnd);
 			}
-			char opponentCode = line.charAt(opponentStart);
-			index = skipWhitespace(line, index);
+			char opponentCode = input.charAt(opponentStart);
+			index = skipWhitespace(input, index, lineEnd);
 			int responseStart = index;
-			index = skipToken(line, index);
-			if (index - responseStart != 1 || skipWhitespace(line, index) != line.length()) {
-				throw malformed(line);
+			index = skipToken(input, index, lineEnd);
+			if (index - responseStart != 1 || skipWhitespace(input, index, lineEnd) != lineEnd) {
+				throw malformed(input, lineStart, lineEnd);
 			}
-			char responseCode = line.charAt(responseStart);
+			char responseCode = input.charAt(responseStart);
 			if (opponentCode < 'A' || opponentCode > 'C'
 					|| responseCode < 'X' || responseCode > 'Z') {
-				throw malformed(line);
+				throw malformed(input, lineStart, lineEnd);
 			}
 
 			int opponent = opponentCode - 'A';
@@ -56,22 +69,23 @@ public class Day02 extends DayTemplate {
 		return new Scores(part1, part2);
 	}
 
-	private int skipWhitespace(String line, int index) {
-		while (index < line.length() && Character.isWhitespace(line.charAt(index))) {
+	private int skipWhitespace(String input, int index, int end) {
+		while (index < end && Character.isWhitespace(input.charAt(index))) {
 			index++;
 		}
 		return index;
 	}
 
-	private int skipToken(String line, int index) {
-		while (index < line.length() && !Character.isWhitespace(line.charAt(index))) {
+	private int skipToken(String input, int index, int end) {
+		while (index < end && !Character.isWhitespace(input.charAt(index))) {
 			index++;
 		}
 		return index;
 	}
 
-	private IllegalArgumentException malformed(String line) {
-		return new IllegalArgumentException("Malformed strategy round: " + line);
+	private IllegalArgumentException malformed(String input, int start, int end) {
+		return new IllegalArgumentException(
+				"Malformed strategy round: " + input.substring(start, end));
 	}
 
 	private static final class Scores {

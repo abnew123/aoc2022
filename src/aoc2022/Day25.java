@@ -19,28 +19,51 @@ public class Day25 extends DayTemplate {
 		return new String[] { answer, answer };
 	}
 
+	/** One slurp, manual scan: sums the trimmed nonblank lines as SNAFU numbers. */
 	private String sum(Scanner in) {
+		String text = in.useDelimiter("\\A").hasNext() ? in.next() : "";
 		BigInteger total = BigInteger.ZERO;
-		while (in.hasNextLine()) {
-			String line = in.nextLine().trim();
-			if (!line.isEmpty()) {
-				total = total.add(parseSnafu(line));
+		int n = text.length();
+		int i = 0;
+		while (i < n) {
+			int lineStart = i;
+			while (i < n && text.charAt(i) != '\n' && text.charAt(i) != '\r') {
+				i++;
+			}
+			int lineEnd = i;
+			if (i < n) {
+				if (text.charAt(i) == '\r' && i + 1 < n && text.charAt(i + 1) == '\n') {
+					i++;
+				}
+				i++;
+			}
+			while (lineStart < lineEnd && text.charAt(lineStart) <= ' ') {
+				lineStart++;
+			}
+			while (lineEnd > lineStart && text.charAt(lineEnd - 1) <= ' ') {
+				lineEnd--;
+			}
+			if (lineStart < lineEnd) {
+				total = total.add(parseSnafu(text, lineStart, lineEnd));
 			}
 		}
 		return formatSnafu(total);
 	}
 
 	private BigInteger parseSnafu(String number) {
+		return parseSnafu(number, 0, number.length());
+	}
+
+	private BigInteger parseSnafu(String text, int from, int to) {
 		BigInteger value = BigInteger.ZERO;
-		for (int index = 0; index < number.length(); index++) {
-			int digit = switch (number.charAt(index)) {
+		for (int index = from; index < to; index++) {
+			int digit = switch (text.charAt(index)) {
 				case '2' -> 2;
 				case '1' -> 1;
 				case '0' -> 0;
 				case '-' -> -1;
 				case '=' -> -2;
-				default -> throw new IllegalArgumentException(
-						"Invalid SNAFU digit: " + number.charAt(index));
+				default -> throw new IllegalArgumentException("Invalid SNAFU digit");
 			};
 			value = value.multiply(FIVE).add(BigInteger.valueOf(digit));
 		}

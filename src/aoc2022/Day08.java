@@ -1,8 +1,7 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class Day08 extends DayTemplate {
@@ -32,17 +31,45 @@ public class Day08 extends DayTemplate {
 	}
 
 	private int[][] parse(Scanner in) {
-		List<String> lines = new ArrayList<>();
-		while (in.hasNextLine()) {
-			lines.add(in.nextLine());
+		String input = in.useDelimiter("\\A").hasNext() ? in.next() : "";
+		int[] lineStarts = new int[16];
+		int[] lineEnds = new int[16];
+		int lineCount = 0;
+		int offset = 0;
+		while (offset < input.length()) {
+			int start = offset;
+			while (offset < input.length() && input.charAt(offset) != '\n'
+					&& input.charAt(offset) != '\r') {
+				offset++;
+			}
+			int end = offset;
+			if (offset < input.length()) {
+				char ending = input.charAt(offset++);
+				if (ending == '\r' && offset < input.length() && input.charAt(offset) == '\n') {
+					offset++;
+				}
+			}
+			if (lineCount == lineStarts.length) {
+				lineStarts = Arrays.copyOf(lineStarts, lineCount * 2);
+				lineEnds = Arrays.copyOf(lineEnds, lineCount * 2);
+			}
+			lineStarts[lineCount] = start;
+			lineEnds[lineCount++] = end;
 		}
-		int rows = lines.size();
-		int cols = lines.get(0).length();
+		if (lineCount == 0) {
+			throw new IndexOutOfBoundsException(0);
+		}
+		int rows = lineCount;
+		int cols = lineEnds[0] - lineStarts[0];
 		int[][] grid = new int[rows][cols];
 		for (int row = 0; row < rows; row++) {
-			String line = lines.get(row);
+			int start = lineStarts[row];
+			int length = lineEnds[row] - start;
 			for (int col = 0; col < cols; col++) {
-				grid[row][col] = line.charAt(col) - '0';
+				if (col >= length) {
+					throw new StringIndexOutOfBoundsException(col);
+				}
+				grid[row][col] = input.charAt(start + col) - '0';
 			}
 		}
 		return grid;
