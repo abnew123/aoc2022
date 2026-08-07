@@ -1,10 +1,8 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -21,22 +19,32 @@ public class Day17 extends DayTemplate {
 	};
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		boolean[] pushesLeft = parsePushes(in.nextLine());
+		boolean[] pushesLeft = parsePushes(in);
 		long goal = part1 ? PART_1_ROCKS : PART_2_ROCKS;
 		return "" + simulate(goal, pushesLeft);
 	}
 
 	@Override
 	public String[] fullSolve(Scanner in) {
-		boolean[] pushesLeft = parsePushes(in.nextLine());
+		boolean[] pushesLeft = parsePushes(in);
 		long[] heights = simulate(PART_2_ROCKS, PART_1_ROCKS, pushesLeft);
 		return new String[] { "" + heights[0], "" + heights[1] };
 	}
 
-	private boolean[] parsePushes(String pushes) {
-		boolean[] pushesLeft = new boolean[pushes.length()];
-		for (int i = 0; i < pushesLeft.length; i++) {
-			pushesLeft[i] = pushes.charAt(i) == '<';
+	/** One slurp, manual scan: the jet pattern is the first line of the input. */
+	private boolean[] parsePushes(Scanner in) {
+		String text = in.useDelimiter("\\A").hasNext() ? in.next() : "";
+		int end = 0;
+		int n = text.length();
+		while (end < n && text.charAt(end) != '\n' && text.charAt(end) != '\r') {
+			end++;
+		}
+		if (end == 0) {
+			throw new IllegalArgumentException("Missing jet pattern");
+		}
+		boolean[] pushesLeft = new boolean[end];
+		for (int i = 0; i < end; i++) {
+			pushesLeft[i] = text.charAt(i) == '<';
 		}
 		return pushesLeft;
 	}
@@ -46,7 +54,7 @@ public class Day17 extends DayTemplate {
 	}
 
 	private long[] simulate(long goal, long checkpoint, boolean[] pushesLeft) {
-		List<Integer> chamber = new ArrayList<>();
+		Chamber chamber = new Chamber();
 		Map<State, long[]> seen = new HashMap<>();
 		int[] columnHeights = new int[CHAMBER_WIDTH];
 		int jetIndex = 0;
@@ -60,7 +68,7 @@ public class Day17 extends DayTemplate {
 		while (rocks < goal) {
 			Piece piece = PIECES[(int) (rocks % PIECES.length)];
 			int x = 2;
-			int y = chamber.size() + 3;
+			int y = chamber.size + 3;
 
 			while (true) {
 				int pushedX = x + (pushesLeft[jetIndex] ? -1 : 1);
@@ -79,11 +87,11 @@ public class Day17 extends DayTemplate {
 
 			rocks++;
 			if (rocks == checkpoint) {
-				checkpointHeight = skippedHeight + chamber.size();
+				checkpointHeight = skippedHeight + chamber.size;
 			}
 			if (!cycleConsumed && cycleRocks == 0) {
 				State state = new State((int) (rocks % PIECES.length), jetIndex, chamber, columnHeights);
-				long height = skippedHeight + chamber.size();
+				long height = skippedHeight + chamber.size;
 				long[] previous = seen.get(state);
 				if (previous == null) {
 					seen.put(state, new long[] { rocks, height });
@@ -99,7 +107,7 @@ public class Day17 extends DayTemplate {
 					rocks += cycles * cycleRocks;
 					skippedHeight += cycles * cycleHeight;
 					if (rocks == checkpoint) {
-						checkpointHeight = skippedHeight + chamber.size();
+						checkpointHeight = skippedHeight + chamber.size;
 					}
 				}
 
@@ -112,37 +120,48 @@ public class Day17 extends DayTemplate {
 			}
 		}
 
-		return new long[] { checkpointHeight, skippedHeight + chamber.size() };
+		return new long[] { checkpointHeight, skippedHeight + chamber.size };
 	}
 
-	private boolean canMove(Piece piece, int x, int y, List<Integer> chamber) {
+	private boolean canMove(Piece piece, int x, int y, Chamber chamber) {
 		if (x < 0 || x + piece.width > CHAMBER_WIDTH || y < 0) {
 			return false;
 		}
 		for (int row = 0; row < piece.rows.length; row++) {
 			int chamberY = y + row;
-			if (chamberY < chamber.size() && ((piece.rows[row] << x) & chamber.get(chamberY)) != 0) {
+			if (chamberY < chamber.size && ((piece.rows[row] << x) & chamber.rows[chamberY]) != 0) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private void settle(Piece piece, int x, int y, List<Integer> chamber, int[] columnHeights) {
+	private void settle(Piece piece, int x, int y, Chamber chamber, int[] columnHeights) {
 		for (int row = 0; row < piece.rows.length; row++) {
 			int chamberY = y + row;
-			while (chamber.size() <= chamberY) {
-				chamber.add(0);
+			if (chamberY >= chamber.size) {
+				while (chamberY >= chamber.rows.length) {
+					chamber.rows = Arrays.copyOf(chamber.rows, chamber.rows.length * 2);
+				}
+				// Newly exposed rows are already zero: the array only grows and
+				// cells at or above size have never been written.
+				chamber.size = chamberY + 1;
 			}
 			// Each chamber row is a seven-bit mask; bit 0 is the left wall side.
 			int shiftedRow = piece.rows[row] << x;
-			chamber.set(chamberY, chamber.get(chamberY) | shiftedRow);
+			chamber.rows[chamberY] |= shiftedRow;
 			for (int column = 0; column < CHAMBER_WIDTH; column++) {
 				if ((shiftedRow & (1 << column)) != 0) {
 					columnHeights[column] = Math.max(columnHeights[column], chamberY + 1);
 				}
 			}
 		}
+	}
+
+	/** Growable primitive stack of seven-bit chamber rows. */
+	private static final class Chamber {
+		private int[] rows = new int[1024];
+		private int size;
 	}
 
 	private static class Piece {
@@ -161,19 +180,19 @@ public class Day17 extends DayTemplate {
 		private final int[] topRows;
 		private final int[] columnDepths;
 
-		private State(int pieceIndex, int jetIndex, List<Integer> chamber, int[] columnHeights) {
+		private State(int pieceIndex, int jetIndex, Chamber chamber, int[] columnHeights) {
 			this.pieceIndex = pieceIndex;
 			this.jetIndex = jetIndex;
 			int lowestReachableRow = min(columnHeights);
-			this.topRows = new int[chamber.size() - lowestReachableRow];
+			this.topRows = new int[chamber.size - lowestReachableRow];
 			for (int i = 0; i < topRows.length; i++) {
-				int y = chamber.size() - 1 - i;
-				topRows[i] = chamber.get(y);
+				int y = chamber.size - 1 - i;
+				topRows[i] = chamber.rows[y];
 			}
 
 			this.columnDepths = new int[CHAMBER_WIDTH];
 			for (int x = 0; x < CHAMBER_WIDTH; x++) {
-				columnDepths[x] = chamber.size() - columnHeights[x];
+				columnDepths[x] = chamber.size - columnHeights[x];
 			}
 		}
 

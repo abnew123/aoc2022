@@ -20,26 +20,26 @@ public class Day19 extends DayTemplate {
 
 	// Each blueprint is exactly seven integers in statement order (id, then the
 	// six costs) regardless of layout — the official example wraps one blueprint
-	// across indented lines, real inputs use one line each.
+	// across indented lines, real inputs use one line each. One slurp: line
+	// boundaries are irrelevant to the digit scan because separators are never
+	// digits, so scanning the whole text groups the numbers identically.
 	private List<BluePrint> parse(Scanner in) {
+		String text = in.useDelimiter("\\A").hasNext() ? in.next() : "";
 		List<BluePrint> blueprints = new ArrayList<>();
 		int[] nums = new int[7];
 		int have = 0;
-		while (in.hasNextLine()) {
-			String line = in.nextLine();
-			for (int i = 0, n = line.length(); i < n; i++) {
-				char c = line.charAt(i);
-				if (c >= '0' && c <= '9') {
-					int v = c - '0';
-					while (i + 1 < n && (c = line.charAt(i + 1)) >= '0' && c <= '9') {
-						v = v * 10 + (c - '0');
-						i++;
-					}
-					nums[have++] = v;
-					if (have == 7) {
-						blueprints.add(new BluePrint(nums[0], nums[1], nums[2], nums[3], nums[4], nums[5], nums[6]));
-						have = 0;
-					}
+		for (int i = 0, n = text.length(); i < n; i++) {
+			char c = text.charAt(i);
+			if (c >= '0' && c <= '9') {
+				int v = c - '0';
+				while (i + 1 < n && (c = text.charAt(i + 1)) >= '0' && c <= '9') {
+					v = v * 10 + (c - '0');
+					i++;
+				}
+				nums[have++] = v;
+				if (have == 7) {
+					blueprints.add(new BluePrint(nums[0], nums[1], nums[2], nums[3], nums[4], nums[5], nums[6]));
+					have = 0;
 				}
 			}
 		}

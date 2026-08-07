@@ -1,9 +1,7 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Scanner;
 
 public class Day12 extends DayTemplate {
@@ -20,26 +18,47 @@ public class Day12 extends DayTemplate {
 	}
 
 	private Answers analyze(Scanner in) {
-		List<String> lines = new ArrayList<>();
-		while (in.hasNextLine()) {
-			lines.add(in.nextLine());
+		String input = in.useDelimiter("\\A").hasNext() ? in.next() : "";
+		int[] lineStarts = new int[16];
+		int[] lineEnds = new int[16];
+		int lineCount = 0;
+		int offset = 0;
+		while (offset < input.length()) {
+			int lineStart = offset;
+			while (offset < input.length() && input.charAt(offset) != '\n'
+					&& input.charAt(offset) != '\r') {
+				offset++;
+			}
+			int lineEnd = offset;
+			if (offset < input.length()) {
+				char ending = input.charAt(offset++);
+				if (ending == '\r' && offset < input.length() && input.charAt(offset) == '\n') {
+					offset++;
+				}
+			}
+			if (lineCount == lineStarts.length) {
+				lineStarts = Arrays.copyOf(lineStarts, lineCount * 2);
+				lineEnds = Arrays.copyOf(lineEnds, lineCount * 2);
+			}
+			lineStarts[lineCount] = lineStart;
+			lineEnds[lineCount++] = lineEnd;
 		}
-		if (lines.isEmpty() || lines.get(0).isEmpty()) {
+		if (lineCount == 0 || lineEnds[0] == lineStarts[0]) {
 			throw new IllegalArgumentException("Height map must not be empty");
 		}
 
-		int rows = lines.size();
-		int cols = lines.get(0).length();
+		int rows = lineCount;
+		int cols = lineEnds[0] - lineStarts[0];
 		int[] heights = new int[Math.multiplyExact(rows, cols)];
 		int start = -1;
 		int end = -1;
 		for (int row = 0; row < rows; row++) {
-			String line = lines.get(row);
-			if (line.length() != cols) {
+			int lineStart = lineStarts[row];
+			if (lineEnds[row] - lineStart != cols) {
 				throw new IllegalArgumentException("Height map must be rectangular");
 			}
 			for (int col = 0; col < cols; col++) {
-				char c = line.charAt(col);
+				char c = input.charAt(lineStart + col);
 				int index = row * cols + col;
 				if (c == 'S') {
 					if (start >= 0) {

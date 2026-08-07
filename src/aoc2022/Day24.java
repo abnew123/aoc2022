@@ -27,10 +27,25 @@ public class Day24 extends DayTemplate {
 		return new String[] { trip1 + "", trip3 + "" };
 	}
 
+	/** One slurp; manual line split (\n, \r\n and lone \r all end a line). */
 	private static List<String> readLines(Scanner in) {
+		String text = in.useDelimiter("\\A").hasNext() ? in.next() : "";
 		List<String> lines = new ArrayList<>();
-		while (in.hasNextLine()) {
-			lines.add(in.nextLine());
+		int length = text.length();
+		int position = 0;
+		while (position < length) {
+			int lineStart = position;
+			while (position < length && text.charAt(position) != '\n' && text.charAt(position) != '\r') {
+				position++;
+			}
+			lines.add(text.substring(lineStart, position));
+			if (position < length) {
+				if (text.charAt(position) == '\r' && position + 1 < length
+						&& text.charAt(position + 1) == '\n') {
+					position++;
+				}
+				position++;
+			}
 		}
 		return lines;
 	}
