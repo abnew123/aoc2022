@@ -1,91 +1,138 @@
 package aoc2022;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class Day12 extends DayTemplate {
 
 	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
-		int answer = 0;
-		List<List<Integer>> grid = new ArrayList<>();
-		int x = 0;
-		int y = 0;
-		while (in.hasNext()) {
-			char[] line = in.nextLine().toCharArray();
-			List<Integer> intLine = new ArrayList<>();
-			for (char l : line) {
-				if (l == 'E') {
-					intLine.add(100);
-				} else {
-					if (l == 'S') {
-						intLine.add(-1);
-					} else {
-						intLine.add(l - 'a');
-					}
-				}
-			}
-			grid.add(intLine);
-		}
-		int[][] realGrid = new int[grid.size()][grid.get(0).size()];
-		int[][] distances = new int[grid.size()][grid.get(0).size()];
-		for (int i = 0; i < grid.size(); i++) {
-			for (int j = 0; j < grid.get(0).size(); j++) {
-				realGrid[i][j] = grid.get(i).get(j);
-				distances[i][j] = 10000;
-				if (grid.get(i).get(j) == 100) {
-					x = i;
-					y = j;
-					realGrid[i][j] = 'z' - 'a';
-				}
-				if (grid.get(i).get(j) == -1) {
-					realGrid[i][j] = 'a' - 'a';
-					distances[i][j] = 0;
-				}
-			}
-		}
-		if (!part1) {
-			for (int i = 0; i < realGrid.length; i++) {
-				for (int j = 0; j < realGrid[0].length; j++) {
-					if (realGrid[i][j] == 0) {
-						distances[i][j] = 0;
-					}
-				}
-			}
-		}
-		int cycles = 0; // to stop impossible cases
-		while (distances[x][y] == 10000 && cycles < distances.length * distances[0].length) {
-			for (int i = 0; i < realGrid.length; i++) {
-				for (int j = 0; j < realGrid[0].length; j++) {
-					if (distances[i][j] == 10000) {
-						int current = realGrid[i][j];
-						if (inBounds(i + 1, j, realGrid) && realGrid[i + 1][j] >= current - 1
-								&& distances[i + 1][j] == cycles) {
-							distances[i][j] = cycles + 1;
-						}
-						if (inBounds(i - 1, j, realGrid) && realGrid[i - 1][j] >= current - 1
-								&& distances[i - 1][j] == cycles) {
-							distances[i][j] = cycles + 1;
-						}
-						if (inBounds(i, j + 1, realGrid) && realGrid[i][j + 1] >= current - 1
-								&& distances[i][j + 1] == cycles) {
-							distances[i][j] = cycles + 1;
-						}
-						if (inBounds(i, j - 1, realGrid) && realGrid[i][j - 1] >= current - 1
-								&& distances[i][j - 1] == cycles) {
-							distances[i][j] = cycles + 1;
-						}
-					}
-				}
-			}
-			cycles++;
-		}
-		answer = distances[x][y];
-		return "" + answer;
+		Answers answers = analyze(in);
+		return "" + (part1 ? answers.fromStart : answers.fromAnyLowest);
 	}
 
-	public boolean inBounds(int x, int y, int[][] grid) {
-		return x >= 0 && y >= 0 && x < grid.length && y < grid[0].length;
+	@Override
+	public String[] fullSolve(Scanner in) throws FileNotFoundException {
+		Answers answers = analyze(in);
+		return new String[]{"" + answers.fromStart, "" + answers.fromAnyLowest};
 	}
+
+	private Answers analyze(Scanner in) {
+		String input = in.useDelimiter("\\A").hasNext() ? in.next() : "";
+		int[] lineStarts = new int[16];
+		int[] lineEnds = new int[16];
+		int lineCount = 0;
+		int offset = 0;
+		while (offset < input.length()) {
+			int lineStart = offset;
+			while (offset < input.length() && input.charAt(offset) != '\n'
+					&& input.charAt(offset) != '\r') {
+				offset++;
+			}
+			int lineEnd = offset;
+			if (offset < input.length()) {
+				char ending = input.charAt(offset++);
+				if (ending == '\r' && offset < input.length() && input.charAt(offset) == '\n') {
+					offset++;
+				}
+			}
+			if (lineCount == lineStarts.length) {
+				lineStarts = Arrays.copyOf(lineStarts, lineCount * 2);
+				lineEnds = Arrays.copyOf(lineEnds, lineCount * 2);
+			}
+			lineStarts[lineCount] = lineStart;
+			lineEnds[lineCount++] = lineEnd;
+		}
+		if (lineCount == 0 || lineEnds[0] == lineStarts[0]) {
+			throw new IllegalArgumentException("Height map must not be empty");
+		}
+
+		int rows = lineCount;
+		int cols = lineEnds[0] - lineStarts[0];
+		int[] heights = new int[Math.multiplyExact(rows, cols)];
+		int start = -1;
+		int end = -1;
+		for (int row = 0; row < rows; row++) {
+			int lineStart = lineStarts[row];
+			if (lineEnds[row] - lineStart != cols) {
+				throw new IllegalArgumentException("Height map must be rectangular");
+			}
+			for (int col = 0; col < cols; col++) {
+				char c = input.charAt(lineStart + col);
+				int index = row * cols + col;
+				if (c == 'S') {
+					if (start >= 0) {
+						throw new IllegalArgumentException("Height map has multiple starts");
+					}
+					start = index;
+					heights[index] = 0;
+				} else if (c == 'E') {
+					if (end >= 0) {
+						throw new IllegalArgumentException("Height map has multiple ends");
+					}
+					end = index;
+					heights[index] = 25;
+				} else if (c >= 'a' && c <= 'z') {
+					heights[index] = c - 'a';
+				} else {
+					throw new IllegalArgumentException("Invalid height: " + c);
+				}
+			}
+		}
+		if (start < 0 || end < 0) {
+			throw new IllegalArgumentException("Height map requires one start and one end");
+		}
+
+		int[] distances = reverseDistancesFromEnd(heights, rows, cols, end);
+		int best = Integer.MAX_VALUE;
+		for (int i = 0; i < heights.length; i++) {
+			if (heights[i] == 0 && distances[i] >= 0 && distances[i] < best) {
+				best = distances[i];
+			}
+		}
+		return new Answers(distances[start], best);
+	}
+
+	private int[] reverseDistancesFromEnd(int[] heights, int rows, int cols, int end) {
+		int[] distances = new int[heights.length];
+		Arrays.fill(distances, -1);
+
+		int[] queue = new int[heights.length];
+		int head = 0;
+		int tail = 0;
+		distances[end] = 0;
+		queue[tail++] = end;
+		while (head < tail) {
+			int current = queue[head++];
+			int row = current / cols;
+			int col = current % cols;
+			int nextDistance = distances[current] + 1;
+			int currentHeight = heights[current];
+
+			if (row > 0) {
+				tail = addIfReachable(currentHeight, current - cols, nextDistance, heights, distances, queue, tail);
+			}
+			if (row + 1 < rows) {
+				tail = addIfReachable(currentHeight, current + cols, nextDistance, heights, distances, queue, tail);
+			}
+			if (col > 0) {
+				tail = addIfReachable(currentHeight, current - 1, nextDistance, heights, distances, queue, tail);
+			}
+			if (col + 1 < cols) {
+				tail = addIfReachable(currentHeight, current + 1, nextDistance, heights, distances, queue, tail);
+			}
+		}
+		return distances;
+	}
+
+	private int addIfReachable(int currentHeight, int next, int nextDistance, int[] heights, int[] distances,
+			int[] queue, int tail) {
+		if (distances[next] == -1 && heights[next] >= currentHeight - 1) {
+			distances[next] = nextDistance;
+			queue[tail++] = next;
+		}
+		return tail;
+	}
+
+	private record Answers(int fromStart, int fromAnyLowest) {}
 }
