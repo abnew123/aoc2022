@@ -1,0 +1,1 @@
+class D{String s(boolean p,String[]x){int r=0;for(var l:x){var s=(new java.util.Scanner(l).useDelimiter("\\D+"));int A=s.nextInt(),B=s.nextInt(),C=s.nextInt(),D=s.nextInt();if(p?(A-C)*(B-D)<1:A<=D&C<=B)r++;}return""+r;}}

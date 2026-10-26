@@ -1,3 +1,0 @@
-package aoc2022;
-import java.util.*;
-class W{int W=6000,c,r,i,a=W,b,d=W,N[]={7,448,73,292,-W,W,-1,1};String s(boolean p,String[]l){Set<Integer>e=new HashSet();for(var t:l)for(r+=W;(c=t.indexOf(35,c)+1)>0;)e.add(r+c+17996999);for(;;i++){var m=new HashMap();for(int x:e){int q=0,j=9;for(;j-->0;)q+=q+(e.contains(x+j/3*W+j%3+~W)?1:0);for(;q>16&++j<4;)if((q&N[i+j&3])<1)m.merge(x+N[i+(j+=4)&3|4],x,(a,b)->null);}e.removeAll(m.values());e.addAll(m.keySet());if(p?i>8:m.size()<1){if(!p)return""+-~i;for(int X:e){r=X/W;i=X%W;a=a<r?a:r;b=b>r?b:r;d=d<i?d:i;c=c>i?c:i;}return(b-a+1)*(c-d+1)-e.size()+"";}}}}

@@ -1,0 +1,115 @@
+package src.solutions;
+
+import src.meta.DayTemplate;
+
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Scanner;
+
+public class Day11 extends DayTemplate {
+
+	public String[] fullSolve(Scanner in) {
+		// The Monkey objects are mutated by the simulation (items are handed around and
+		// counter is incremented), so each part gets a freshly built set; only the raw
+		// input lines are shared.
+		List<String> lines = readLines(in);
+		return new String[] { run(lines, true), run(lines, false) };
+	}
+
+	public String solve(boolean part1, Scanner in) throws FileNotFoundException {
+		return run(readLines(in), part1);
+	}
+
+	private List<String> readLines(Scanner in) {
+		List<String> lines = new ArrayList<>();
+		while (in.hasNext()) {
+			lines.add(in.nextLine());
+		}
+		return lines;
+	}
+
+	private String run(List<String> lines, boolean part1) {
+		List<Monkey> monkeys = new ArrayList<>();
+		List<Long> items = new ArrayList<>();
+		int[] consts = new int[5];
+		int modulo = 1;
+		for (String line : lines) {
+			if (line.startsWith("Monkey") || line.equals("")) {
+				continue;
+			}
+			if (line.startsWith("  Starting items")) {
+				String[] itms = line.split(": ")[1].split(", ");
+				for (String itm : itms) {
+					items.add(Long.parseLong(itm));
+				}
+			}
+			String[] itms = line.split(": ")[1].split(" ");
+			if (line.startsWith("  Operation")) {
+				consts[0] = itms[4].equals("old") ? 2 : itms[3].equals("+") ? 0 : 1;
+				consts[1] = Integer.parseInt(itms[4].equals("old") ? "0" : itms[4]);
+			}
+			if (line.startsWith("  Test")) {
+				consts[2] = Integer.parseInt(itms[2]);
+			}
+			if (line.startsWith("    If true")) {
+				consts[3] = Integer.parseInt(itms[3]);
+			}
+			if (line.startsWith("    If false")) {
+				consts[4] = Integer.parseInt(itms[3]);
+				monkeys.add(new Monkey(items, consts));
+				modulo *= consts[2];
+				items.clear();
+				consts = new int[5];
+			}
+		}
+		for (int i = 0; i < (part1 ? 20 : 10000); i++) {
+			for (Monkey monkey : monkeys) {
+				monkey.turn(monkeys, part1, modulo);
+			}
+		}
+		List<Long> inspects = new ArrayList<>();
+		for (Monkey monkey : monkeys) {
+			inspects.add(monkey.counter);
+		}
+		Collections.sort(inspects);
+		return "" + (inspects.get(inspects.size() - 2) * inspects.get(inspects.size() - 1));
+	}
+}
+
+class Monkey {
+	List<Long> items;
+	int[] consts;
+	long counter;
+
+	public Monkey(List<Long> items, int[] consts) {
+		this.items = new ArrayList<>();
+		this.items.addAll(items);
+		this.consts = consts;
+		counter = 0;
+	}
+
+	public void turn(List<Monkey> monkeys, boolean part1, int modulo) {
+		for (Long item : items) {
+			switch (consts[0]) {
+			case 0:
+				item += consts[1];
+				break;
+			case 1:
+				item *= consts[1];
+				break;
+			case 2:
+				item *= item;
+				break;
+			}
+			if (part1) {
+				item /= 3;
+			}
+			item %= modulo;
+			monkeys.get((item % consts[2] == 0) ? consts[3] : consts[4]).items.add(item);
+			counter++;
+		}
+		items.clear();
+	}
+}

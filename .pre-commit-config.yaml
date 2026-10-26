@@ -1,0 +1,8 @@
+repos:
+  - repo: https://github.com/LiquidFun/aoc_tiles
+    rev: 0.6.3
+    hooks:
+      - id: aoc-tiles
+        args:
+          - --overwrite-year=2024
+          - --exclude-patterns=src/meta/*,src/objects/*
