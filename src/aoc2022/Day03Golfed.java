@@ -1,1 +1,1 @@
-package aoc2022;class C{String s(boolean p,String[]l){int r=0,i=0;for(;i<l.length;i+=p?0:2){var a=l[i++];for(int n=p?a.length()/2:0,j=n;j<a.length();){var c=a.charAt(j++);if(p?a.indexOf(c)<n:(l[i].indexOf(c)|l[i+1].indexOf(c))>=0){r+=c%32+26-c/91*26;break;}}}return""+r;}}
+class C{int r,i,c,j;Object s(boolean p,String[]l){for(;i<300;i+=p?0:2){var a=l[i++];for(j=0;((p?a:l[i]).indexOf(c=a.charAt(j++),p?a.length()/2:0)|(p?0:l[i+1].indexOf(c)))<0;);r+=(c-38)%58;}return r;}}

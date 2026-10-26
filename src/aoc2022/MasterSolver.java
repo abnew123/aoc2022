@@ -1,6 +1,7 @@
 package aoc2022;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.util.Scanner;
@@ -79,15 +80,17 @@ public class MasterSolver {
 	}
 
 	private static String className(int day, String zeroFilledDay) {
-		return useGolfed ? "aoc2022." + GOLFED_DAYS[day - 1] : "aoc2022.Day" + zeroFilledDay;
+		return useGolfed ? GOLFED_DAYS[day - 1] : "aoc2022.Day" + zeroFilledDay;
 	}
 
 	private static String solve(Class<?> cls, boolean part1, File file) throws Exception {
-		Object solver = cls.getDeclaredConstructor().newInstance();
+		Constructor<?> ctor = cls.getDeclaredConstructor();
+        ctor.setAccessible(true);
+        Object solver = ctor.newInstance();
 		if (useGolfed) {
 			Method m = cls.getDeclaredMethod("s", boolean.class, String[].class);
 			m.setAccessible(true);
-			return (String) m.invoke(solver, part1, Files.readAllLines(file.toPath()).toArray(String[]::new));
+			return String.valueOf(m.invoke(solver, part1, Files.readAllLines(file.toPath()).toArray(String[]::new)));
 		}
 		try (Scanner in = new Scanner(file)) {
 			Method m = cls.getDeclaredMethod("solve", boolean.class, Scanner.class);
