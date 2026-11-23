@@ -1,5 +1,10 @@
 # aoc2022
 
+> [!NOTE]
+> This repository is archived. These solutions, with their full history, now live in
+> [ShichengRao/advent-of-code](https://github.com/ShichengRao/advent-of-code/tree/main/2022)
+> alongside every other year.
+
 Repo for advent of code 2022 problems. 
 
 To run, go into class MasterSolver.java
