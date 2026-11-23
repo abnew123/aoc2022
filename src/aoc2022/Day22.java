@@ -103,7 +103,7 @@ public class Day22 extends DayTemplate {
 		if (xloc < 50) {
 			if (yloc >= 50 && yloc < 100) {
 				if (dir == 2) {// 2->5
-					return new int[] { 0, 149 - xloc, yloc };
+					return new int[] { 0, 149 - xloc, 0 };
 				}
 				if (dir == 3) {// 2->6
 					return new int[] { 0, yloc + 100, 0 };
@@ -152,7 +152,7 @@ public class Day22 extends DayTemplate {
 				return new int[] { 3, 149, xloc - 100 };
 			}
 			if (dir == 1) {// 6->1
-				return new int[] { 1, 0, xloc - 100 };
+				return new int[] { 1, 0, yloc + 100 };
 			}
 			if (dir == 2) {// 6->2
 				return new int[] { 1, 0, xloc - 100 };
